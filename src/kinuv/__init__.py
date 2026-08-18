@@ -1,4 +1,4 @@
-"""kinUV — 066-1 DFT; 066-2 Wiener+PB; 066-3 geometry; 066-5 T2; 066-6/7."""
+"""kinUV — 066-1 DFT; 066-2 Wiener+PB; 066-3 geometry; 066-5 T2; 066-6/7/8."""
 
 from .constants import ARCSEC_TO_RAD, C_LIGHT_M_S, C_LIGHT_KM_S, F_REST_CO21_HZ
 from .decisions import load_decision_index, requires
@@ -15,6 +15,18 @@ from .geometry import (
     rotate_by_pa,
     sky_to_galaxy,
 )
+from .infer.map import (
+    DX_DY_BOUND_ARCSEC,
+    SHIFT_PRIOR_SIGMA_ARCSEC,
+    MapResult,
+    gate_delta_chi2,
+    map_gate_scores,
+    map_objective,
+    run_stage_a_map,
+    shift_prior,
+    stage_a_bounds,
+    stage_a_seeds,
+)
 from .io.vis import VisData, load_kgas066
 from .likelihood.chi2 import chi2, chi2_zero, delta_chi2
 from .response.primary_beam import fwhm_pb_arcsec, primary_beam
@@ -28,12 +40,16 @@ __all__ = [
     "ARCSEC_TO_RAD",
     "C_LIGHT_M_S",
     "C_LIGHT_KM_S",
+    "DX_DY_BOUND_ARCSEC",
     "F_REST_CO21_HZ",
+    "MapResult",
+    "SHIFT_PRIOR_SIGMA_ARCSEC",
     "VisData",
     "catalogue_ba",
     "chi2",
     "chi2_zero",
     "delta_chi2",
+    "gate_delta_chi2",
     "dft_numpy",
     "fwhm_pb_arcsec",
     "galaxy_to_sky",
@@ -47,6 +63,8 @@ __all__ = [
     "load_decision_index",
     "load_kgas066",
     "los_velocity",
+    "map_gate_scores",
+    "map_objective",
     "nufft2_degrid",
     "pa_seed_deg",
     "pa_seed_rad",
@@ -54,7 +72,11 @@ __all__ = [
     "primary_beam",
     "requires",
     "rotate_by_pa",
+    "run_stage_a_map",
+    "shift_prior",
     "sky_to_galaxy",
+    "stage_a_bounds",
+    "stage_a_seeds",
     "uv_wavelengths",
     "__version__",
 ]
