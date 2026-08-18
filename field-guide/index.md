@@ -4,7 +4,7 @@ Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-IND
 
 ## Mailbox (two agents)
 
-Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and review only via `docs/reviews/` (see `_template.md`). Rubber-stamp ACK is a process failure. Cursor plans without `canon_generation` matching STATUS are stale. `code_freeze: false` only for 066-0/066-1 (decisions registry + analytic DFT). Do not create a `DEC-*` id.
+Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and review only via `docs/reviews/` (see `_template.md`). Rubber-stamp ACK is a process failure. Cursor plans without `canon_generation` matching STATUS are stale. `code_freeze: false` for 066-2/3/4/5 (template, geometry, rings, NUFFT). No fitter, no MAP. Do not create a `DEC-*` id.
 
 ## Stop conditions
 
@@ -51,4 +51,4 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 
 ## Git
 
-Branch `cursor/two-agent-ssot` (docs landed). 066 code: decisions registry + analytic DFT; discard scaffolding `src/` not listed in 066-0/066-1. One component id per commit.
+Branch `dev`. One component id per commit (`feat(066-N): …`). Do not mix 066-2/3/4/5 in one commit.
