@@ -37,6 +37,12 @@ F_REST_CO21_HZ = 230.538e9
 #: Conversion from a Gaussian FWHM to its standard deviation.
 FWHM_TO_SIGMA = 1.0 / np.sqrt(8.0 * np.log(2.0))
 
+#: Boltzmann constant, SI exact [J/K].
+K_BOLTZMANN_J_K = 1.380649e-23
+
+#: Jansky in SI [W m⁻² Hz⁻¹].
+JY_W_M2_HZ = 1.0e-26
+
 
 @dataclass(frozen=True)
 class Distance:
