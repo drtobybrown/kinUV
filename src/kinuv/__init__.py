@@ -1,7 +1,8 @@
-"""kinUV — 066-1 DFT; 066-2 Wiener+PB; 066-3 geometry; 066-5 T2; 066-6 likelihood."""
+"""kinUV — 066-1 DFT; 066-2 Wiener+PB; 066-3 geometry; 066-5 T2; 066-6/7."""
 
 from .constants import ARCSEC_TO_RAD, C_LIGHT_M_S, C_LIGHT_KM_S, F_REST_CO21_HZ
 from .decisions import load_decision_index, requires
+from .forward.model import los_velocity, predict_vis
 from .geometry import (
     catalogue_ba,
     galaxy_to_sky,
@@ -45,9 +46,11 @@ __all__ = [
     "k_to_jy_per_beam",
     "load_decision_index",
     "load_kgas066",
+    "los_velocity",
     "nufft2_degrid",
     "pa_seed_deg",
     "pa_seed_rad",
+    "predict_vis",
     "primary_beam",
     "requires",
     "rotate_by_pa",
