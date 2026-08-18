@@ -1,10 +1,10 @@
 ---
 id: DEC-066-PB
 status: accepted
-generation: 2
+generation: 3
 date: 2026-08-18
 owner: 066-2-template
-supersedes: PLAN.md Q9 (PB deferred for 066); generation 1 FWHM formula 56.6″/ν_GHz
+supersedes: generation 2 (order of (dx,dy) vs A unspecified)
 ---
 # Primary beam handling in the forward model
 
@@ -24,12 +24,17 @@ Never divide `V_data` by the primary beam in the uv-plane. That would amplify ed
 
 ### 2. Attenuate the model on the sky
 
+Order is mandatory (DEC-066-SHIFT):
+
 ```
-I_attenuated(x, y, ν) = A(x, y, ν) · I_model(x, y, ν)
+I_sky(x, y, ν)        = I_intrinsic(x − dx, y − dy, ν)   # galaxy moves; phase centre fixed
+I_attenuated(x, y, ν) = A(x, y, ν) · I_sky(x, y, ν)     # A stays on the pointing
 V_model(u, v, ν)      = FINUFFT_T2{ I_attenuated }
 ```
 
-`I_model` is the Wiener-deconvolved Ico template times the kinematic line profile (DEC-066-SB).
+Do **not** apply `A` first and then a visibility phase ramp for `(dx, dy)`. That drags the PB with the galaxy. The analytic ramp is allowed only as an equivalent of a pure image translation when `A ≡ 1`.
+
+`I_intrinsic` is the Wiener-deconvolved Ico template times the kinematic line profile (DEC-066-SB).
 
 ### 3. Parameterisation
 
@@ -62,3 +67,4 @@ V_model(u, v, ν)      = FINUFFT_T2{ I_attenuated }
 
 - Uniform disk to r = 15″: short-baseline amplitudes show the ~20% edge suppression vs a no-PB model.
 - Regression: no-PB + pbcor template produces a radial residual-phase trend or a depressed outer SB; with PB that trend is gone.
+- **Stationary-PB gate:** set `(dx, dy) = (1″, 1″)`. The emission centroid must move; the PB envelope must remain centred on the phase centre. A control with ramp-after-A must fail this test.

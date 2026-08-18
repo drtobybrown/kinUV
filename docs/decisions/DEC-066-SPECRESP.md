@@ -1,10 +1,10 @@
 ---
 id: DEC-066-SPECRESP
 status: accepted
-generation: 2
+generation: 3
 date: 2026-08-18
 owner: 066-6-likelihood
-supersedes: generation 1 (applied 12/29 and empirical s together; Hann on binned axis)
+supersedes: generation 2 (no spectral guard channels; edge Hann truncated)
 ---
 # Spectral response function handling
 
@@ -23,11 +23,12 @@ ALMA's default correlator window is Hann. On native channels that is convolution
 
 **066 implementation:**
 
-1. Evaluate the line profile at the **native** channel frequencies of the parent MS (or the pre-bin npz).
-2. Convolve along the channel axis with `[0.25, 0.5, 0.25]`.
+1. Evaluate the line profile on the native channel grid **plus at least one guard channel** on each spectral end (kernel `[0.25, 0.5, 0.25]` needs one neighbour). If the parent MS still has those channels, use them. If the npz is already trimmed, evaluate the model at `ν_edge ± Δν_native` — do **not** zero-pad visibilities (that biases the outer bin if line wings remain). The YAML `vel_buffer_kms ≈ 100` is an upper bound, not a requirement, once one native guard exists.
+2. Convolve along that extended native axis with `[0.25, 0.5, 0.25]`.
 3. Bin with the same `N` and the same weighted-mean / weight-sum as the data npz.
+4. Trim guard bins so the model spectral axis matches the data npz.
 
-**Forbidden:** convolving `[0.25, 0.5, 0.25]` along an already-binned axis (e.g. 125 channels). That applies Hann at ~5–10 km/s instead of ~1.27 km/s and biases `gas_sigma` and the inner curve.
+**Forbidden:** convolving `[0.25, 0.5, 0.25]` along an already-binned axis (e.g. 125 channels). That applies Hann at ~5–10 km/s instead of ~1.27 km/s and biases `gas_sigma` and the inner curve. **Forbidden:** Hann on a finite native axis with implicit zeros at the ends.
 
 `N` and `Δv` are properties of the npz being fit, not constants. Record `(n_row, n_chan, Δv_kms, N)` in 066-0. Replica forensics used 881×125 at bin-4; YAML default is bin-8. Prefer the replica window so Δχ² is comparable.
 
@@ -65,3 +66,4 @@ Banded GLS with the measured inter-bin correlation. Not in the 066 MAP critical 
 1. Synthetic white noise → Hann → bin N: recover `s_theory(N)` and `ρ_bin`. This tests the formula, not 066 WEIGHT.
 2. On the real 066 npz: line-free `⟨w|V|²⟩` in range, `s` applied, line-free reduced statistic ≈ 2 after `s`.
 3. Forward-model test: Hann on native then bin matches a reference; Hann on the binned axis does **not** (negative test).
+4. **Edge-padding gate:** a narrow line sitting in the first native channel of the unpadded window must not change the outer binned amplitude by more than the thermal noise after guards are added; unpadded Hann must fail this test.

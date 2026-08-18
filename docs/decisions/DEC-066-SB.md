@@ -1,10 +1,10 @@
 ---
 id: DEC-066-SB
 status: accepted
-generation: 2
+generation: 4
 date: 2026-08-18
 owner: 066-2-template
-supersedes: generation 1 (K = σ²/S_peak had wrong units; Approach B double-beamed)
+supersedes: generation 3 (clip-to-zero had no centroid gate)
 ---
 # Surface brightness template: Ico Wiener deconvolution
 
@@ -36,9 +36,13 @@ Source: `KGAS66_Ico_K_kms-1.fits`. HISTORY: `tclean` `restoration=True`, `restor
 
 4. **Taper.** Where `|B̃(u,v)| < 0.05`, set deconvolved amplitudes to zero (gain cap 20× if K=0). Conservative: the template must not claim spatial frequencies the restored image does not constrain.
 
-5. **Inverse FT** to the sky grid. Mask = the finite pixels of the Ico map. Do not inpaint CLEAN residuals.
+5. **FFT pad (wrap-around).** Do not FFT the raw 135² stamp. Zero-pad so each axis is at least **2× NAXIS** (135 → ≥270; 512 is the safe 066 default). Do **not** tie this pad to `ImageGrid.nx` (that grid is a visibility Nyquist choice, DEC-066-GRID, and must not drive the Wiener FFT). Crop back to the Ico stamp after iFFT.
 
-6. **Normalisation.** Shape only; flux is a free parameter. Normalise the template to unit integral.
+6. **Inverse FT, positivity, mask.** Crop to the Ico grid. Default: `I_clip = max(I, 0)`. **Centroid gate:** the flux-weighted centroid `⟨x⟩ = ∫ x I dΩ / ∫ I dΩ` must move by **< 0.01″** (absolute, Ico WCS) between `I` and `I_clip`. Do not write this as “0.1 × cellsize” without naming the cell (Ico is 0.4″; that would be 0.04″ and is too loose vs the 0.5″ `(dx, dy)` prior). If the gate fails on the real Ico (asymmetric noise/mask), **do not hard-clip**; leave signed I. Then apply the 1709-pixel mask. Do not inpaint CLEAN residuals.
+
+7. **Resample onto the model sky grid.** Ico `CDELT` is 0.4″; the model cell is whatever DEC-066-GRID asserts (not blindly 0.1″). If cells differ, interpolate with a **flux-conserving** kernel (conserve `Σ I ΔΩ` to the interpolation tolerance). Bilinear that does not conserve `∫ I dΩ` is forbidden.
+
+8. **Normalisation.** Shape only; flux is a free parameter. If clipped, normalise `max(I,0)` on the mask to unit integral. **Signed-template gate (clip skipped):** require `∫_mask I_signed dΩ > 0.5 ∫_mask |I_signed| dΩ` before dividing. If that fails, abort — do not invert the template sign or divide by a near-zero integral. Otherwise normalise `I_signed` (mask) to unit integral.
 
 Primary-beam re-attenuation of this intrinsic template is **DEC-066-PB**, not this step.
 
@@ -57,3 +61,7 @@ Exponential-SB run (free `r_scale`, free flux) is required. If Ico-template `V_c
 1. **Gaussian fake:** known SB → convolve with restoring beam → Wiener. Long-baseline FT must match unconvolved truth inside the taper, not the restored map.
 2. **Exponential disk fake:** Re=7.4″, 066-like mask. Recovered scale length unbiased; no ringing at the taper/mask boundary.
 3. **Correlated noise (load-bearing):** exponential into dirty-beam noise → CLEAN-like Ico → deconvolve. Recovered scale length still unbiased. Optional to skip this test is not allowed.
+4. **Pad gate:** same Gaussian fake on 135² unpadded vs ≥2× padded; wrap-around power at the opposite edge of the stamp must drop below the taper floor when padded.
+5. **Flux conservation:** resample 0.4″ → model cell; `|Σ I_out ΔΩ_out / Σ I_in ΔΩ_in − 1| < 1e-4` on a compact Gaussian.
+6. **Centroid gate:** Gaussian fake Wiener + clip; `|⟨x⟩_clip − ⟨x⟩_signed| < 0.01″`. A control with a strongly asymmetric mask that fails this bound must skip hard clip.
+7. **Signed-flux dominance (clip skipped):** `∫ I > 0.5 ∫ |I|` on the mask; a near-zero or negative integral must raise, not invert.

@@ -4,7 +4,7 @@ Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-IND
 
 ## Mailbox (two agents)
 
-Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and review only via `docs/reviews/` (see `_template.md`). Rubber-stamp ACK is a process failure. Cursor plans without `canon_generation` matching STATUS are stale. `code_freeze: true` → no Python. Do not create a `DEC-*` id.
+Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and review only via `docs/reviews/` (see `_template.md`). Rubber-stamp ACK is a process failure. Cursor plans without `canon_generation` matching STATUS are stale. `code_freeze: false` only for 066-0/066-1 (decisions registry + analytic DFT). Do not create a `DEC-*` id.
 
 ## Stop conditions
 
@@ -13,6 +13,7 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 - Restored Ico into FINUFFT as intrinsic SB → stop (DEC-066-SB).
 - Hann on already-binned channels → stop (DEC-066-SPECRESP).
 - `(dx,dy)` frozen at 0 before MAP → stop (DEC-066-SHIFT).
+- Visibility phase ramp of `(dx,dy)` after PB → stop (DEC-066-SHIFT / PB).
 - Growing a file past 400 lines of Python → flag `BLOATED:`, do not add more.
 
 ## 066 gates (in order)
@@ -32,14 +33,14 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 | TARGET | KGAS066 only |
 | INC | 43.9° freeze, ±5° |
 | PA | fit; seed 205.2° receding |
-| SB | Wiener restoring beam; K=(σ/I_peak)²; taper 0.05 |
-| PB | A(x,y) before NUFFT; FWHM=1.13 λ/D ≈25.9″ |
-| VC | arctan then 6–8 rings |
-| OSCMETRIC | Ω_k/Δv<0.3; 20 mocks × 5 λ; AIC vs arctan |
-| SHIFT | (dx,dy) in MAP; ramp; σ=0.5″ |
+| SB | Wiener; pad ≥2×; clip only if centroid shift <0.01″ |
+| PB | A after image (dx,dy); FWHM=1.13 λ/D ≈25.9″ |
+| VC | arctan then 6–8 rings; outer flat; inner solid-body |
+| OSCMETRIC | r0≥0.5 BMAJ; Ω/Δv<0.3; 20×5 λ; AIC |
+| SHIFT | Fourier/spline image shift then PB; σ=0.5″ |
 | INFER | MAP then NUTS |
 | VIS | aggregated npz; record N, Δv |
-| SPECRESP | Hann native then bin; empirical s only |
+| SPECRESP | Hann native+guards then bin; empirical s |
 | WEIGHT | s=2/⟨w\|V\|²⟩; not 0.5; not 12/29 |
 | POL | XX+YY re-export |
 | GRID | Nyquist vs 305 kλ; no imaging override |
@@ -50,4 +51,4 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 
 ## Git
 
-Branch `kgas066-slice`. First commit: this guide + `docs/decisions/` + `.gitignore`. No `src/` scaffolding. One component id per commit. Code starts only after architecture is approved.
+Branch `cursor/two-agent-ssot` (docs landed). 066 code: decisions registry + analytic DFT; discard scaffolding `src/` not listed in 066-0/066-1. One component id per commit.

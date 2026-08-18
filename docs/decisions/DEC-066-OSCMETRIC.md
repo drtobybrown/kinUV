@@ -1,10 +1,10 @@
 ---
 id: DEC-066-OSCMETRIC
 status: accepted
-generation: 2
+generation: 4
 date: 2026-08-18
 owner: 066-4-rings
-supersedes: generation 1 (Matérn-∞ / SE kernel claim; 100-mock grid; hardcoded Δv=10.6)
+supersedes: generation 3 (no outer/inner evaluation BC)
 ---
 # Quantitative oscillation metric for ring V_c regularisation
 
@@ -18,6 +18,17 @@ Discrete curvature ratio, using the **npz channel width**, not a hardcoded 10.6 
 
 `Δv_chan` is the channel width of the visibilities being fit (replica bin-4 ≈ 5.3 km/s; YAML bin-8 ≈ 10.6 km/s). Record it with the npz in 066-0.
 
+## Knot placement (066)
+
+Innermost knot `r_0 ≥ 0.5 × BMAJ`. For the Ico restoring beam BMAJ ≈ 1.30″ that is **`r_0 ≥ 0.65″`**. Uniform rings down to `r = 0` overfit beam-smeared inner gradients into a central spike. Subsequent knots: `Δr ≈ 1.0–1.3″` over the ~7.5″ CO disk, `N_rings = 6–8` (DEC-066-VC).
+
+## Evaluation outside the knots (Stage B rings only)
+
+- **Outer:** for all `R > r_last`, `V_c(R) = V_c(r_last)` (flat). No polynomial or spline extrapolation. Quadrature nodes and mask pixels out to ~10″ must use this.
+- **Inner:** for `R < r_0`, **solid body** `V_c(R) = V_c(r_0) · (R / r_0)`, not a flat `V_c(r_0)`. Flat inner BC leaves a derivative jump at `r_0` that can still spike the centre. Stage A arctan is defined for all `R` and is **not** flattened.
+
+Unit test: evaluate `V_c` on a grid to 15″ with `r_last = 7.5″`; `dV/dR = 0` for `R > r_last`; `V(0) = 0`.
+
 ## Bayesian content (what it is, not a GP slogan)
 
 The curvature penalty `λ_reg Σ_k (V_{k+1} − 2 V_k + V_{k-1})²` is a Gaussian prior on second differences: a discrete **cubic-spline / integrated-Wiener** regulariser. It is **not** a squared-exponential / Matérn-∞ kernel. Do not implement a GP; implement the sum of squares.
@@ -25,11 +36,12 @@ The curvature penalty `λ_reg Σ_k (V_{k+1} − 2 V_k + V_{k-1})²` is a Gaussia
 ## 066 calibration protocol
 
 1. Truth = arctan `(V₀ = 200 km/s, r_t = 3″)` at real 066 `(u,v,ν,w)` plus Gaussian noise.
-2. **066 budget:** 20 mocks × ~5 values of `λ_reg`. Densify only if the two criteria below conflict.
+2. **066 budget:** 20 mocks × ~5 values of `λ_reg`. Densify only if the three criteria below conflict.
 3. Accept the **smallest** `λ_reg` such that:
    - `max_k Ω_k < 0.3` in ≥95% of mocks
    - **and** recovered `(V₀, r_t)` lie within 1σ of truth in ≥68% of mocks
-4. If no `λ` satisfies both, increase ring count. If they conflict at all ring counts, that is a model-specification failure, not a licence to drop the metric.
+   - **and** mean recovered `V₀` is not biased low relative to Stage A (arctan-only) by more than the 1σ scatter. This guards the heuristic `μ_mono = λ_reg` near turnover `r_t`.
+4. If no `λ` satisfies all three, increase ring count (keeping `r_0 ≥ 0.5 BMAJ`). If they conflict at all ring counts, that is a model-specification failure, not a licence to drop the metric.
 
 ## Monotonicity (066 only)
 
