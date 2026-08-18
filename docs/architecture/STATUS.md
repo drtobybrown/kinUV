@@ -15,7 +15,7 @@ canon_generation: 4
 
 **User dispatch 2026-08-18.** `dev`. Wave 1 + **066-6** (`1017602`) + **066-7** (`8b06c2b`) merged. Path to MAP: native npz + replica operator N=4, local CPU. Mock recovery (noise-free, native-window χ²): flux 0.9995, PA 205.199°, vsys 8299.554, (dx,dy)=(0.3003″, 0.3002″); eval 0.417 s. **066-8 next** (real MAP through Hann+bin). No NUTS.
 
-Native preview: `⟨w|V|²⟩≈2.59`, `s≈0.77`. Remeasure `s` on the fit array.
+Native preview: `⟨w|V|²⟩≈2.59`, `s≈0.77`. **Fit array (066-6):** `n_row=881`, `n_chan=95`, `Δv=5.080 km/s`, `N=4`, `s=0.514`. Replica was 881×125 (wider buffer).
 
 ## 066 npz (local inventory)
 
