@@ -1,0 +1,14 @@
+---
+description: kinUV two-agent SSoT — read the repo mailbox every turn
+alwaysApply: true
+---
+
+# Single source of truth
+
+Start of every turn: `AGENTS.md` → `field-guide/index.md` → `docs/architecture/STATUS.md` → latest `docs/reviews/*.md`. Handshake: `DEC-066-AGENTS`. Ranking: `DEC-066-INDEX`.
+
+- If `STATUS.code_freeze` is true, do not write Python.
+- Follow `STATUS.next_role` (`proposer` | `reviewer` | `user`). Do not ACK in the same turn as proposing.
+- Rubber-stamp reviews are invalid. New `DEC-*` ids are user-only.
+- Cursor `~/.cursor/plans/*.plan.md` is not canon unless it headers `canon_generation` matching STATUS. Prefer repo ADRs.
+- Physics lives in `docs/decisions/DEC-*.md`. Do not paste ADR essays into this rule.
