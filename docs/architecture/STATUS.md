@@ -14,7 +14,7 @@ canon_generation: 4
 
 # Architecture mailbox
 
-**User dispatch 2026-08-18.** Development branch is `dev`. 066-1 committed (`b4ab50f`). **066-3 merged** (`0bbdb2c`). **066-4 merged** (`b976d19`). In flight: 066-2, 066-5. No fitter, no MAP, no 066-6 until bin N is chosen.
+**User dispatch 2026-08-18.** Development branch is `dev`. 066-1 committed (`b4ab50f`). **066-3 merged** (`0bbdb2c`). **066-4 merged** (`b976d19`). **066-5 merged** (`3c34344`, jax-finufft T2 vs DFT 5.1e-10). In flight: 066-2. No fitter, no MAP, no 066-6 until bin N is chosen.
 
 ## 066 npz (local inventory)
 
