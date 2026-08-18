@@ -1,10 +1,10 @@
 ---
 generation: 4
-phase: 066-7
+phase: 066-8
 code_freeze: false
 next_role: proposer
 pending: []
-last_propose: docs/reviews/2026-08-18-handoff-new-chat.md
+last_propose: docs/reviews/2026-08-18-merge-066-8.md
 last_review: docs/reviews/2026-08-18-review-g4.md
 open_questions: []
 deadlocks: []
@@ -13,7 +13,7 @@ canon_generation: 4
 
 # Architecture mailbox
 
-**User dispatch 2026-08-18.** `dev`. Wave 1 + **066-6** (`1017602`) + **066-7** (`8b06c2b`) merged. Path to MAP: native npz + replica operator N=4, local CPU. Mock recovery (noise-free, native-window χ²): flux 0.9995, PA 205.199°, vsys 8299.554, (dx,dy)=(0.3003″, 0.3002″); eval 0.417 s. **066-8 next** (real MAP through Hann+bin). No NUTS.
+**User dispatch 2026-08-18.** `dev` at `7f9f125` (`feat(066-8)` fast-forward). Wave 1 + 066-6 + 066-7 + **066-8** Stage A MAP. Gate 3: Δχ² vs V=0 is **+4341** (χ²_MAP=1.999×10⁵, χ²_zero=2.042×10⁵); eval 0.708 s. Fit array 881×95, N=4, s=0.514. Stage A vector **sat on the box** (PA=175.2°, σ=50 km/s, dy=+2″, V_0=0, r_t=0.5″, flux=47.29 Jy) — detection of a shifted Gaussian disk, not a kinematics start. No rings on real vis. No NUTS. No 066-9/10/11.
 
 Native preview: `⟨w|V|²⟩≈2.59`, `s≈0.77`. **Fit array (066-6):** `n_row=881`, `n_chan=95`, `Δv=5.080 km/s`, `N=4`, `s=0.514`. Replica was 881×125 (wider buffer).
 
