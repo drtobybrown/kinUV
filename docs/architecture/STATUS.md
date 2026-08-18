@@ -1,32 +1,25 @@
 ---
 generation: 4
-phase: 066-2
+phase: 066-7
 code_freeze: false
 next_role: proposer
 pending: []
-last_propose: docs/reviews/2026-08-18-dispatch-066-2.md
+last_propose: docs/reviews/2026-08-18-handoff-new-chat.md
 last_review: docs/reviews/2026-08-18-review-g4.md
-open_questions:
-  - native-npz-vs-replica-bin
+open_questions: []
 deadlocks: []
 canon_generation: 4
 ---
 
 # Architecture mailbox
 
-**User dispatch 2026-08-18.** Development branch is `dev`. Wave 1 on `dev`: 066-2 (`45d7ea8`), 066-3 (`0bbdb2c`), 066-4 (`b976d19`), 066-5 (`3c34344`). No fitter, no MAP, no 066-6 until bin N is chosen.
+**User dispatch 2026-08-18.** `dev`. Wave 1 + **066-6** (`1017602`) + **066-7** (`8b06c2b`) merged. Path to MAP: native npz + replica operator N=4, local CPU. Mock recovery (noise-free, native-window χ²): flux 0.9995, PA 205.199°, vsys 8299.554, (dx,dy)=(0.3003″, 0.3002″); eval 0.417 s. **066-8 next** (real MAP through Hann+bin). No NUTS.
+
+Native preview: `⟨w|V|²⟩≈2.59`, `s≈0.77`. Remeasure `s` on the fit array.
 
 ## 066 npz (local inventory)
 
-- Local: `/Users/thbrown/kilogas/DR1/visibilities/KILOGAS066.npz`
-- CANFAR: `/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz`
-- Ico: `/Users/thbrown/kilogas/analysis/kinms_test/kgas066/KGAS66_Ico_K_kms-1.fits`
-- Measured: `n_row=43240`, `n_chan=1920`, `Δν=0.9765625 MHz`, `|Δv|=1.270 km/s` (radio vs rest CO), software bin **N=1** (native SPW). `max |b|≈404 m` ≈ **302 kλ** at 224.6 GHz. Keys: `u_m,v_m,vis,weights,freqs,phase_dir_rad`. **Not** the forensic replica 881×125 / bin-4.
-
-## Rank (DEC-066-INDEX)
-
-1. `docs/decisions/DEC-*.md`
-2. `field-guide/index.md`
-3. this file
-4. `docs/reviews/`
-5. `PLAN.md`
+- Local: `/Users/thbrown/kilogas/DR1/visibilities/KILOGAS066.npz` (native 43240×1920)
+- CANFAR: same bytes (`Content-Length` 997305244)
+- Ico / cube: `/Users/thbrown/kilogas/analysis/kinms_test/kgas066/KGAS66_Ico_K_kms-1.fits`, `KGAS66_clipped_cube.fits` (VOPT 8034–8536 km/s, 17×30 km/s)
+- YAML `obs_freq_range` clips the receding side — do not use it as the trim
