@@ -4,7 +4,7 @@ phase: 066-8
 code_freeze: false
 next_role: proposer
 pending: []
-last_propose: docs/reviews/2026-08-18-merge-066-8.md
+last_propose: docs/reviews/2026-08-19-fix-066-8-vsys-pa.md
 last_review: docs/reviews/2026-08-18-review-g4.md
 open_questions: []
 deadlocks: []
@@ -13,7 +13,7 @@ canon_generation: 4
 
 # Architecture mailbox
 
-**User dispatch 2026-08-18.** `dev` at `7f9f125` (`feat(066-8)` fast-forward). Wave 1 + 066-6 + 066-7 + **066-8** Stage A MAP. Gate 3: Δχ² vs V=0 is **+4341** (χ²_MAP=1.999×10⁵, χ²_zero=2.042×10⁵); eval 0.708 s. Fit array 881×95, N=4, s=0.514. Stage A vector **sat on the box** (PA=175.2°, σ=50 km/s, dy=+2″, V_0=0, r_t=0.5″, flux=47.29 Jy) — detection of a shifted Gaussian disk, not a kinematics start. No rings on real vis. No NUTS. No 066-9/10/11.
+**User dispatch 2026-08-19.** `dev`. 066-8 Stage A **interior** after radio vsys + PA ±180° two-start. Δχ² vs V=0 **+26213** (was blob +4341). vsys=8098.7 km/s (radio), PA=381.86°≡21.9°, V_0=268.4 km/s, σ=11.7 km/s, (dx,dy)=(−0.10″, −0.06″), r_t still 0.50″ floor, flux=60.6 Jy. Eval 0.98 s. No NUTS. No rings (`λ_reg` uncalibrated). No 066-9/10/11.
 
 Native preview: `⟨w|V|²⟩≈2.59`, `s≈0.77`. **Fit array (066-6):** `n_row=881`, `n_chan=95`, `Δv=5.080 km/s`, `N=4`, `s=0.514`. Replica was 881×125 (wider buffer).
 
