@@ -4,6 +4,7 @@ Fit flux, PA, vsys, gas σ, (dx, dy), V_0, r_t. Freeze i. Shift lives inside
 ``predict_vis`` via ``fourier_shift`` then PB — no visibility phase ramp.
 Model path is native ``predict_vis`` → ``hann_then_bin`` (DEC-066-SPECRESP).
 Gate is likelihood ``Δχ² = χ²_zero − χ²``; the (dx, dy) prior is MAP-only.
+Two-start PA: 205.2° and 25.2°. Keep the larger likelihood Δχ².
 """
 
 from __future__ import annotations
@@ -15,16 +16,11 @@ import numpy as np
 from scipy.optimize import minimize
 
 from kinuv.decisions import requires
-from kinuv.forward.model import (
-    GAS_SIGMA_SEED_KM_S,
-    VSYS_SEED_KM_S,
-    predict_vis,
-)
+from kinuv.forward.model import predict_vis
 from kinuv.forward.sb import load_sb_template
-from kinuv.geometry import inclination_rad, pa_seed_deg
+from kinuv.geometry import inclination_rad
 from kinuv.io.vis import VisData, load_kgas066
 from kinuv.likelihood.chi2 import chi2, chi2_zero, delta_chi2
-from kinuv.profiles.rotation import CALIBRATION_RT_ARCSEC, CALIBRATION_V0_KM_S
 from kinuv.response.spectral import hann_then_bin
 from kinuv.transforms.grid import (
     fov_co_plus_pb_arcsec,
@@ -32,20 +28,20 @@ from kinuv.transforms.grid import (
     max_baseline_lambda,
 )
 
-SHIFT_PRIOR_SIGMA_ARCSEC = 0.5
-DX_DY_BOUND_ARCSEC = 2.0
-FLUX_SEED_JY = 1.0
-PA_BOUND_HALF_DEG = 30.0
-VSYS_BOUND_HALF_KM_S = 100.0
-GAS_SIGMA_BOUNDS_KM_S = (2.0, 50.0)
-V0_BOUNDS_KM_S = (0.0, 400.0)
-RT_BOUNDS_ARCSEC = (0.5, 15.0)
-FLUX_BOUNDS_JY = (1.0e-8, 100.0)
+from .seeds import (
+    DX_DY_BOUND_ARCSEC,
+    FLUX_BOUNDS_JY,
+    FLUX_SEED_JY,
+    SHIFT_PRIOR_SIGMA_ARCSEC,
+    pa_start_degs,
+    stage_a_bounds,
+    stage_a_seeds,
+)
+
 MAXITER_STAGE_A = 80
 ABORT_EVAL_S = 20.0
 FD_STEP = 1.0e-3
 
-# Scaled z so L-BFGS steps are O(1). Physical = offset + z * scale.
 _SCALES = np.array(
     [1.0, 10.0, 20.0, 5.0, 0.5, 0.5, 50.0, 1.0], dtype=np.float64
 )
@@ -86,41 +82,11 @@ class MapResult:
     success: bool
     optimiser_ran: bool
     message: str
+    pa_start_deg: float = 0.0
 
     @property
     def beats_zero(self) -> bool:
         return self.delta_chi2 > 0.0
-
-
-def stage_a_seeds() -> dict[str, float]:
-    """YAML / ADR seeds. ``(dx, dy) = (0, 0)`` is a seed, not a freeze."""
-    return {
-        "flux": FLUX_SEED_JY,
-        "pa_deg": pa_seed_deg(),
-        "vsys_kms": VSYS_SEED_KM_S,
-        "gas_sigma_kms": GAS_SIGMA_SEED_KM_S,
-        "dx_arcsec": 0.0,
-        "dy_arcsec": 0.0,
-        "v0_kms": CALIBRATION_V0_KM_S,
-        "r_t_arcsec": CALIBRATION_RT_ARCSEC,
-    }
-
-
-def stage_a_bounds() -> dict[str, tuple[float, float]]:
-    """L-BFGS-B box in physical units. ``(dx, dy)`` support is ±2″, not ``{0}``."""
-    pa = pa_seed_deg()
-    vsys = VSYS_SEED_KM_S
-    box = float(DX_DY_BOUND_ARCSEC)
-    return {
-        "flux": FLUX_BOUNDS_JY,
-        "pa_deg": (pa - PA_BOUND_HALF_DEG, pa + PA_BOUND_HALF_DEG),
-        "vsys_kms": (vsys - VSYS_BOUND_HALF_KM_S, vsys + VSYS_BOUND_HALF_KM_S),
-        "gas_sigma_kms": GAS_SIGMA_BOUNDS_KM_S,
-        "dx_arcsec": (-box, box),
-        "dy_arcsec": (-box, box),
-        "v0_kms": V0_BOUNDS_KM_S,
-        "r_t_arcsec": RT_BOUNDS_ARCSEC,
-    }
 
 
 @requires("DEC-066-SHIFT")
@@ -184,9 +150,7 @@ def _z_bounds(offsets: np.ndarray) -> list[tuple[float, float]]:
     out = []
     for i, name in enumerate(PARAM_NAMES):
         lo, hi = b[name]
-        out.append(
-            ((lo - offsets[i]) / _SCALES[i], (hi - offsets[i]) / _SCALES[i])
-        )
+        out.append(((lo - offsets[i]) / _SCALES[i], (hi - offsets[i]) / _SCALES[i]))
     return out
 
 
@@ -249,7 +213,17 @@ def _optimal_flux(vis, model_unit, weights) -> float:
     return float(np.clip(flux, lo, hi))
 
 
-def _result(params, c, c0, dchi, data, eval_s, nfev, success, ran, message):
+def score_seed_delta_chi2(data: VisData, template, grid, params: dict[str, float]):
+    """Optimal-flux Δχ² at a frozen kinematics vector. Not the MAP product."""
+    p = dict(params)
+    p["flux"] = 1.0
+    unit = predict_binned(data, p, template, grid)
+    p["flux"] = _optimal_flux(data.vis, unit, data.weights)
+    _, _, dchi = map_gate_scores(data.vis, p["flux"] * unit, data.weights, data.s)
+    return float(dchi), float(p["flux"])
+
+
+def _result(params, c, c0, dchi, data, eval_s, nfev, success, ran, message, pa_start):
     n_row, n_chan = data.vis.shape
     return MapResult(
         flux=params["flux"],
@@ -273,65 +247,20 @@ def _result(params, c, c0, dchi, data, eval_s, nfev, success, ran, message):
         success=bool(success),
         optimiser_ran=bool(ran),
         message=str(message),
+        pa_start_deg=float(pa_start),
     )
 
 
-@requires(
-    "DEC-066-INFER",
-    "DEC-066-ZEROMODEL",
-    "DEC-066-SHIFT",
-    "DEC-066-SPECRESP",
-    "DEC-066-VC",
-    "DEC-066-WEIGHT",
-)
-def run_stage_a_map(
-    data: VisData | None = None,
-    *,
-    template=None,
-    grid=None,
-    maxiter: int = MAXITER_STAGE_A,
-    abort_eval_s: float = ABORT_EVAL_S,
-) -> MapResult:
-    """L-BFGS-B Stage A MAP. Times one aggregated eval; aborts if it is tens of s."""
-    if data is None:
-        data = load_kgas066()
-    if grid is None:
-        grid = image_grid_for_vis(data)
-    if template is None:
-        template = load_sb_template(grid)
-
-    seeds = stage_a_seeds()
+def _lbfgs_one_start(data, template, grid, seeds, eval_s, maxiter, pa_start):
     offsets = _offsets(seeds)
     params = dict(seeds)
-    t0 = perf_counter()
-    model_unit = predict_binned(data, params, template, grid)
-    eval_s = perf_counter() - t0
-    params["flux"] = _optimal_flux(data.vis, model_unit, data.weights)
-    model = params["flux"] * model_unit
-    c, c0, dchi = map_gate_scores(data.vis, model, data.weights, data.s)
-
-    if eval_s >= float(abort_eval_s):
-        return _result(
-            params,
-            c,
-            c0,
-            dchi,
-            data,
-            eval_s,
-            1,
-            False,
-            False,
-            f"single eval {eval_s:.3f}s >= {abort_eval_s:.1f}s; optimiser skipped",
-        )
-
+    unit = predict_binned(data, params, template, grid)
+    params["flux"] = _optimal_flux(data.vis, unit, data.weights)
     nfev = {"n": 0}
 
-    def predict_from_z(z):
-        p = _unpack(z, offsets)
-        return p, predict_binned(data, p, template, grid)
-
     def fun(z):
-        p, model_z = predict_from_z(z)
+        p = _unpack(z, offsets)
+        model_z = predict_binned(data, p, template, grid)
         c_z = chi2(data.vis, model_z, data.weights, data.s)
         return map_objective(c_z, p["dx_arcsec"], p["dy_arcsec"])
 
@@ -349,10 +278,9 @@ def run_stage_a_map(
             g[i] = (fun_count(zp) - f0) / FD_STEP
         return g
 
-    z0 = _pack(params, offsets)
     opt = minimize(
         fun_count,
-        z0,
+        _pack(params, offsets),
         method="L-BFGS-B",
         jac=jac,
         bounds=_z_bounds(offsets),
@@ -372,4 +300,96 @@ def run_stage_a_map(
         bool(opt.success),
         True,
         str(opt.message),
+        pa_start,
+    )
+
+
+@requires(
+    "DEC-066-INFER",
+    "DEC-066-ZEROMODEL",
+    "DEC-066-SHIFT",
+    "DEC-066-SPECRESP",
+    "DEC-066-VC",
+    "DEC-066-WEIGHT",
+)
+def run_stage_a_map(
+    data: VisData | None = None,
+    *,
+    template=None,
+    grid=None,
+    maxiter: int = MAXITER_STAGE_A,
+    abort_eval_s: float = ABORT_EVAL_S,
+) -> MapResult:
+    """Two-start L-BFGS-B. Keep the start with larger likelihood Δχ²."""
+    if data is None:
+        data = load_kgas066()
+    if grid is None:
+        grid = image_grid_for_vis(data)
+    if template is None:
+        template = load_sb_template(grid)
+
+    seeds = stage_a_seeds()
+    t0 = perf_counter()
+    _ = predict_binned(data, seeds, template, grid)
+    eval_s = perf_counter() - t0
+    if eval_s >= float(abort_eval_s):
+        unit = predict_binned(data, seeds, template, grid)
+        seeds["flux"] = _optimal_flux(data.vis, unit, data.weights)
+        c, c0, dchi = map_gate_scores(
+            data.vis, seeds["flux"] * unit, data.weights, data.s
+        )
+        return _result(
+            seeds,
+            c,
+            c0,
+            dchi,
+            data,
+            eval_s,
+            1,
+            False,
+            False,
+            f"single eval {eval_s:.3f}s >= {abort_eval_s:.1f}s; optimiser skipped",
+            seeds["pa_deg"],
+        )
+
+    runs = []
+    for pa in pa_start_degs():
+        runs.append(
+            _lbfgs_one_start(
+                data,
+                template,
+                grid,
+                stage_a_seeds(pa_deg=pa),
+                eval_s,
+                maxiter,
+                pa,
+            )
+        )
+    winner = max(runs, key=lambda r: r.delta_chi2)
+    nfev = sum(r.nfev for r in runs)
+    msg = (
+        f"{winner.message}; starts "
+        + ", ".join(f"PA={r.pa_start_deg:.1f} Δχ²={r.delta_chi2:.1f}" for r in runs)
+    )
+    return _result(
+        {
+            "flux": winner.flux,
+            "pa_deg": winner.pa_deg,
+            "vsys_kms": winner.vsys_kms,
+            "gas_sigma_kms": winner.gas_sigma_kms,
+            "dx_arcsec": winner.dx_arcsec,
+            "dy_arcsec": winner.dy_arcsec,
+            "v0_kms": winner.v0_kms,
+            "r_t_arcsec": winner.r_t_arcsec,
+        },
+        winner.chi2_map,
+        winner.chi2_zero,
+        winner.delta_chi2,
+        data,
+        eval_s,
+        nfev,
+        winner.success,
+        True,
+        msg,
+        winner.pa_start_deg,
     )
