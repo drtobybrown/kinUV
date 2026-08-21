@@ -36,6 +36,9 @@ CALIBRATION_RT_ARCSEC = 3.0
 OMEGA_ACCEPT_MAX = 0.3
 OMEGA_PASS_FRACTION = 0.95
 RECOVERY_1SIGMA_FRACTION = 0.68
+# Field-guide Gate 4: beam-scale window, not mock-sample scatter.
+RECOVERY_V0_KMS = 10.0
+RECOVERY_RT_ARCSEC = 0.5
 
 _INNER_SOLID = "solid_body"
 _INNER_FLAT = "flat"
@@ -201,6 +204,12 @@ def omega_k(v_knots_kms, dv_chan_kms: float = DV_CHAN_NATIVE_KM_S) -> np.ndarray
     if dv == 0.0:
         raise ValueError("dv_chan_kms must be nonzero")
     return np.abs(_second_differences(v_knots_kms)) / dv
+
+
+@requires("DEC-066-OSCMETRIC")
+def omega_residual(v_knots_kms, v_ref_kms, dv_chan_kms: float = DV_CHAN_NATIVE_KM_S):
+    """``Ω_k`` of ``V − V_ref`` (ringing about the init arctan)."""
+    return omega_k(_f64(v_knots_kms) - _f64(v_ref_kms), dv_chan_kms)
 
 
 def k_extra_rings(n_rings: int) -> int:

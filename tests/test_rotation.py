@@ -15,6 +15,8 @@ from kinuv.profiles.rotation import (
     N_RINGS_MIN,
     OMEGA_ACCEPT_MAX,
     R0_MIN_OVER_BMAJ,
+    RECOVERY_RT_ARCSEC,
+    RECOVERY_V0_KMS,
     V_K_MAX_KM_S,
     V_K_MIN_KM_S,
     aic_keep_stage_a,
@@ -23,6 +25,7 @@ from kinuv.profiles.rotation import (
     k_extra_rings,
     monotonicity_penalty,
     omega_k,
+    omega_residual,
     r0_min_arcsec,
     ring_regulariser,
     ring_vc,
@@ -193,11 +196,13 @@ def test_select_lambda_reg_acceptance_on_fake_omega():
         max_omega,
         v0_b,
         rt_b,
-        v0_sigma=8.0,
-        rt_sigma=0.5,
+        v0_sigma=RECOVERY_V0_KMS,
+        rt_sigma=RECOVERY_RT_ARCSEC,
         v0_stage_a=v0_a,
     )
     assert chosen == pytest.approx(0.1)
+    assert RECOVERY_V0_KMS == pytest.approx(10.0)
+    assert RECOVERY_RT_ARCSEC == pytest.approx(0.5)
 
 
 def test_select_lambda_reg_returns_none_if_criteria_conflict():
@@ -215,8 +220,8 @@ def test_select_lambda_reg_returns_none_if_criteria_conflict():
             max_omega,
             v0_b,
             rt_b,
-            v0_sigma=8.0,
-            rt_sigma=0.5,
+            v0_sigma=RECOVERY_V0_KMS,
+            rt_sigma=RECOVERY_RT_ARCSEC,
             v0_stage_a=v0_a,
         )
         is None
@@ -235,6 +240,22 @@ def test_truth_arctan_omega_exceeds_gate_at_oscmmetric_knots():
         v_k = rings_from_arctan(r_k, CALIBRATION_V0_KM_S, CALIBRATION_RT_ARCSEC)
         om = omega_k(v_k, dv_chan_kms=dv)
         assert float(np.max(om)) > OMEGA_ACCEPT_MAX
+
+
+def test_omega_residual_truth_is_zero_and_zigzag_fails_gate():
+    """Residual Ω is ringing about the init arctan, not absolute concavity."""
+    dv = 5.079701780454343
+    for n in (6, 7, 8):
+        r_k = uniform_knot_radii(n)
+        v_ref = rings_from_arctan(r_k, CALIBRATION_V0_KM_S, CALIBRATION_RT_ARCSEC)
+        om0 = omega_residual(v_ref, v_ref, dv)
+        assert float(np.max(om0)) < 1e-12
+    r_k = uniform_knot_radii(7)
+    v_ref = rings_from_arctan(r_k, CALIBRATION_V0_KM_S, CALIBRATION_RT_ARCSEC)
+    zigzag = v_ref.copy()
+    zigzag[3] += 20.0
+    om_z = omega_residual(zigzag, v_ref, dv)
+    assert float(np.max(om_z)) > OMEGA_ACCEPT_MAX
 
 
 def test_lambda_reg_campaign_delegates_to_calibrator():

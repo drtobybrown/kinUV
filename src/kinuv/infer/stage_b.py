@@ -24,7 +24,7 @@ from kinuv.profiles.rotation import (
     V_K_MIN_KM_S,
     aic_keep_stage_a,
     arctan_vc,
-    omega_k,
+    omega_residual,
     ring_regulariser,
     ring_vc,
     rings_from_arctan,
@@ -284,7 +284,7 @@ def run_stage_b_map(
     aic_a = chi2_a + 2.0 * 2.0
     aic_b = float(c) + 2.0 * n
     v0_r, rt_r = recover_arctan_from_rings(r_k, v_k)
-    om = omega_k(v_k, dv_chan_kms=float(data.dv_kms))
+    om = omega_residual(v_k, v_init, data.dv_kms)
     return StageBResult(
         v_knots_kms=tuple(float(x) for x in v_k),
         r_knots_arcsec=tuple(float(x) for x in r_k),

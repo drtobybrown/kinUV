@@ -1,11 +1,16 @@
 """Stub OSCMETRIC loop (066-12). Does not run real uv."""
 
+import json
 from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
-from kinuv.infer.campaign import add_complex_noise, calibrate_lambda_reg
+from kinuv.infer.campaign import (
+    _prior_checkpoint,
+    add_complex_noise,
+    calibrate_lambda_reg,
+)
 from kinuv.infer.stage_b import StageBResult
 
 
@@ -89,3 +94,24 @@ def test_calibrate_lambda_reg_stub_early_exit(monkeypatch):
     )
     assert out["chosen_lambda"] == pytest.approx(0.1)
     assert out["lambdas_tried"] == [0.01, 0.1]
+    assert out["omega_mode"] == "residual"
+
+
+def test_prior_checkpoint_refuses_absolute_omega(tmp_path):
+    payload = {
+        "n_mock": 4,
+        "n_rings": 7,
+        "v0_stage_a": [200.0] * 4,
+        "rows": [],
+    }
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(payload) + "\n")
+    assert _prior_checkpoint(tmp_path, 7, 4, False) is None
+    payload["omega_mode"] = "absolute"
+    path.write_text(json.dumps(payload) + "\n")
+    assert _prior_checkpoint(tmp_path, 7, 4, False) is None
+    payload["omega_mode"] = "residual"
+    path.write_text(json.dumps(payload) + "\n")
+    loaded = _prior_checkpoint(tmp_path, 7, 4, False)
+    assert loaded is not None
+    assert loaded["omega_mode"] == "residual"

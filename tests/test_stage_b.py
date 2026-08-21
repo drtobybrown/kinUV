@@ -1,5 +1,7 @@
 """Stage B ring MAP helpers (066-12). No visibility campaign here."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -54,3 +56,12 @@ def test_los_velocity_knots_match_ring_vc():
         CALIBRATION_RT_ARCSEC,
     )
     assert v_ring != pytest.approx(v_a)
+
+
+def test_run_stage_b_map_stores_residual_omega():
+    from kinuv.infer import stage_b as sb
+
+    src = Path(sb.__file__).read_text(encoding="utf-8")
+    chunk = src.split("def run_stage_b_map", 1)[1]
+    assert "om = omega_residual(v_k, v_init, data.dv_kms)" in chunk
+    assert "max_omega=float(np.max(om))" in chunk

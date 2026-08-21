@@ -30,6 +30,8 @@ from kinuv.profiles.rotation import (
     CALIBRATION_RT_ARCSEC,
     CALIBRATION_V0_KM_S,
     N_RINGS_MAX,
+    RECOVERY_RT_ARCSEC,
+    RECOVERY_V0_KMS,
     select_lambda_reg,
 )
 
@@ -79,13 +81,15 @@ def mock_visdata(base: VisData, vis_clean, rng: np.random.Generator) -> VisData:
 
 
 def _prior_checkpoint(out_dir: Path | None, n_rings: int, n_use: int, smoke: bool):
-    """Load ``campaign.json`` if it is the same n_rings / n_mock run."""
+    """Load ``campaign.json`` if it is the same residual-Ω n_rings / n_mock run."""
     if out_dir is None or smoke:
         return None
     path = Path(out_dir) / "campaign.json"
     if not path.is_file():
         return None
     prior = json.loads(path.read_text())
+    if prior.get("omega_mode") != "residual":
+        return None
     if int(prior.get("n_rings", -1)) != int(n_rings):
         return None
     if int(prior.get("n_mock", -1)) != int(n_use):
@@ -176,6 +180,7 @@ def calibrate_lambda_reg(
             "v0_stage_a": v0_a.tolist(),
             "rows": rows,
             "smoke": bool(smoke),
+            "omega_mode": "residual",
         }
         (out / "campaign.json").write_text(json.dumps(payload, indent=2) + "\n")
 
@@ -235,15 +240,13 @@ def calibrate_lambda_reg(
         if n_use < 2:
             chosen = float(lam_i)
             break
-        v0_sig = np.repeat(np.std(v0_b, axis=1, ddof=1)[:, None], n_use, axis=1)
-        rt_sig = np.repeat(np.std(rt_b, axis=1, ddof=1)[:, None], n_use, axis=1)
         picked = select_lambda_reg(
             np.asarray(used, dtype=np.float64),
             max_omega,
             v0_b,
             rt_b,
-            v0_sigma=v0_sig,
-            rt_sigma=rt_sig,
+            v0_sigma=RECOVERY_V0_KMS,
+            rt_sigma=RECOVERY_RT_ARCSEC,
             v0_stage_a=v0_a,
         )
         if picked is not None:
@@ -271,4 +274,5 @@ def calibrate_lambda_reg(
         "v0_stage_a": v0_a.tolist(),
         "rows": rows,
         "smoke": bool(smoke),
+        "omega_mode": "residual",
     }
