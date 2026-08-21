@@ -290,9 +290,8 @@ def select_lambda_reg(
     return None
 
 
-def run_lambda_reg_campaign(*_args, **_kwargs):
-    """20 mocks × ~5 ``λ_reg`` on real 066 uv. Needs a forward model; not 066-4."""
-    raise NotImplementedError(
-        "066-4 does not run the 20×5 λ_reg campaign; that needs a forward "
-        "model / real uv. Use select_lambda_reg on mock summaries."
-    )
+def run_lambda_reg_campaign(*args, **kwargs):
+    """20 mocks × ~5 ``λ_reg`` on real 066 uv (066-12). Delegates the loop."""
+    from kinuv.infer.campaign import calibrate_lambda_reg
+
+    return calibrate_lambda_reg(*args, **kwargs)

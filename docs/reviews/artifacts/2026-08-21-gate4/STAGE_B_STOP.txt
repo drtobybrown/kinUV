@@ -1,0 +1,1 @@
+STOP 2026-08-21: Gate4 complete N=7+N=8; chosen_lambda=None (OSCMETRIC Ω vs recovery conflict). No Stage B on real 066. Official product remains stage_a_map.json (Δχ²=+26213, V0=268). Artifacts: campaign_n7_complete.json, campaign_n8_complete.json, chosen.json.

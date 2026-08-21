@@ -1,9 +1,9 @@
 """Circular thin-disk native-channel visibilities (066-7).
 
 ``I_sky(x,y,ν) = flux × I_template(x−dx, y−dy) × Gaussian(v(ν)−v_los; σ)``
-with Stage A arctan ``V_c`` (DEC-066-VC). Then Fourier-shift the template,
-``A`` at the **phase centre** (DEC-066-PB / SHIFT), FINUFFT T2 (DEC-066-GRID).
-Do not apply a visibility phase ramp after PB.
+with Stage A arctan ``V_c`` or Stage B ``ring_vc`` (DEC-066-VC). Then
+Fourier-shift the template, ``A`` at the **phase centre** (DEC-066-PB / SHIFT),
+FINUFFT T2 (DEC-066-GRID). Do not apply a visibility phase ramp after PB.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from kinuv.profiles.rotation import (
     CALIBRATION_V0_KM_S,
     DV_CHAN_NATIVE_KM_S,
     arctan_vc,
+    ring_vc,
 )
 from kinuv.response.primary_beam import attenuate, primary_beam
 from kinuv.template.fourier_shift import fourier_shift
@@ -50,11 +51,22 @@ def los_velocity(
     vsys_kms,
     v0_kms: float = CALIBRATION_V0_KM_S,
     r_t_arcsec: float = CALIBRATION_RT_ARCSEC,
+    r_knots_arcsec=None,
+    v_knots_kms=None,
 ):
-    """``v_los = vsys + V_c(R) sin(i) cos(θ)``; +x is receding (DEC-066-PA)."""
+    """``v_los = vsys + V_c(R) sin(i) cos(θ)``; +x is receding (DEC-066-PA).
+
+    Default ``V_c`` is Stage A arctan. Pass both knot arrays for Stage B
+    ``ring_vc`` (solid-body inner, flat outer).
+    """
     xg, yg = sky_to_galaxy(x_east_arcsec, y_north_arcsec, pa_rad, i_rad)
     radius = np.hypot(xg, yg)
-    vc = arctan_vc(radius, v0_kms, r_t_arcsec)
+    if r_knots_arcsec is None and v_knots_kms is None:
+        vc = arctan_vc(radius, v0_kms, r_t_arcsec)
+    elif r_knots_arcsec is None or v_knots_kms is None:
+        raise ValueError("r_knots_arcsec and v_knots_kms must be provided together")
+    else:
+        vc = ring_vc(radius, r_knots_arcsec, v_knots_kms)
     cos_th = np.divide(xg, radius, out=np.zeros_like(radius), where=radius > 0.0)
     return float(vsys_kms) + vc * np.sin(i_rad) * cos_th
 
@@ -80,6 +92,8 @@ def sky_cube(
     v0_kms: float = CALIBRATION_V0_KM_S,
     r_t_arcsec: float = CALIBRATION_RT_ARCSEC,
     i_rad=None,
+    r_knots_arcsec=None,
+    v_knots_kms=None,
 ):
     """Attenuated sky cube ``(ny, nx, n_chan)`` in Jy/pixel (native channels).
 
@@ -105,6 +119,8 @@ def sky_cube(
         vsys_kms,
         v0_kms,
         r_t_arcsec,
+        r_knots_arcsec=r_knots_arcsec,
+        v_knots_kms=v_knots_kms,
     )
     phi = _gaussian_pdf(vel[None, None, :], v_los[:, :, None], gas_sigma_kms)
     d_omega = grid.cell_arcsec**2
@@ -141,6 +157,8 @@ def predict_vis(
     r_t_arcsec: float = CALIBRATION_RT_ARCSEC,
     i_rad=None,
     eps: float = 1e-8,
+    r_knots_arcsec=None,
+    v_knots_kms=None,
 ):
     """Native-channel model visibilities ``(n_row, n_chan)`` complex128.
 
@@ -159,5 +177,7 @@ def predict_vis(
         v0_kms=v0_kms,
         r_t_arcsec=r_t_arcsec,
         i_rad=i_rad,
+        r_knots_arcsec=r_knots_arcsec,
+        v_knots_kms=v_knots_kms,
     )
     return nufft2_degrid(grid, cube, u_m, v_m, freqs_hz, eps=eps)

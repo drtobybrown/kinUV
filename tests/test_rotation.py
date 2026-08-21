@@ -1,5 +1,7 @@
 """Stage A arctan + Stage B rings (DEC-066-VC, DEC-066-OSCMETRIC)."""
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -25,7 +27,6 @@ from kinuv.profiles.rotation import (
     ring_vc,
     ring_velocity_bounds,
     rings_from_arctan,
-    run_lambda_reg_campaign,
     select_lambda_reg,
     uniform_knot_radii,
 )
@@ -221,6 +222,10 @@ def test_select_lambda_reg_returns_none_if_criteria_conflict():
     )
 
 
-def test_lambda_reg_campaign_not_implemented():
-    with pytest.raises(NotImplementedError, match="forward model"):
-        run_lambda_reg_campaign()
+def test_lambda_reg_campaign_delegates_to_calibrator():
+    from kinuv.profiles import rotation as rot
+
+    src = Path(rot.__file__).read_text(encoding="utf-8")
+    chunk = src.split("def run_lambda_reg_campaign", 1)[1]
+    assert "calibrate_lambda_reg" in chunk
+    assert "NotImplementedError" not in chunk.split("def ", 1)[0]

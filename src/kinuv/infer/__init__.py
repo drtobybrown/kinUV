@@ -1,5 +1,6 @@
-"""Stage A L-BFGS MAP on Hann+bin KGAS066 (066-8). No NUTS. No Stage B rings."""
+"""Stage A MAP (066-8) and Stage B ``V_k`` MAP (066-12). No NUTS."""
 
+from .campaign import calibrate_lambda_reg
 from .map import (
     DX_DY_BOUND_ARCSEC,
     SHIFT_PRIOR_SIGMA_ARCSEC,
@@ -13,6 +14,7 @@ from .map import (
     stage_a_bounds,
     stage_a_seeds,
 )
+from .stage_b import StageBResult, fit_v0_rt, run_stage_b_map
 from .seeds import (
     BLOB_VSYS_KMS,
     PA_BOUND_HALF_DEG,
@@ -26,6 +28,10 @@ __all__ = [
     "PA_BOUND_HALF_DEG",
     "SHIFT_PRIOR_SIGMA_ARCSEC",
     "MapResult",
+    "StageBResult",
+    "calibrate_lambda_reg",
+    "fit_v0_rt",
+    "run_stage_b_map",
     "gate_delta_chi2",
     "map_gate_scores",
     "map_objective",
