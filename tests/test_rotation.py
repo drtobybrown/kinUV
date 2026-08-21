@@ -13,6 +13,7 @@ from kinuv.profiles.rotation import (
     DV_CHAN_NATIVE_KM_S,
     N_RINGS_MAX,
     N_RINGS_MIN,
+    OMEGA_ACCEPT_MAX,
     R0_MIN_OVER_BMAJ,
     V_K_MAX_KM_S,
     V_K_MIN_KM_S,
@@ -220,6 +221,20 @@ def test_select_lambda_reg_returns_none_if_criteria_conflict():
         )
         is None
     )
+
+
+def test_truth_arctan_omega_exceeds_gate_at_oscmmetric_knots():
+    """Absolute Ω<0.3 fights the arctan turnover, not just ring noise.
+
+    Second difference / Δv_chan at N=7–8 and Δv≈5.08 km/s is ≳1.6 on the
+    *true* (V0=200, rt=3″) samples. Gate 4 cannot pass without flattening.
+    """
+    dv = 5.079701780454343
+    for n in (6, 7, 8):
+        r_k = uniform_knot_radii(n)
+        v_k = rings_from_arctan(r_k, CALIBRATION_V0_KM_S, CALIBRATION_RT_ARCSEC)
+        om = omega_k(v_k, dv_chan_kms=dv)
+        assert float(np.max(om)) > OMEGA_ACCEPT_MAX
 
 
 def test_lambda_reg_campaign_delegates_to_calibrator():
