@@ -254,6 +254,10 @@ def calibrate_lambda_reg(
             break
         _checkpoint()
     if chosen is None and int(n_rings) < N_RINGS_MAX and not smoke:
+        if out is not None:
+            snap = out / f"campaign_n{int(n_rings)}.json"
+            if (out / "campaign.json").is_file():
+                snap.write_text((out / "campaign.json").read_text())
         return calibrate_lambda_reg(
             data=data,
             template=template,

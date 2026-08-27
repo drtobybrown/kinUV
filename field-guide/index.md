@@ -49,6 +49,12 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 | OPS-AUTH | `kinuv-KGAS066-{sha6}-{map\|nuts}` |
 | HIER-SELFUNC | deferred Phase 5 |
 
+## Imaging products (CANFAR)
+
+Root: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/`
+- Ico / vis-trim / SB: `30kms/` (`KGAS66_Ico_K_kms-1.fits`, `KGAS66_clipped_cube.fits`)
+- Stage B vs imaging: `10kms/` (`KGAS66_clipped_cube.fits`, `KGAS66_mask_cube.fits`). Δv≈10.4 km/s vs σ≈12 and vis Δv≈5.1; do not use 30 km/s for mom2/PV. Method: `docs/diagnostics/stage-b-vs-imaging.md`.
+
 ## Git
 
 Branch `dev`. One component id per commit (`feat(066-N): …`). Do not mix 066-6/7/8 in one commit.
