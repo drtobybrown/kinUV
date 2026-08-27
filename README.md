@@ -2,7 +2,7 @@
 
 Visibility-plane kinematic fitter for KILOGAS. First target: **KGAS066**.
 
-Start here: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md). Physics lives in [`docs/decisions/`](docs/decisions/). Image-plane check of the Stage B MAP: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md).
+Start here: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md). Physics lives in [`docs/decisions/`](docs/decisions/). Image-plane check of the Stage B MAP: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md). Figure style: [`docs/diagnostics/plotting.md`](docs/diagnostics/plotting.md).
 
 ## Status (066)
 

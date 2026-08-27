@@ -1,6 +1,6 @@
 # Stage B sky model vs the 10 km/s imaging cube
 
-This is an **image-plane check** of a fit that was performed in the visibility plane. It does not enter the likelihood and does not replace Stage A/B MAP. A graduate astronomer who already knows cubes, moments, and PV diagrams should be able to reproduce the figures from the paths and steps below.
+This is an **image-plane check** of a fit that was performed in the visibility plane. It does not enter the likelihood and does not replace Stage A/B MAP. A graduate astronomer who already knows cubes, moments, and PV diagrams should be able to reproduce the figures from the paths and steps below. Figure encoding (crop, east-left, shared clim, v−vsys, colours) is [`plotting.md`](plotting.md); do not copy rcParams into a new script.
 
 ## Why compare in the image plane at all?
 
@@ -68,10 +68,12 @@ None of these plots are χ². The fit was to visibilities; a pretty image-plane 
 
 ## How to run
 
+Display only: moment 1 is shown as \(v - v_{\rm sys}\) (optical) so the colourbar is centred on 0. Moments themselves are still computed in absolute optical km/s.
+
 ```bash
 cd /arc/projects/KILOGAS/analysis/toby_sandbox/kinUV
 source ~/kinuv-venv-recovery/bin/activate
-export PYTHONPATH=$PWD/src
+export PYTHONPATH=$PWD/src MPLBACKEND=Agg
 python scripts/plot_stage_b_vs_imaging.py
 ```
 
@@ -80,4 +82,4 @@ Writes:
 - matched cube `.../kinuv-KGAS066-f47bc9-map/stage_b_model_on_10kms.fits` (K, imaging WCS; not in git)
 - `docs/reviews/artifacts/2026-08-27-stage-b-imaging/{moments,spectra,pv_major,pv_minor}.png`
 
-Tests that do not need `/arc` FITS: `pytest tests/test_diagnostics_imaging.py`.
+Tests that do not need `/arc` FITS: `pytest tests/test_diagnostics_imaging.py tests/test_plot_style.py`.

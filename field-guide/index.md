@@ -53,7 +53,7 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 
 Root: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/`
 - Ico / vis-trim / SB: `30kms/` (`KGAS66_Ico_K_kms-1.fits`, `KGAS66_clipped_cube.fits`)
-- Stage B vs imaging: `10kms/` (`KGAS66_clipped_cube.fits`, `KGAS66_mask_cube.fits`). Δv≈10.4 km/s vs σ≈12 and vis Δv≈5.1; do not use 30 km/s for mom2/PV. Method: `docs/diagnostics/stage-b-vs-imaging.md`.
+- Stage B vs imaging: `10kms/` (`KGAS66_clipped_cube.fits`, `KGAS66_mask_cube.fits`). Δv≈10.4 km/s vs σ≈12 and vis Δv≈5.1; do not use 30 km/s for mom2/PV. Method: `docs/diagnostics/stage-b-vs-imaging.md`. Plot style: `docs/diagnostics/plotting.md` (`kinuv.diagnostics.style`; do not copy rcParams).
 
 ## Git
 

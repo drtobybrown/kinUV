@@ -9,13 +9,32 @@ from pathlib import Path
 import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
+from matplotlib.gridspec import GridSpec
 
 from kinuv.diagnostics.imaging import (
     match_model_to_imaging,
     masked_moments,
     offset_world,
     pv_diagram,
-    spectral_axis_kms,
+)
+from kinuv.diagnostics.style import (
+    COLOUR,
+    CROP_ARCSEC,
+    apply_style,
+    beam_ellipse,
+    cbar,
+    data_model_residual_grid,
+    format_sky_ax,
+    imshow_masked,
+    intensity_cmap,
+    panel_letter,
+    residual_cmap,
+    save_fig,
+    sequential_clim,
+    sky_extent_arcsec,
+    symmetric_clim,
+    velocity_cmap,
+    vsys_line,
 )
 
 ROOT_10KMS = Path(
@@ -29,126 +48,128 @@ ARTIFACT = Path("docs/reviews/artifacts/2026-08-27-stage-b-imaging")
 LENGTH_ARCSEC = 16.0
 
 
-def _extent_arcsec(header) -> tuple[float, float, float, float]:
-    nx, ny = int(header["NAXIS1"]), int(header["NAXIS2"])
-    dx = float(header["CDELT1"]) * 3600.0
-    dy = float(header["CDELT2"]) * 3600.0
-    x0 = (0.5 - float(header["CRPIX1"])) * dx
-    x1 = (nx + 0.5 - float(header["CRPIX1"])) * dx
-    y0 = (0.5 - float(header["CRPIX2"])) * dy
-    y1 = (ny + 0.5 - float(header["CRPIX2"])) * dy
-    return x0, x1, y0, y1
-
-
-def _finite_share(*arrays):
-    m = np.ones(arrays[0].shape, dtype=bool)
-    for a in arrays:
-        m &= np.isfinite(a)
-    return m
-
-
-def _imshow(ax, img, extent, vmin, vmax, cmap, title):
-    im = ax.imshow(
-        img,
-        origin="lower",
-        extent=extent,
-        vmin=vmin,
-        vmax=vmax,
-        cmap=cmap,
-        interpolation="nearest",
-        aspect="equal",
-    )
-    ax.set_title(title)
-    ax.set_xlabel("East offset (arcsec)")
-    ax.set_ylabel("North offset (arcsec)")
-    return im
-
-
-def _moment_figure(data, model, residual, labels, extents, vsys, out):
+def _moment_figure(data, model, residual, extent, vsys, beam, centre, out):
+    apply_style()
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(3, 3, figsize=(11.5, 10.5), constrained_layout=True)
+    fig = plt.figure(figsize=(11.4, 8.9))
+    axes, cax_pair, cax_res = data_model_residual_grid(
+        fig, 3, left=0.11, right=0.90, top=0.90, bottom=0.08
+    )
     rows = (
-        ("mom0", "K km/s", "inferno"),
-        ("mom1", "km/s", "RdBu_r"),
-        ("mom2", "km/s", "viridis"),
+        ("mom0", "M0", "K km/s", "K km/s", intensity_cmap(), False),
+        ("mom1", "M1", "v − vsys (km/s)", "km/s", velocity_cmap(), True),
+        ("mom2", "M2", "km/s", "km/s", intensity_cmap(), False),
     )
-    for i, (key, unit, cmap) in enumerate(rows):
-        d, m = data[key], model[key]
-        r = residual[key]
-        share = _finite_share(d, m)
-        if key == "mom1":
-            span = np.nanpercentile(np.abs(d[share] - vsys), 95) if np.any(share) else 150.0
-            vmin, vmax = vsys - span, vsys + span
-            rv = np.nanpercentile(np.abs(r[share]), 95) if np.any(share) else 20.0
+    bmaj, bmin, bpa = beam
+    cx, cy = centre
+    crop = CROP_ARCSEC
+    for i, (key, row_name, unit, res_unit, cmap, is_vel) in enumerate(rows):
+        d, m_img, r = data[key], model[key], residual[key]
+        if is_vel:
+            d, m_img = d - vsys, m_img - vsys
+            vmin, vmax = symmetric_clim(d, m_img)
         else:
-            vmax = np.nanpercentile(d[share], 99) if np.any(share) else 1.0
-            vmin = 0.0
-            rv = np.nanpercentile(np.abs(r[share]), 95) if np.any(share) else 1.0
-        for ax, img, title, v0, v1, cm in (
-            (axes[i, 0], d, f"Data {labels[key]}", vmin, vmax, cmap),
-            (axes[i, 1], m, f"Stage B {labels[key]}", vmin, vmax, cmap),
-            (axes[i, 2], r, f"Residual (data−model)", -rv, rv, "RdBu_r"),
+            vmin, vmax = sequential_clim(d, m_img)
+        rv0, rv1 = symmetric_clim(r)
+        ims = []
+        for j, (img, v0, v1, cm) in enumerate(
+            (
+                (d, vmin, vmax, cmap),
+                (m_img, vmin, vmax, cmap),
+                (r, rv0, rv1, residual_cmap()),
+            )
         ):
-            im = _imshow(ax, img, extents, v0, v1, cm, title)
-            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label=unit)
-    fig.suptitle("KGAS066 Stage B vs 10 km/s imaging cube (same 2-D spatial mask)")
-    fig.savefig(out, dpi=150)
-    plt.close(fig)
+            ax = axes[i][j]
+            ims.append(imshow_masked(ax, img, extent, v0, v1, cm))
+            format_sky_ax(ax, crop, centre, xlabel=(i == 2), ylabel=(j == 0))
+            if i == 0:
+                ax.set_title(("Data", "Model", "Residual")[j])
+        axes[i][0].text(
+            -0.32, 0.5, row_name, transform=axes[i][0].transAxes,
+            rotation=90, va="center", ha="center", fontsize=11,
+        )
+        cbar(fig, ims[0], unit, cax=cax_pair[i])
+        cbar(fig, ims[2], res_unit, cax=cax_res[i])
+    beam_ellipse(axes[0][0], bmaj, bmin, bpa, (cx + crop - 2.1, cy - crop + 2.1))
+    fig.suptitle("KGAS066  ·  Stage B vs 10 km/s cube", fontsize=11, y=0.97)
+    fig.text(
+        0.50, 0.015,
+        "east left, north up  ·  same 2-D spatial mask  ·  M1 shown as v − vsys (optical, LSRK)",
+        ha="center", fontsize=8, color=COLOUR["muted"],
+    )
+    save_fig(fig, out)
 
 
-def _spectra_figure(v, spec_d, spec_m, aper, out):
+def _spectra_figure(v, aper, vsys, pa, out):
+    apply_style()
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 7), sharex=True, constrained_layout=True)
-    axes = axes.ravel()
-    titles = ("Mask-integrated", "Centre", "Approaching", "Receding")
+    fig = plt.figure(figsize=(9.4, 6.2))
+    gs = GridSpec(
+        2, 2, figure=fig,
+        left=0.10, right=0.97, top=0.88, bottom=0.10, wspace=0.16, hspace=0.28,
+    )
+    axes = np.array([[fig.add_subplot(gs[i, j]) for j in range(2)] for i in range(2)])
+    titles = (
+        "Mask-integrated",
+        "Centre (1 beam)",
+        f"Approaching along fitted PA ({pa:.1f}°)",
+        f"Receding along fitted PA ({pa:.1f}°)",
+    )
     keys = ("mask", "centre", "approaching", "receding")
-    for ax, title, key in zip(axes, titles, keys):
-        ax.plot(v, aper[key][0], color="k", lw=1.4, label="data")
-        ax.plot(v, aper[key][1], color="C0", lw=1.4, label="Stage B")
-        ax.set_title(title)
+    for ax, title, key, letter in zip(axes.ravel(), titles, keys, "abcd"):
+        yd, ym = aper[key]
+        ax.plot(v, yd, color=COLOUR["data"], lw=1.5, label="data", zorder=2)
+        ax.plot(v, ym, color=COLOUR["model"], lw=1.35, label="Stage B", zorder=3)
+        ax.axhline(0.0, color=COLOUR["zero"], lw=0.6, zorder=1)
+        vsys_line(ax, vsys, orientation="v")
+        ax.set_title(title, fontsize=10)
+        panel_letter(ax, letter)
+    for ax in axes[:, 0]:
         ax.set_ylabel("Flux (mJy)")
-        ax.axhline(0.0, color="0.7", lw=0.6)
-        ax.legend(frameon=False, fontsize=8)
-    for ax in axes[2:]:
+    for ax in axes[1, :]:
         ax.set_xlabel("Optical velocity (km/s, LSRK)")
-    fig.suptitle("Spectra (same mask / 1-beam apertures)")
-    fig.savefig(out, dpi=150)
-    plt.close(fig)
-    # mask-integrated stored as spec_d/spec_m too
-    _ = spec_d, spec_m
+    for ax in axes[0, :]:
+        ax.tick_params(labelbottom=False)
+    # Do not hide y ticks on the right column: rows do not share ylim.
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper right", ncol=2, bbox_to_anchor=(0.97, 0.995), fontsize=8)
+    fig.suptitle("Spectra  ·  1-beam apertures along the fitted receding PA", fontsize=11, y=0.995, x=0.42)
+    save_fig(fig, out)
 
 
-def _pv_figure(v, offsets, data_pv, model_pv, title, out):
+def _pv_figure(v, offsets, data_pv, model_pv, title, vsys, out):
+    apply_style()
     import matplotlib.pyplot as plt
 
     resid = data_pv - model_pv
-    vmax = np.nanpercentile(np.abs(data_pv[np.isfinite(data_pv)]), 99)
-    rv = np.nanpercentile(np.abs(resid[np.isfinite(resid)]), 95)
+    vmin, vmax = sequential_clim(data_pv, model_pv)
+    rv0, rv1 = symmetric_clim(resid)
     extent = [offsets[0], offsets[-1], v[0], v[-1]]
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4.4), sharey=True, constrained_layout=True)
-    for ax, img, name, v0, v1, cmap in (
-        (axes[0], data_pv, "Data", 0.0, vmax, "inferno"),
-        (axes[1], model_pv, "Stage B", 0.0, vmax, "inferno"),
-        (axes[2], resid, "Residual (data−model)", -rv, rv, "RdBu_r"),
-    ):
-        im = ax.imshow(
-            img,
-            origin="lower",
-            aspect="auto",
-            extent=extent,
-            vmin=v0,
-            vmax=v1,
-            cmap=cmap,
-        )
+    fig = plt.figure(figsize=(11.4, 6.5))
+    axes, cax_pair, cax_res = data_model_residual_grid(
+        fig, 1, left=0.09, right=0.90, top=0.86, bottom=0.14
+    )
+    row = axes[0]
+    panels = (
+        (data_pv, vmin, vmax, intensity_cmap(), "Data"),
+        (model_pv, vmin, vmax, intensity_cmap(), "Model"),
+        (resid, rv0, rv1, residual_cmap(), "Residual"),
+    )
+    ims = []
+    for j, (img, v0, v1, cmap, name) in enumerate(panels):
+        ax = row[j]
+        ims.append(imshow_masked(ax, img, extent, v0, v1, cmap, aspect="auto"))
         ax.set_title(name)
-        ax.set_xlabel("Offset (arcsec, receding +)")
-        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04, label="K")
-    axes[0].set_ylabel("Optical velocity (km/s)")
-    fig.suptitle(title)
-    fig.savefig(out, dpi=150)
-    plt.close(fig)
+        ax.set_xlabel("Offset (arcsec; receding +)")
+        vsys_line(ax, vsys, orientation="h")
+        panel_letter(ax, "abc"[j])
+    row[0].set_ylabel("Optical velocity (km/s, LSRK)")
+    cbar(fig, ims[0], "K", cax=cax_pair[0])
+    cbar(fig, ims[2], "K", cax=cax_res[0])
+    fig.suptitle(title, fontsize=11, y=0.97)
+    save_fig(fig, out)
 
 
 def _spectrum_mjy(cube_k, mask2d, header, vel_kms):
@@ -228,15 +249,25 @@ def main(argv=None) -> int:
     data_m = dict(zip(keys, d_m))
     model_m = dict(zip(keys, m_m))
     resid = {k: data_m[k] - model_m[k] for k in keys}
-    labels = {"mom0": "moment 0", "mom1": "moment 1", "mom2": "moment 2"}
-    extent = _extent_arcsec(hdr)
-    _moment_figure(data_m, model_m, resid, labels, extent, vsys_opt, out_dir / "moments.png")
+    extent = sky_extent_arcsec(hdr)
+    bmaj = float(hdr["BMAJ"]) * 3600.0
+    bmin = float(hdr["BMIN"]) * 3600.0
+    bpa = float(hdr["BPA"])
+    _moment_figure(
+        data_m,
+        model_m,
+        resid,
+        extent,
+        vsys_opt,
+        (bmaj, bmin, bpa),
+        (dx, dy),
+        out_dir / "moments.png",
+    )
 
     spec_d = _spectrum_mjy(data, mask2d, hdr, vel)
     spec_m = _spectrum_mjy(np.nan_to_num(matched, nan=0.0), mask2d, hdr, vel)
     ra0, dec0 = float(hdr["CRVAL1"]), float(hdr["CRVAL2"])
     ra_c, dec_c = offset_world(ra0, dec0, dx, dy)
-    bmaj = float(hdr["BMAJ"]) * 3600.0
     aper = {"mask": (spec_d, spec_m)}
     for name, east, north in (
         ("centre", 0.0, 0.0),
@@ -248,16 +279,32 @@ def main(argv=None) -> int:
             _spectrum_mjy(data, ap, hdr, vel),
             _spectrum_mjy(np.nan_to_num(matched, nan=0.0), ap, hdr, vel),
         )
-    _spectra_figure(vel, spec_d, spec_m, aper, out_dir / "spectra.png")
+    _spectra_figure(vel, aper, vsys_opt, pa, out_dir / "spectra.png")
 
     width = bmaj
     matched0 = np.nan_to_num(matched, nan=0.0)
     d_maj, off = pv_diagram(data, hdr, ra_c, dec_c, pa, LENGTH_ARCSEC, width)
     m_maj, _ = pv_diagram(matched0, hdr, ra_c, dec_c, pa, LENGTH_ARCSEC, width)
-    _pv_figure(vel, off, d_maj, m_maj, "Major-axis PV (PA = {:.1f}°)".format(pa), out_dir / "pv_major.png")
+    _pv_figure(
+        vel,
+        off,
+        d_maj,
+        m_maj,
+        "Major-axis PV  ·  fitted PA = {:.1f}°  ·  receding +".format(pa),
+        vsys_opt,
+        out_dir / "pv_major.png",
+    )
     d_min, _ = pv_diagram(data, hdr, ra_c, dec_c, pa + 90.0, LENGTH_ARCSEC, width)
     m_min, _ = pv_diagram(matched0, hdr, ra_c, dec_c, pa + 90.0, LENGTH_ARCSEC, width)
-    _pv_figure(vel, off, d_min, m_min, "Minor-axis PV (PA + 90°)", out_dir / "pv_minor.png")
+    _pv_figure(
+        vel,
+        off,
+        d_min,
+        m_min,
+        "Minor-axis PV  ·  fitted PA + 90°",
+        vsys_opt,
+        out_dir / "pv_minor.png",
+    )
 
     summary = {
         "data_cube": str(args.data_cube),
