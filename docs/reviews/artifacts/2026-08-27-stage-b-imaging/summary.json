@@ -1,0 +1,18 @@
+{
+  "data_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+  "mask_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+  "model_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-f47bc9-map/stage_b_model_cube.fits",
+  "matched_fits": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-f47bc9-map/stage_b_model_on_10kms.fits",
+  "pa_deg": 21.861772820233682,
+  "dx_arcsec": -0.1035227692065665,
+  "dy_arcsec": -0.058981227360822966,
+  "vsys_optical_kms": 8323.572732491431,
+  "mom0_sum_data": 27863.685648623163,
+  "mom0_sum_model": 23016.60675932197,
+  "plots": [
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-08-27-stage-b-imaging/moments.png",
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-08-27-stage-b-imaging/spectra.png",
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-08-27-stage-b-imaging/pv_major.png",
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-08-27-stage-b-imaging/pv_minor.png"
+  ]
+}

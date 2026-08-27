@@ -69,6 +69,12 @@ def optical_to_radio_kms(v_opt_kms, c_kms: float = C_LIGHT_KM_S):
     return v / (1.0 + v / c_kms)
 
 
+def radio_to_optical_kms(v_rad_kms, c_kms: float = C_LIGHT_KM_S):
+    """Inverse of :func:`optical_to_radio_kms`."""
+    v = np.asarray(v_rad_kms, dtype=np.float64)
+    return v / (1.0 - v / c_kms)
+
+
 def cube_vopt_window_kms(cube_path: Path | None = DEFAULT_CUBE) -> tuple[float, float]:
     """Channel-centre VOPT min/max from the Ico cube, or the dispatch span."""
     path = Path(cube_path) if cube_path is not None else DEFAULT_CUBE
