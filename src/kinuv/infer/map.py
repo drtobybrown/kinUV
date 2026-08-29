@@ -46,14 +46,8 @@ _SCALES = np.array(
     [1.0, 10.0, 20.0, 5.0, 0.5, 0.5, 50.0, 1.0], dtype=np.float64
 )
 PARAM_NAMES = (
-    "flux",
-    "pa_deg",
-    "vsys_kms",
-    "gas_sigma_kms",
-    "dx_arcsec",
-    "dy_arcsec",
-    "v0_kms",
-    "r_t_arcsec",
+    "flux", "pa_deg", "vsys_kms", "gas_sigma_kms",
+    "dx_arcsec", "dy_arcsec", "v0_kms", "r_t_arcsec",
 )
 
 
@@ -121,16 +115,8 @@ def map_gate_scores(vis, model, weights, s):
 
 def _offsets(seeds: dict[str, float]) -> np.ndarray:
     return np.array(
-        [
-            0.0,
-            seeds["pa_deg"],
-            seeds["vsys_kms"],
-            seeds["gas_sigma_kms"],
-            0.0,
-            0.0,
-            seeds["v0_kms"],
-            seeds["r_t_arcsec"],
-        ],
+        [0.0, seeds["pa_deg"], seeds["vsys_kms"], seeds["gas_sigma_kms"],
+         0.0, 0.0, seeds["v0_kms"], seeds["r_t_arcsec"]],
         dtype=np.float64,
     )
 
@@ -145,8 +131,12 @@ def _pack(params: dict[str, float], offsets: np.ndarray) -> np.ndarray:
     return (phys - offsets) / _SCALES
 
 
-def _z_bounds(offsets: np.ndarray) -> list[tuple[float, float]]:
-    b = stage_a_bounds()
+def _z_bounds(
+    offsets: np.ndarray, extra_bounds: dict[str, tuple[float, float]] | None = None
+) -> list[tuple[float, float]]:
+    b = dict(stage_a_bounds())
+    if extra_bounds:
+        b.update(extra_bounds)
     out = []
     for i, name in enumerate(PARAM_NAMES):
         lo, hi = b[name]
@@ -161,9 +151,12 @@ def image_grid_for_vis(data: VisData):
 
 
 @requires("DEC-066-SPECRESP", "DEC-066-PB", "DEC-066-SHIFT", "DEC-066-GRID")
-def predict_binned(data: VisData, params: dict[str, float], template, grid):
+def predict_binned(
+    data: VisData, params: dict[str, float], template, grid, *, i_rad=None
+):
     """Native ``predict_vis`` (guards in) → Hann+bin to the fit array."""
     n_g = int(data.n_guard)
+    i_use = inclination_rad() if i_rad is None else float(i_rad)
     model_native = predict_vis(
         data.u_m,
         data.v_m,
@@ -178,7 +171,7 @@ def predict_binned(data: VisData, params: dict[str, float], template, grid):
         grid=grid,
         v0_kms=params["v0_kms"],
         r_t_arcsec=params["r_t_arcsec"],
-        i_rad=inclination_rad(),
+        i_rad=i_use,
     )
     vel_trim = data.vel_native[n_g:-n_g]
     freqs_trim = data.freqs_native[n_g:-n_g]
@@ -251,7 +244,9 @@ def _result(params, c, c0, dchi, data, eval_s, nfev, success, ran, message, pa_s
     )
 
 
-def _lbfgs_one_start(data, template, grid, seeds, eval_s, maxiter, pa_start):
+def _lbfgs_one_start(
+    data, template, grid, seeds, eval_s, maxiter, pa_start, extra_bounds=None
+):
     offsets = _offsets(seeds)
     params = dict(seeds)
     unit = predict_binned(data, params, template, grid)
@@ -283,7 +278,7 @@ def _lbfgs_one_start(data, template, grid, seeds, eval_s, maxiter, pa_start):
         _pack(params, offsets),
         method="L-BFGS-B",
         jac=jac,
-        bounds=_z_bounds(offsets),
+        bounds=_z_bounds(offsets, extra_bounds),
         options={"maxiter": int(maxiter), "ftol": 1e-9},
     )
     params = _unpack(opt.x, offsets)
@@ -319,14 +314,20 @@ def run_stage_a_map(
     grid=None,
     maxiter: int = MAXITER_STAGE_A,
     abort_eval_s: float = ABORT_EVAL_S,
+    rt_bounds_arcsec: tuple[float, float] | None = None,
 ) -> MapResult:
-    """Two-start L-BFGS-B. Keep the start with larger likelihood Δχ²."""
+    """Two-start L-BFGS-B. Keep the start with larger Δχ²."""
     if data is None:
         data = load_kgas066()
     if grid is None:
         grid = image_grid_for_vis(data)
     if template is None:
         template = load_sb_template(grid)
+    extra_bounds = (
+        None
+        if rt_bounds_arcsec is None
+        else {"r_t_arcsec": (float(rt_bounds_arcsec[0]), float(rt_bounds_arcsec[1]))}
+    )
 
     seeds = stage_a_seeds()
     t0 = perf_counter()
@@ -363,6 +364,7 @@ def run_stage_a_map(
                 eval_s,
                 maxiter,
                 pa,
+                extra_bounds=extra_bounds,
             )
         )
     winner = max(runs, key=lambda r: r.delta_chi2)

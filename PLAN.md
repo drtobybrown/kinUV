@@ -1,9 +1,11 @@
 # kinUV — design plan and evidence base
 
 **Status:** architecture closed after pre-build review (2026-08-18). No production code until approved.
-**Date:** 2026-08-17 (reviewed 2026-08-18; ADR generation 2)
+**Date:** 2026-08-17 (reviewed 2026-08-18; ADR generation 2; methodology scorecard 2026-08-29)
 **Source of truth:** mailbox [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md); ranking in [`DEC-066-INDEX`](docs/decisions/DEC-066-INDEX.md) (ADRs > Field Guide > STATUS > this file > Cursor plans). Handshake: [`DEC-066-AGENTS`](docs/decisions/DEC-066-AGENTS.md). This document is evidence, not policy.
 **Context:** KILOGAS DR1, ALMA CO(2–1), 452 galaxies (283 MaNGA + 169 SAMI, z = 0.016–0.060).
+
+**2026-08-29 evidence (not policy).** Phase-1 transform exit is met (FINUFFT T2 vs analytic Gaussian; error ≪ noise floor). Mission 10× is **not** that plot: it is S1 (sub-beam \(V_c\) and \(\sigma\) vs CLEAN) plus S2 (calibrated vis posteriors) plus Y1 (\(10^5\) evals in minutes). 066 vis MAP beats \(V=0\) and matches the 10 km/s cube after the CASA uv-sign / Ico-east fixes; S1/S2/Y1 are **not** shown (`r_t` on 0.5″ floor; no NUTS; ~2 eval/s CPU). Propose: [`docs/reviews/2026-08-29-propose-methodology.md`](docs/reviews/2026-08-29-propose-methodology.md).
 
 ---
 

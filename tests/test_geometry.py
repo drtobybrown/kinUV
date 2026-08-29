@@ -64,7 +64,16 @@ def test_geometry_has_no_moment1_loader():
     assert not hasattr(geom, "from_moment")
 
 
-def test_rotate_by_pa_north_and_east():
+def test_rotate_by_pa_matches_standard_disk_frame():
+    """x' = E sin PA + N cos PA; y' = E cos PA − N sin PA (receding +x)."""
+    rng = np.random.default_rng(66)
+    e = rng.normal(size=16)
+    n = rng.normal(size=16)
+    pa = np.radians(201.9)
+    s, c = np.sin(pa), np.cos(pa)
+    x_maj, y_min = rotate_by_pa(e, n, pa)
+    assert x_maj == pytest.approx(e * s + n * c)
+    assert y_min == pytest.approx(e * c - n * s)
     x_maj, y_min = rotate_by_pa(0.0, 1.0, pa_rad=0.0)
     assert x_maj == pytest.approx(1.0)
     assert y_min == pytest.approx(0.0)

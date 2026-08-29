@@ -17,9 +17,9 @@ The fitted gas dispersion is σ ≈ 12 km/s and the visibility fit array has Δv
 
 The Stage B sky cube (native vis channels, ~1.27 km/s, Jy/pixel, no restoring beam) lives next to the MAP JSON:
 
-`/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-f47bc9-map/stage_b_model_cube.fits`
+`/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/stage_b_model_cube.fits`
 
-`sky_cube` uses +x east. `scripts/write_model_cubes.py` flips NAXIS1 so the FITS `CDELT1 < 0` WCS is sky-true. Do not flip again on read.
+`sky_cube` uses +x east. `scripts/write_model_cubes.py` flips NAXIS1 so the FITS `CDELT1 < 0` WCS is sky-true. Do not flip again on read. The Ico SB template is flipped the same way on ingest (`fits_image_east_north`) because the CASA map has `CDELT1<0`. The 066 npz Fourier kernel uses `NPZ_UV_SIGN = -1`: CASA visibilities match the WCS-true CLEAN cube with a `+2πi` kernel, not a conjugated export. `kinuv-KGAS066-f47bc9-map` is the historical vis-winner at PA=21.9° before that sign.
 
 ## What the two cubes actually are
 
@@ -51,7 +51,7 @@ Moments are the usual masked sums:
 - \(M_1 = \sum T v / \sum T\) (km/s)
 - \(M_2 = \sqrt{\sum T (v-M_1)^2 / \sum T}\) (km/s)
 
-PV slits are 16″ long and one beam wide, centred on the Stage A kinematic centre (phase centre + \((d_x,d_y)\)). Position angle is the fitted receding-side PA (21.9°). Positive offset is the receding side. The minor-axis cut is PA+90° and is a vsys/PA check, not a rotation-curve product.
+PV slits are 16″ long and one beam wide, centred on the Stage A kinematic centre (phase centre + \((d_x,d_y)\)). Position angle is the fitted receding-side PA (~202° after the npz `(u,v)` sign). Positive offset is the receding side. The minor-axis cut is PA+90° and is a vsys/PA check, not a rotation-curve product.
 
 Spectra are converted to mJy with the same K→Jy/beam factor so they share an axis with the KILOGAS `KGAS66_spectrum.csv` convention. Apertures: the 2-D mask footprint, plus 1-beam circles at the centre and ±4″ along the major axis.
 
@@ -60,7 +60,7 @@ Spectra are converted to mJy with the same K→Jy/beam factor so they share an a
 - **Moment 0 residual:** flux scale, beam, or SB-template mismatch. A bulk offset is \((d_x,d_y)\) or PA. Do not interpret a 3-D-mask moment-0 deficit as a flux error.
 - **Moment 1 residual:** rotation-curve or PA/vsys error. A dipole along the major axis is \(V(r)\); a rotation of the zero-velocity line is PA.
 - **Moment 2 residual:** the model is a single \(\sigma = 11.7\) km/s plus unresolved shear in the beam. Extra width in the data is beam smearing the data does not share, or a real dispersion residual.
-- **Spectra:** total flux and the approaching/receding horns. A shift of both horns is vsys; a stretch is \(V_{\rm rot}\). If the ±4″ apertures swap horns relative to the data, the image-plane receding side is 180° from the vis-fitted PA.
+- **Spectra:** total flux and the approaching/receding horns. A shift of both horns is vsys; a stretch is \(V_{\rm rot}\). If the ±4″ apertures swap horns relative to the data, the image-plane receding side is 180° from the vis-fitted PA (that was the 2026-08-27 figure set; `NPZ_UV_SIGN` is the fix).
 - **Major-axis PV:** the actual \(v_{\rm los}(r)\) the rings are trying to match, after the imaging beam. Positive offset is the fitted receding PA. Data high-velocity on the negative side is the same 180° flag.
 - **Minor-axis PV:** should sit near systemic. A tilt is a PA error.
 
@@ -79,7 +79,9 @@ python scripts/plot_stage_b_vs_imaging.py
 
 Writes:
 
-- matched cube `.../kinuv-KGAS066-f47bc9-map/stage_b_model_on_10kms.fits` (K, imaging WCS; not in git)
-- `docs/reviews/artifacts/2026-08-27-stage-b-imaging/{moments,spectra,pv_major,pv_minor}.png`
+- matched cube `.../kinuv-KGAS066-uvsign-map/stage_b_model_on_10kms.fits` (K, imaging WCS; not in git)
+- `docs/reviews/artifacts/2026-08-28-stage-b-imaging/{moments,spectra,pv_major,pv_minor}.png`
+
+The 2026-08-27 artifact folder is the pre-sign inverted-PA comparison against `f47bc9-map`. Do not treat it as the current model.
 
 Tests that do not need `/arc` FITS: `pytest tests/test_diagnostics_imaging.py tests/test_plot_style.py`.

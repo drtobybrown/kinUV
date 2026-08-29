@@ -61,6 +61,24 @@ def test_grid_from_uv_not_header_cdelt_or_blind_256():
     assert grid.fov_arcsec < fov_co_plus_pb_arcsec() + 2.0 * grid.cell_arcsec
 
 
+def test_npz_uv_sign_flips_both_axes_and_is_shared():
+    from kinuv.constants import C_LIGHT_M_S
+    from kinuv.transforms.dft import NPZ_UV_SIGN, uv_wavelengths, vis_uv_wavelengths
+
+    assert NPZ_UV_SIGN == pytest.approx(-1.0)
+    u_m = np.array([12.0, -3.0])
+    v_m = np.array([8.0, 1.5])
+    freqs = np.array([C_LIGHT_M_S])
+    u0, v0 = uv_wavelengths(u_m, v_m, freqs)
+    u1, v1 = vis_uv_wavelengths(u_m, v_m, freqs)
+    assert u1 == pytest.approx(-u0)
+    assert v1 == pytest.approx(-v0)
+    nufft_src = Path(__file__).resolve().parents[1] / "src" / "kinuv" / "transforms" / "nufft.py"
+    dft_src = Path(__file__).resolve().parents[1] / "src" / "kinuv" / "transforms" / "dft.py"
+    assert "vis_uv_wavelengths" in nufft_src.read_text(encoding="utf-8")
+    assert "vis_uv_wavelengths" in dft_src.read_text(encoding="utf-8")
+
+
 def test_nufft2_matches_dft_gaussian(uv_sampling, freqs):
     u_m, v_m = uv_sampling
     mb = max_baseline_lambda(u_m, v_m, freqs)

@@ -1,0 +1,625 @@
+{
+  "n_sbc": 20,
+  "t": 1.0,
+  "pipeline_kernel": "Hann+bin",
+  "pol": "XX",
+  "rate68": {
+    "pa_deg": 0.3,
+    "vsys_kms": 0.45,
+    "flux": 0.2,
+    "gas_sigma_kms": 0.25,
+    "v0_kms": 0.1,
+    "r_t_arcsec": 0.1
+  },
+  "rate95": {
+    "pa_deg": 0.6,
+    "vsys_kms": 0.55,
+    "flux": 0.4,
+    "gas_sigma_kms": 0.3,
+    "v0_kms": 0.35,
+    "r_t_arcsec": 0.55
+  },
+  "draws": [
+    {
+      "draw": 0,
+      "chi2": 167467.6621092669,
+      "params": {
+        "flux": 68.49047973280243,
+        "pa_deg": 199.6771691805747,
+        "vsys_kms": 8075.664485617373,
+        "gas_sigma_kms": 7.571421901385268,
+        "dx_arcsec": -0.008864165357140734,
+        "dy_arcsec": -0.0040289697813041744,
+        "v0_kms": 249.18674987567962,
+        "r_t_arcsec": 0.22484401316494662
+      },
+      "hit68": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 1,
+      "chi2": 166623.95863579583,
+      "params": {
+        "flux": 71.67426641758018,
+        "pa_deg": 199.9173782425699,
+        "vsys_kms": 8075.9797441147175,
+        "gas_sigma_kms": 8.503859243837676,
+        "dx_arcsec": 0.002011247544205619,
+        "dy_arcsec": 0.00796178378969486,
+        "v0_kms": 250.33194645436467,
+        "r_t_arcsec": 0.25645602839886433
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 2,
+      "chi2": 166663.07480148278,
+      "params": {
+        "flux": 69.17526692202549,
+        "pa_deg": 199.55317501940874,
+        "vsys_kms": 8075.739685061474,
+        "gas_sigma_kms": 8.032439290557273,
+        "dx_arcsec": -0.0010619738508573359,
+        "dy_arcsec": 0.009599446228019662,
+        "v0_kms": 249.00210827429262,
+        "r_t_arcsec": 0.22935809185085684
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 3,
+      "chi2": 170179.42333140448,
+      "params": {
+        "flux": 70.02068068382424,
+        "pa_deg": 199.7266793605268,
+        "vsys_kms": 8078.851029858557,
+        "gas_sigma_kms": 11.786302447131803,
+        "dx_arcsec": -0.1254535121992063,
+        "dy_arcsec": -0.21242951269529853,
+        "v0_kms": 254.39536275327177,
+        "r_t_arcsec": 0.29782564319817995
+      },
+      "hit68": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": true,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": true,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 4,
+      "chi2": 167067.43318696157,
+      "params": {
+        "flux": 69.64006081564973,
+        "pa_deg": 199.76388278350117,
+        "vsys_kms": 8075.986565816567,
+        "gas_sigma_kms": 8.066681574550373,
+        "dx_arcsec": -0.004547434676713955,
+        "dy_arcsec": 0.001575325138556933,
+        "v0_kms": 249.4039254636737,
+        "r_t_arcsec": 0.24315794580548059
+      },
+      "hit68": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 5,
+      "chi2": 171417.58657035098,
+      "params": {
+        "flux": 46.45854570556988,
+        "pa_deg": 199.52396238354228,
+        "vsys_kms": 8077.67780217443,
+        "gas_sigma_kms": 7.182582612111977,
+        "dx_arcsec": -0.08900977547412543,
+        "dy_arcsec": -0.10123917060585089,
+        "v0_kms": 250.9386252771744,
+        "r_t_arcsec": 0.23503968575316764
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 6,
+      "chi2": 169074.7550295824,
+      "params": {
+        "flux": 58.47469296294452,
+        "pa_deg": 200.2759004021251,
+        "vsys_kms": 8076.368044325721,
+        "gas_sigma_kms": 10.199904264039148,
+        "dx_arcsec": 0.0010412561359445709,
+        "dy_arcsec": -0.037101618320086176,
+        "v0_kms": 248.3191970335344,
+        "r_t_arcsec": 0.23146954572887618
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 7,
+      "chi2": 166976.1445315834,
+      "params": {
+        "flux": 75.40083917542601,
+        "pa_deg": 199.7711955920546,
+        "vsys_kms": 8075.79088646892,
+        "gas_sigma_kms": 9.65826805171261,
+        "dx_arcsec": 0.005192076030249397,
+        "dy_arcsec": -0.0004549276067062069,
+        "v0_kms": 249.43039276329762,
+        "r_t_arcsec": 0.2580055602407323
+      },
+      "hit68": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 8,
+      "chi2": 167609.84622940395,
+      "params": {
+        "flux": 71.98507991298963,
+        "pa_deg": 200.21390678423006,
+        "vsys_kms": 8075.5500609752235,
+        "gas_sigma_kms": 7.883624712887404,
+        "dx_arcsec": 0.05663754340184053,
+        "dy_arcsec": -0.014881280998983445,
+        "v0_kms": 248.48379811553625,
+        "r_t_arcsec": 0.20435647332167495
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 9,
+      "chi2": 166842.8705586892,
+      "params": {
+        "flux": 69.53328335774133,
+        "pa_deg": 199.61464470756417,
+        "vsys_kms": 8075.817225725457,
+        "gas_sigma_kms": 7.94108808498554,
+        "dx_arcsec": -0.002285306030295576,
+        "dy_arcsec": -0.0013694479293339563,
+        "v0_kms": 249.03110127827918,
+        "r_t_arcsec": 0.24470894952329078
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 10,
+      "chi2": 167261.6837859115,
+      "params": {
+        "flux": 72.19932730635585,
+        "pa_deg": 200.03360768653266,
+        "vsys_kms": 8075.486955622569,
+        "gas_sigma_kms": 8.640523194356591,
+        "dx_arcsec": -0.013149973921043055,
+        "dy_arcsec": 0.03817283968716237,
+        "v0_kms": 250.4032675027689,
+        "r_t_arcsec": 0.25827005504256695
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 11,
+      "chi2": 166788.91866767794,
+      "params": {
+        "flux": 70.57535752143154,
+        "pa_deg": 199.73485294840873,
+        "vsys_kms": 8075.967219629519,
+        "gas_sigma_kms": 8.25753759828105,
+        "dx_arcsec": -0.0068092873149251726,
+        "dy_arcsec": 0.007450239527000752,
+        "v0_kms": 249.57505006274633,
+        "r_t_arcsec": 0.2393672051612647
+      },
+      "hit68": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": false,
+        "v0_kms": true,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 12,
+      "chi2": 169262.2348193225,
+      "params": {
+        "flux": 71.9055334192875,
+        "pa_deg": 199.63511751501693,
+        "vsys_kms": 8076.2917655697875,
+        "gas_sigma_kms": 9.146223301066303,
+        "dx_arcsec": -0.040813781099099194,
+        "dy_arcsec": 0.04782862131615653,
+        "v0_kms": 250.16637381596865,
+        "r_t_arcsec": 0.250701528340524
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 13,
+      "chi2": 167118.1980959732,
+      "params": {
+        "flux": 69.41990674528608,
+        "pa_deg": 199.56558152343172,
+        "vsys_kms": 8075.971346025756,
+        "gas_sigma_kms": 7.497177733151621,
+        "dx_arcsec": 0.004579631804115775,
+        "dy_arcsec": -0.0047849566661800225,
+        "v0_kms": 250.51870383559844,
+        "r_t_arcsec": 0.25653729107937245
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 14,
+      "chi2": 166926.24713720224,
+      "params": {
+        "flux": 70.2209358144025,
+        "pa_deg": 199.83849232431672,
+        "vsys_kms": 8076.0747683958,
+        "gas_sigma_kms": 7.964528493737009,
+        "dx_arcsec": -0.0007388304399765915,
+        "dy_arcsec": -0.002451623626734446,
+        "v0_kms": 249.76372180991368,
+        "r_t_arcsec": 0.24415887115239893
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": true,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 15,
+      "chi2": 168221.3046251632,
+      "params": {
+        "flux": 74.9424813762238,
+        "pa_deg": 200.01491509925114,
+        "vsys_kms": 8076.040321634119,
+        "gas_sigma_kms": 8.413008223979006,
+        "dx_arcsec": -0.007958271413508099,
+        "dy_arcsec": 0.03250295302272481,
+        "v0_kms": 247.57779057758995,
+        "r_t_arcsec": 0.2290962403605083
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 16,
+      "chi2": 168056.19257106725,
+      "params": {
+        "flux": 69.45278412553974,
+        "pa_deg": 199.68778277951324,
+        "vsys_kms": 8075.986018431293,
+        "gas_sigma_kms": 7.735710941080431,
+        "dx_arcsec": 0.008749882045005843,
+        "dy_arcsec": -0.0008409375057542677,
+        "v0_kms": 249.71442937486324,
+        "r_t_arcsec": 0.24439533891246124
+      },
+      "hit68": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": false,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 17,
+      "chi2": 168007.0777493711,
+      "params": {
+        "flux": 74.75967393494943,
+        "pa_deg": 199.81022598625216,
+        "vsys_kms": 8075.930351142379,
+        "gas_sigma_kms": 8.450825853043405,
+        "dx_arcsec": 0.03921761833159221,
+        "dy_arcsec": -0.016185034999222025,
+        "v0_kms": 252.30607534530225,
+        "r_t_arcsec": 0.2600327380314537
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      }
+    },
+    {
+      "draw": 18,
+      "chi2": 166784.52686148538,
+      "params": {
+        "flux": 69.66551035592222,
+        "pa_deg": 199.80037054815693,
+        "vsys_kms": 8075.9759717733505,
+        "gas_sigma_kms": 8.014067741398176,
+        "dx_arcsec": -0.00555848640559716,
+        "dy_arcsec": 0.00558480953329195,
+        "v0_kms": 249.51205554063898,
+        "r_t_arcsec": 0.2419953680880441
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": false,
+        "r_t_arcsec": false
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": true,
+        "flux": true,
+        "gas_sigma_kms": true,
+        "v0_kms": true,
+        "r_t_arcsec": true
+      }
+    },
+    {
+      "draw": 19,
+      "chi2": 167691.21759596618,
+      "params": {
+        "flux": 70.85196553639847,
+        "pa_deg": 199.66313207082013,
+        "vsys_kms": 8075.656047663173,
+        "gas_sigma_kms": 9.168812334827926,
+        "dx_arcsec": -0.003059020247659876,
+        "dy_arcsec": 0.011852304514563872,
+        "v0_kms": 249.42078719191264,
+        "r_t_arcsec": 0.2462228530895487
+      },
+      "hit68": {
+        "pa_deg": false,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": true
+      },
+      "hit95": {
+        "pa_deg": true,
+        "vsys_kms": false,
+        "flux": false,
+        "gas_sigma_kms": false,
+        "v0_kms": false,
+        "r_t_arcsec": true
+      }
+    }
+  ],
+  "note": "Pass if rates are consistent with 0.68/0.95 (binomial), not a point match."
+}

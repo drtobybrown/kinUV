@@ -27,6 +27,20 @@ def image_grid_xy_arcsec(grid: ImageGrid):
     return x, y
 
 
+def fits_image_east_north(data, header) -> np.ndarray:
+    """CASA FITS array → ImageGrid axes: ``+x`` east, ``+y`` north.
+
+    ``CDELT1 < 0`` means NAXIS1 increases west. Wiener BPA is east of north
+    on the sky, so the flip must happen before :func:`ico_to_template`.
+    """
+    img = np.squeeze(np.asarray(data, dtype=np.float64))
+    if img.ndim != 2:
+        raise ValueError(f"Ico must be 2-D after squeeze, got {img.shape}")
+    if float(header["CDELT1"]) < 0.0:
+        img = np.flip(img, axis=1)
+    return np.ascontiguousarray(img)
+
+
 def _overlap_axes(x_in, cell_in, x_out, cell_out) -> np.ndarray:
     """Same area-overlap kernel as ``kinuv.template.resample._overlap_1d``."""
     left_in = x_in - 0.5 * cell_in
@@ -88,7 +102,7 @@ def load_sb_template(grid: ImageGrid, ico_path: Path | None = None) -> np.ndarra
 
         with fits.open(path) as hdul:
             h = hdul[0].header
-            data = np.array(hdul[0].data, dtype=np.float64)
+            data = fits_image_east_north(hdul[0].data, h)
         bmaj = float(h["BMAJ"]) * 3600.0
         bmin = float(h["BMIN"]) * 3600.0
         bpa = float(h["BPA"])

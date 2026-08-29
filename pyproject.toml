@@ -24,4 +24,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-filterwarnings = ["error::RuntimeWarning"]
+filterwarnings = [
+    "error::RuntimeWarning",
+    "ignore:.*obsfix.*:astropy.wcs.wcs.FITSFixedWarning",
+]

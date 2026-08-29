@@ -21,6 +21,7 @@ from kinuv.forward.sb import (
     R_SCALE_066_ARCSEC,
     exponential_r_scale,
     exponential_template,
+    fits_image_east_north,
     fourier_shift_padded,
     load_sb_template,
     place_template_on_grid,
@@ -41,6 +42,18 @@ from kinuv.transforms.grid import (
 from kinuv.transforms.nufft import nufft2_degrid
 
 SRC = Path(__file__).resolve().parents[1] / "src" / "kinuv" / "forward"
+CANFAR_ICO = Path(
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
+    "KGAS66_Ico_K_kms-1.fits"
+)
+
+
+def _ico_path():
+    if ICO_FITS.is_file():
+        return ICO_FITS
+    if CANFAR_ICO.is_file():
+        return CANFAR_ICO
+    return None
 
 
 def test_no_uvkin_or_kinms_import():
@@ -171,18 +184,19 @@ def test_pb_stays_on_phase_centre_after_shift(uv_sampling, freqs):
     _ = nufft2_degrid(grid, plane, u_m[:8], v_m[:8], freqs[:1])
 
 
-@pytest.mark.skipif(not ICO_FITS.is_file(), reason="Ico FITS not on this machine")
+@pytest.mark.skipif(_ico_path() is None, reason="Ico FITS not on this machine")
 def test_ico_resampled_onto_vis_grid_not_cdelt():
+    ico = _ico_path()
     grid = image_grid_from_uv(305e3, fov_co_plus_pb_arcsec())
     assert grid.cell_arcsec != pytest.approx(0.4)
-    sb = load_sb_template(grid, ICO_FITS)
+    sb = load_sb_template(grid, ico)
     assert sb.shape == (grid.ny, grid.nx)
     assert abs(float(sb.sum()) * grid.cell_arcsec**2 - 1.0) < 1e-8
     from astropy.io import fits
 
-    with fits.open(ICO_FITS) as hdul:
+    with fits.open(ico) as hdul:
         h = hdul[0].header
-        data = np.array(hdul[0].data, dtype=np.float64)
+        data = fits_image_east_north(hdul[0].data, h)
     cell = abs(float(h["CDELT2"])) * 3600.0
     tmpl = ico_to_template(
         data,
@@ -201,3 +215,37 @@ def test_ico_resampled_onto_vis_grid_not_cdelt():
     assert sky_axes(tmpl.sb.shape[0], tmpl.cell_arcsec).shape[0] != grid.nx or not np.isclose(
         tmpl.cell_arcsec, grid.cell_arcsec
     )
+
+
+@pytest.mark.skipif(_ico_path() is None, reason="Ico FITS not on this machine")
+def test_sb_template_east_matches_ico_wcs():
+    """CDELT1<0 Ico must not be placed mirrored on ImageGrid (+x east)."""
+    from astropy.io import fits
+    from astropy.wcs import WCS
+
+    ico = _ico_path()
+    grid = image_grid_from_uv(305e3, fov_co_plus_pb_arcsec())
+    sb = load_sb_template(grid, ico)
+    x = (np.arange(grid.nx) - grid.nx // 2) * grid.cell_arcsec
+    y = (np.arange(grid.ny) - grid.ny // 2) * grid.cell_arcsec
+    xe, yn = np.meshgrid(x, y, indexing="xy")
+    tot = float(sb.sum())
+    east_t = float((sb * xe).sum() / tot)
+    north_t = float((sb * yn).sum() / tot)
+    hdu = fits.open(ico)[0]
+    img = np.squeeze(np.asarray(hdu.data, dtype=np.float64))
+    img = np.where(np.isfinite(img), img, 0.0)
+    w = WCS(hdu.header).celestial
+    ny, nx = img.shape
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    world = w.all_pix2world(np.stack([xx.ravel(), yy.ravel()], axis=1), 0)
+    ra0, dec0 = float(hdu.header["CRVAL1"]), float(hdu.header["CRVAL2"])
+    east = ((world[:, 0] - ra0) * np.cos(np.deg2rad(dec0)) * 3600.0).reshape(ny, nx)
+    north = ((world[:, 1] - dec0) * 3600.0).reshape(ny, nx)
+    s = float(img.sum())
+    east_i = float((img * east).sum() / s)
+    north_i = float((img * north).sum() / s)
+    assert np.sign(east_t) == np.sign(east_i) or abs(east_i) < 0.05
+    assert abs(east_t - east_i) < 0.15
+    assert abs(north_t - north_i) < 0.15
+    assert float(hdu.header["CDELT1"]) < 0.0

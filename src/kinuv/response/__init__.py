@@ -6,7 +6,14 @@ from .primary_beam import (
     primary_beam,
     translate_then_attenuate,
 )
-from .spectral import bin_channels, hann_native, hann_then_bin, rho_bin, s_theory
+from .spectral import (
+    bin_channels,
+    hann_native,
+    hann_then_bin,
+    native_diagonal,
+    rho_bin,
+    s_theory,
+)
 
 __all__ = [
     "D_ANT_M",
@@ -16,6 +23,7 @@ __all__ = [
     "fwhm_pb_arcsec",
     "hann_native",
     "hann_then_bin",
+    "native_diagonal",
     "primary_beam",
     "rho_bin",
     "s_theory",

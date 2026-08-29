@@ -1,8 +1,9 @@
-"""066-7 mock recovery on a native uv window.
+"""066-7 mock recovery on a native uv window through Hann+bin.
 
-If ``kinuv.likelihood.hann_then_bin`` exists it is applied before χ². Otherwise
-recovery uses **diagonal χ² on a short native window**. 066-8 (real-data MAP)
-must go through 066-6 Hann+bin (DEC-066-SPECRESP); this path is not that MAP.
+Spectral axis is contiguous native channels plus guards, then
+``kinuv.response.spectral.hann_then_bin`` (DEC-066-SPECRESP). Row subsample
+only. Not the full 1920×43240 cube. 066-8 (real 066 MAP) uses the same
+operator on the aggregated fit array via ``predict_binned``.
 """
 
 from __future__ import annotations
@@ -16,7 +17,9 @@ from scipy.optimize import minimize
 from kinuv.constants import freq_to_velocity_kms
 from kinuv.decisions import requires
 from kinuv.geometry import inclination_rad, pa_seed_deg, pa_seed_rad
+from kinuv.io.vis import N_BIN, N_GUARD, optical_to_radio_kms
 from kinuv.profiles.rotation import CALIBRATION_RT_ARCSEC, CALIBRATION_V0_KM_S
+from kinuv.response.spectral import bin_channels, hann_then_bin
 from kinuv.transforms.grid import (
     ImageGrid,
     fov_co_plus_pb_arcsec,
@@ -27,28 +30,39 @@ from kinuv.transforms.grid import (
 from .model import (
     GAS_SIGMA_SEED_KM_S,
     INJECT_OFFSET_ARCSEC,
-    LINE_V_MAX_KM_S,
-    LINE_V_MIN_KM_S,
     VSYS_SEED_KM_S,
-    predict_vis,
 )
 
-NPZ_PATH = Path("/Users/thbrown/kilogas/DR1/visibilities/KILOGAS066.npz")
+_LAPTOP_NPZ = Path("/Users/thbrown/kilogas/DR1/visibilities/KILOGAS066.npz")
+_CANFAR_NPZ = Path(
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz"
+)
+NPZ_PATH = _LAPTOP_NPZ if _LAPTOP_NPZ.is_file() else _CANFAR_NPZ
 
-# Gate 2 is recovery, not a 30-minute bench: few thousand rows, line window.
+PIPELINE_KERNEL = "hann_then_bin"
+
+# Gate 2 is recovery, not a 30-minute bench: few thousand rows, short line core.
 N_ROW_MOCK = 2048
-CHAN_STRIDE_MOCK = 4
+N_BINNED_CHAN_MOCK = 20
 
 
 @dataclass(frozen=True)
 class NativeUvWindow:
     u_m: np.ndarray
     v_m: np.ndarray
-    freqs_hz: np.ndarray
+    freqs_native: np.ndarray
+    vel_native: np.ndarray
+    weights_native: np.ndarray
     weights: np.ndarray
-    vis: np.ndarray
     grid: ImageGrid
     operator: str
+    n_bin: int = N_BIN
+    n_guard: int = N_GUARD
+
+    @property
+    def freqs_hz(self) -> np.ndarray:
+        """Native frequencies (guards in). Alias for older call sites."""
+        return self.freqs_native
 
 
 @dataclass(frozen=True)
@@ -64,46 +78,58 @@ class RecoveryResult:
     operator: str
 
 
-def _hann_then_bin_if_present(vis, weights):
-    """Use 066-6 when imported; else native vis (document for 066-8)."""
-    try:
-        from kinuv.likelihood import hann_then_bin
-    except ImportError:
-        return (
-            np.asarray(vis),
-            np.asarray(weights, dtype=np.float64),
-            "native_diagonal",
+def _assert_hann_bin_operator(name: str) -> None:
+    if name != PIPELINE_KERNEL:
+        raise AssertionError(
+            f"pipeline_kernel must be {PIPELINE_KERNEL!r} (Hann+bin); got {name!r}"
         )
-    out = hann_then_bin(vis, weights)
-    if isinstance(out, tuple) and len(out) >= 2:
-        return out[0], out[1], "hann_then_bin"
-    return out, np.asarray(weights, dtype=np.float64), "hann_then_bin"
+
+
+def apply_hann_then_bin(vis_native, window: NativeUvWindow):
+    """SPECRESP operator: Hann native (guards in), trim, bin ``N``."""
+    n_g = int(window.n_guard)
+    vel_trim = window.vel_native[n_g:-n_g]
+    freqs_trim = window.freqs_native[n_g:-n_g]
+    return hann_then_bin(
+        vis_native,
+        window.n_bin,
+        n_guard=n_g,
+        weights=window.weights_native,
+        vel=vel_trim,
+        freqs=freqs_trim,
+    )
 
 
 @requires("DEC-066-GRID")
 def subsample_native_uv(
     npz_path: Path | None = None,
     *,
-    v_min_kms: float = LINE_V_MIN_KM_S,
-    v_max_kms: float = LINE_V_MAX_KM_S,
     n_row: int = N_ROW_MOCK,
-    chan_stride: int = CHAN_STRIDE_MOCK,
+    n_binned: int = N_BINNED_CHAN_MOCK,
     rng_seed: int = 66,
     min_baseline_m: float = 1.0,
 ) -> NativeUvWindow:
-    """Real 066 ``(u,v,ν)`` on the Ico line window; not the full 1920×43240 cube."""
+    """Real 066 ``(u,v,ν)``; contiguous native core + guards; Hann+bin.
+
+    Row subsample only; not the full 1920×43240 cube.
+    """
     path = NPZ_PATH if npz_path is None else Path(npz_path)
     z = np.load(path)
     u = np.asarray(z["u_m"], dtype=np.float64)
     v = np.asarray(z["v_m"], dtype=np.float64)
     freqs = np.asarray(z["freqs"], dtype=np.float64)
     weights = np.asarray(z["weights"], dtype=np.float64)
-    vis = np.asarray(z["vis"])
     vel = freq_to_velocity_kms(freqs)
-    chan = np.flatnonzero((vel >= v_min_kms) & (vel <= v_max_kms))
-    if chan.size == 0:
-        raise ValueError("no channels in the requested velocity window")
-    chan = chan[:: max(int(chan_stride), 1)]
+    v_c = float(optical_to_radio_kms(VSYS_SEED_KM_S))
+    n_core = int(n_binned) * int(N_BIN)
+    n_need = n_core + 2 * int(N_GUARD)
+    if freqs.size < n_need:
+        raise ValueError(f"native axis shorter than Hann+bin window ({n_need})")
+    mid = int(np.argmin(np.abs(vel - v_c)))
+    i0 = mid - n_need // 2
+    i0 = max(0, min(i0, int(freqs.size) - n_need))
+    i1 = i0 + n_need
+    chan = np.arange(i0, i1)
     b = np.hypot(u, v)
     good = (b >= float(min_baseline_m)) & np.any(weights[:, chan] > 0.0, axis=1)
     idx = np.flatnonzero(good)
@@ -114,24 +140,34 @@ def subsample_native_uv(
     pick = rng.choice(idx, size=n_take, replace=False)
     pick.sort()
     u_s, v_s = u[pick], v[pick]
-    f_s = freqs[chan]
-    w_s = weights[np.ix_(pick, chan)]
-    vis_s, w_s, op = _hann_then_bin_if_present(vis[np.ix_(pick, chan)], w_s)
-    mb = max_baseline_lambda(u_s, v_s, f_s)
+    f_native = freqs[chan]
+    vel_native = vel[chan]
+    w_full = weights[np.ix_(pick, chan)]
+    n_g = int(N_GUARD)
+    w_trim = w_full[:, n_g:-n_g]
+    vel_trim = vel_native[n_g:-n_g]
+    freqs_trim = f_native[n_g:-n_g]
+    dummy = np.zeros_like(w_trim, dtype=np.complex128)
+    _, w_b, _, _, _ = bin_channels(dummy, w_trim, vel_trim, freqs_trim, int(N_BIN))
+    mb = max_baseline_lambda(u_s, v_s, f_native)
     grid = image_grid_from_uv(mb, fov_co_plus_pb_arcsec())
+    _assert_hann_bin_operator(PIPELINE_KERNEL)
     return NativeUvWindow(
         u_m=u_s,
         v_m=v_s,
-        freqs_hz=f_s,
-        weights=np.asarray(w_s, dtype=np.float64),
-        vis=np.asarray(vis_s),
+        freqs_native=f_native,
+        vel_native=vel_native,
+        weights_native=np.asarray(w_trim, dtype=np.float64),
+        weights=np.asarray(w_b, dtype=np.float64),
         grid=grid,
-        operator=op,
+        operator=PIPELINE_KERNEL,
+        n_bin=int(N_BIN),
+        n_guard=n_g,
     )
 
 
 def diagonal_chi2(v_model, vis, weights) -> float:
-    """Σ w |V_m − V|². Native stand-in; 066-8 must use Hann+bin χ²."""
+    """Σ w |V_m − V|² on the **binned** array (after Hann+bin)."""
     r = np.asarray(v_model) - np.asarray(vis)
     w = np.maximum(np.asarray(weights, dtype=np.float64), 0.0)
     return float(np.sum(w * (r.real * r.real + r.imag * r.imag)))
@@ -145,7 +181,7 @@ def recover_stage_a(
     *,
     flux_true: float,
     pa_deg_true: float = None,
-    vsys_true: float = VSYS_SEED_KM_S,
+    vsys_true: float | None = None,
     dx_true: float = INJECT_OFFSET_ARCSEC,
     dy_true: float = INJECT_OFFSET_ARCSEC,
     gas_sigma_kms: float = GAS_SIGMA_SEED_KM_S,
@@ -154,12 +190,16 @@ def recover_stage_a(
     start=None,
 ):
     """L-BFGS-B on ``(flux, PA, vsys, dx, dy)``. Frozen *i* is not a recovery test."""
+    _assert_hann_bin_operator(window.operator)
     pa0 = pa_seed_deg() if pa_deg_true is None else float(pa_deg_true)
-    vis_t, w_t, _ = _hann_then_bin_if_present(vis_true, window.weights)
-    # Scaled z: flux/flux0, ΔPA/5°, Δvsys/5 km/s, dx/0.1″, dy/0.1″
+    if vsys_true is None:
+        vsys_true = float(optical_to_radio_kms(VSYS_SEED_KM_S))
+    vis_t = apply_hann_then_bin(vis_true, window)
+    w_t = window.weights
     scales = np.array(
         [float(flux_true), 5.0, 5.0, 0.1, 0.1], dtype=np.float64
     )
+    from .model import predict_vis
 
     def unpack(z):
         z = np.asarray(z, dtype=np.float64)
@@ -175,7 +215,7 @@ def recover_stage_a(
         vm = predict_vis(
             window.u_m,
             window.v_m,
-            window.freqs_hz,
+            window.freqs_native,
             flux=flux,
             pa_rad=np.radians(pa_deg),
             vsys_kms=vsys,
@@ -188,8 +228,7 @@ def recover_stage_a(
             r_t_arcsec=r_t_arcsec,
             i_rad=inclination_rad(),
         )
-        vm, _, _ = _hann_then_bin_if_present(vm, window.weights)
-        return vm
+        return apply_hann_then_bin(vm, window)
 
     def fun(z):
         return diagonal_chi2(predict_from_z(z), vis_t, w_t)
@@ -253,7 +292,7 @@ def stage_a_truth(*, flux: float = 1.0):
         "flux": float(flux),
         "pa_rad": pa_seed_rad(),
         "pa_deg": pa_seed_deg(),
-        "vsys_kms": VSYS_SEED_KM_S,
+        "vsys_kms": float(optical_to_radio_kms(VSYS_SEED_KM_S)),
         "dx_arcsec": INJECT_OFFSET_ARCSEC,
         "dy_arcsec": INJECT_OFFSET_ARCSEC,
         "gas_sigma_kms": GAS_SIGMA_SEED_KM_S,

@@ -42,9 +42,9 @@ ROOT_10KMS = Path(
 )
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
-    "kinuv-KGAS066-f47bc9-map"
+    "kinuv-KGAS066-uvsign-map"
 )
-ARTIFACT = Path("docs/reviews/artifacts/2026-08-27-stage-b-imaging")
+ARTIFACT = Path("docs/reviews/artifacts/2026-08-28-stage-b-imaging")
 LENGTH_ARCSEC = 16.0
 
 

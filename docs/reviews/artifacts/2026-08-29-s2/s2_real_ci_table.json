@@ -1,0 +1,79 @@
+{
+  "map": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map",
+  "chi2_map": 168675.59555208942,
+  "n_vis": 83695,
+  "T_dof": 1.0076802410663088,
+  "T_nvis": 2.0153604821326176,
+  "chi2_red": 1.0076802410663088,
+  "pol": "XX",
+  "s": 0.5136098555284736,
+  "table68": {
+    "pa_deg": {
+      "MAP": 199.72980072503037,
+      "unscaled_lo": 199.63643579161587,
+      "unscaled_hi": 199.82316565844488,
+      "T_dof_lo": 199.63607794479125,
+      "T_dof_hi": 199.8235235052695,
+      "T_nvis_lo": 199.5972566981129,
+      "T_nvis_hi": 199.86234475194786,
+      "width_ratio_T_dof": 1.0038327754492637,
+      "width_ratio_T_nvis": 1.41963392539509
+    },
+    "vsys_kms": {
+      "MAP": 8098.773150512066,
+      "unscaled_lo": 8098.613948483864,
+      "unscaled_hi": 8098.932352540269,
+      "T_dof_lo": 8098.613338298239,
+      "T_dof_hi": 8098.932962725894,
+      "T_nvis_lo": 8098.5471419118385,
+      "T_nvis_hi": 8098.999159112294,
+      "width_ratio_T_dof": 1.003832775449419,
+      "width_ratio_T_nvis": 1.419633925396275
+    },
+    "flux": {
+      "MAP": 70.45946914656797,
+      "unscaled_lo": 70.00924442094411,
+      "unscaled_hi": 70.90969387219182,
+      "T_dof_lo": 70.00751881066905,
+      "T_dof_hi": 70.91141948246688,
+      "T_nvis_lo": 69.82031485202066,
+      "T_nvis_hi": 71.09862344111528,
+      "width_ratio_T_dof": 1.0038327754493452,
+      "width_ratio_T_nvis": 1.4196339253950685
+    },
+    "gas_sigma_kms": {
+      "MAP": 12.050032182953927,
+      "unscaled_lo": 11.878088020727805,
+      "unscaled_hi": 12.22197634518005,
+      "T_dof_lo": 11.87742899736417,
+      "T_dof_hi": 12.222635368543685,
+      "T_nvis_lo": 11.805934416984092,
+      "T_nvis_hi": 12.294129948923763,
+      "width_ratio_T_dof": 1.0038327754493261,
+      "width_ratio_T_nvis": 1.4196339253950616
+    },
+    "v0_kms": {
+      "MAP": 267.6703121989014,
+      "unscaled_lo": 267.1081867464877,
+      "unscaled_hi": 268.2324376513151,
+      "T_dof_lo": 267.1060322458543,
+      "T_dof_hi": 268.2345921519485,
+      "T_nvis_lo": 266.87229983632693,
+      "T_nvis_hi": 268.46832456147587,
+      "width_ratio_T_dof": 1.0038327754492746,
+      "width_ratio_T_nvis": 1.4196339253949877
+    },
+    "r_t_arcsec": {
+      "MAP": 0.5,
+      "unscaled_lo": 0.48808603508486115,
+      "unscaled_hi": 0.5119139649151389,
+      "T_dof_lo": 0.4880403715326302,
+      "T_dof_hi": 0.5119596284673699,
+      "T_nvis_lo": 0.48308653122050227,
+      "T_nvis_hi": 0.5169134687794977,
+      "width_ratio_T_dof": 1.0038327754493352,
+      "width_ratio_T_nvis": 1.4196339253950716
+    }
+  },
+  "note": "T_dof = chi2 / (2 n_vis) is the product. T_nvis = chi2 / n_vis is sensitivity. Structured leftover vs velocity can still over-narrow real CIs."
+}

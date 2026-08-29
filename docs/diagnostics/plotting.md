@@ -5,8 +5,18 @@ Follow this for every figure. Cosmetics live in `kinuv.diagnostics.style`. Match
 ## When to plot
 
 - After a MAP or a cube match, to show the astronomer what the model *looks like*.
-- Not as a likelihood. Vis χ² is the fit; these figures are a check.
+- Not as a likelihood. Vis `chi2` is the fit; these figures are a check.
 - Do not add dashboard chrome, sparkline insets, or a novel title on every panel.
+
+## Standard suite (every fit)
+
+Use `kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`. Do not invent a second leftover or slice plotter. Axis labels are ASCII (`chi2`, `gas_sigma`, `r_t`) so underscores and Greek do not break renderers.
+
+1. **Residual breakdown** — `plot_leftover_chi2`: `chi2` vs uv-distance and vs velocity. Flat-in-baseline + structured-in-velocity is SB misspecification, not a missing-flux bowl. Official example: `docs/reviews/artifacts/2026-08-29-s1-mock/leftover_chi2.png`.
+2. **Likelihood geometry** — `plot_chi2_slices`: 2-D `chi2` on `PA-gas_sigma`, `gas_sigma-i` (scan only), `PA-r_t`. S1 example: `s1_chi2_slices.png`. Expensive on the full fit array; do not run on every survey galaxy by default.
+3. **Data | Model | Residual** — `scripts/plot_stage_b_vs_imaging.py` (moments, spectra, PV). Official: `docs/reviews/artifacts/2026-08-28-stage-b-imaging/`. `plot_fit_diagnostics.py --imaging` calls this after leftover.
+
+Preview writes go to `docs/reviews/artifacts/fit-diagnostics/` (gitignored). Canon PNGs stay under dated `docs/reviews/artifacts/YYYY-MM-DD-<slug>/`.
 
 ## Required imports
 
@@ -51,7 +61,7 @@ Use the named tokens. Never `C0` / `C1` / `tab10` for science lines.
 | `velocity_cmap()` | matplotlib `coolwarm` | Moment 1, **after** subtracting vsys |
 | `residual_cmap()` | matplotlib `RdBu_r` | data − model. Not the M1 cmap. |
 
-Do not use `inferno`, `viridis`, or `seismic`. Sequential maps must be dark at low intensity so a white mask is visible.
+Do not use `inferno`, `viridis`, `magma`, or `seismic`. Sequential maps must be dark at low intensity so a white mask is visible. `apply_style()` sets inward ticks, white frames, and DejaVu Sans (the in-repo publication face).
 
 ## Sky recipe (moments / channel maps)
 

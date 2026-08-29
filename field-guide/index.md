@@ -43,7 +43,7 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 | SPECRESP | Hann native+guards then bin; empirical s |
 | WEIGHT | s=2/⟨w\|V\|²⟩; not 0.5; not 12/29 |
 | POL | XX+YY re-export |
-| GRID | Nyquist vs 305 kλ; no imaging override |
+| GRID | Nyquist vs 305 kλ; npz `(u,v)→(−u,−v)` in −2πi kernel |
 | ZEROMODEL | V=0; Δχ² |
 | REPO | standalone kinUV |
 | OPS-AUTH | `kinuv-KGAS066-{sha6}-{map\|nuts}` |

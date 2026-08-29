@@ -185,3 +185,11 @@ def hann_then_bin(
     if one_d:
         return vis_b[0]
     return vis_b
+
+
+def native_diagonal(*_args, **_kwargs):
+    """Removed. The 066-7 mock fallback is not a valid SPECRESP operator."""
+    raise RuntimeError(
+        "native_diagonal is removed. Use kinuv.response.spectral.hann_then_bin "
+        "(Hann+bin with native guards). Do not chi2 on un-Hann'd native channels."
+    )

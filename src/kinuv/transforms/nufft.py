@@ -16,7 +16,7 @@ from typing import Callable
 import numpy as np
 
 from kinuv.decisions import requires
-from kinuv.transforms.dft import uv_wavelengths
+from kinuv.transforms.dft import vis_uv_wavelengths
 from kinuv.transforms.grid import ImageGrid, nyquist_assert
 
 BACKEND: str | None
@@ -91,9 +91,11 @@ def nufft_backend() -> str:
 def nufft2_degrid(grid: ImageGrid, image, u_m, v_m, freqs_hz, *, eps: float = 1e-8):
     """Type-2 NUFFT: ``V[k,c] = sum_{x,y} I[y,x,c] exp(-2πi (u_λ l + v_λ m))``.
 
-    ``image`` is ``(ny, nx)`` (broadcast over channels) or ``(ny, nx, n_chan)``.
-    Pixel ``[j, i]`` sits at ``(l, m) = ((i-nx//2) cell, (j-ny//2) cell)``.
-    Returns ``(n_row, n_chan)`` complex128, matching :func:`dft_numpy`.
+    ``u_λ, v_λ`` include :data:`kinuv.transforms.dft.NPZ_UV_SIGN` so the 066
+    npz receding PA matches the 10 km/s cube. ``image`` is ``(ny, nx)``
+    (broadcast over channels) or ``(ny, nx, n_chan)``. Pixel ``[j, i]`` sits
+    at ``(l, m) = ((i-nx//2) cell, (j-ny//2) cell)``. Returns
+    ``(n_row, n_chan)`` complex128, matching :func:`dft_numpy`.
     """
     impl = _t2
     nufft_backend()
@@ -112,7 +114,7 @@ def nufft2_degrid(grid: ImageGrid, image, u_m, v_m, freqs_hz, *, eps: float = 1e
     else:
         raise ValueError(f"image ndim must be 2 or 3, got {image.ndim}")
 
-    u_lam, v_lam = uv_wavelengths(u_m, v_m, freqs)
+    u_lam, v_lam = vis_uv_wavelengths(u_m, v_m, freqs)
     nyquist_assert(grid.cell_arcsec, float(np.hypot(u_lam, v_lam).max()))
 
     source = np.transpose(image, (2, 1, 0)).astype(np.complex128)

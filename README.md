@@ -2,7 +2,7 @@
 
 Visibility-plane kinematic fitter for KILOGAS. First target: **KGAS066**.
 
-Start here: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md). Physics lives in [`docs/decisions/`](docs/decisions/). Image-plane check of the Stage B MAP: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md). Figure style: [`docs/diagnostics/plotting.md`](docs/diagnostics/plotting.md).
+Start here: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md). Physics lives in [`docs/decisions/`](docs/decisions/). Image-plane check of the Stage B MAP: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md). Figure style: [`docs/diagnostics/plotting.md`](docs/diagnostics/plotting.md). kinUV vs uvkin: [`docs/diagnostics/repos.md`](docs/diagnostics/repos.md). Recent changes: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Status (066)
 
@@ -18,4 +18,4 @@ export PYTHONPATH=src
 pytest
 ```
 
-NUFFT extras: `pip install -e ".[nufft]"`. Plotting the Stage B vs imaging figures needs matplotlib (`pip install matplotlib`) and the CANFAR `/arc` paths in the diagnostic note.
+NUFFT extras: `pip install -e ".[nufft]"`. Diagnostic figures need matplotlib (`pip install matplotlib`) and the CANFAR `/arc` paths in the diagnostic note. Standard leftover `chi2` (+ optional moments): `python scripts/plot_fit_diagnostics.py`. Do not use `native_diagonal`; the operator is `kinuv.response.spectral.hann_then_bin`.

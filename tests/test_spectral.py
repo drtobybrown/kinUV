@@ -12,6 +12,7 @@ from kinuv.response.spectral import (
     bin_channels,
     hann_native,
     hann_then_bin,
+    native_diagonal,
     rho_bin,
     s_theory,
 )
@@ -97,6 +98,14 @@ def test_bin_channels_weighted_mean_and_summed_weights():
     np.testing.assert_allclose(wb[0], [2.0, 4.0])
     np.testing.assert_allclose(velb, [0.5, 2.5])
     np.testing.assert_allclose(fb, [4.5, 6.5])
+
+
+def test_native_diagonal_is_removed():
+    with pytest.raises(RuntimeError, match="hann_then_bin"):
+        native_diagonal()
+    import kinuv.likelihood as lik
+
+    assert "hann_then_bin" not in lik.__all__
 
 
 def test_spectral_sources_do_not_import_uvkin():

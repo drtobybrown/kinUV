@@ -1,8 +1,8 @@
 """Gate 2: noise-free mock recovery of flux, PA, vsys, 0.3″ (dx, dy).
 
-066-6 Hann+bin is used when ``kinuv.likelihood.hann_then_bin`` is importable.
-Otherwise this test recovers on a **short native window with diagonal χ²**.
-066-8 (real 066 MAP) must go through 066-6 Hann+bin (DEC-066-SPECRESP).
+Requires DEC-066-SPECRESP ``Hann+bin`` (``kinuv.response.spectral.hann_then_bin``)
+before any synthetic visibilities are generated. 066-8 (real 066 MAP) uses the
+same operator on the aggregated fit array.
 """
 
 from __future__ import annotations
@@ -16,13 +16,19 @@ import pytest
 from kinuv.forward.mocks import (
     NPZ_PATH,
     N_ROW_MOCK,
+    PIPELINE_KERNEL,
     recover_stage_a,
     stage_a_truth,
     subsample_native_uv,
 )
-from kinuv.forward.model import predict_vis
 from kinuv.forward.sb import load_sb_template
 from kinuv.geometry import inclination_deg, inclination_rad
+from kinuv.response.spectral import hann_then_bin as pipeline_hann
+
+CANFAR_ICO = Path(
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
+    "KGAS66_Ico_K_kms-1.fits"
+)
 
 # 10% flux, 5° PA, 5 km/s vsys, 0.1″ offset
 FLUX_TOL = 0.10
@@ -31,21 +37,33 @@ VSYS_TOL_KM_S = 5.0
 OFFSET_TOL_ARCSEC = 0.10
 
 
+def _assert_pipeline_hann_bin():
+    """Reviewer bound: operator is Hann+bin before generating visibilities."""
+    assert pipeline_hann.__module__ == "kinuv.response.spectral"
+    assert pipeline_hann.__name__ == "hann_then_bin"
+    assert PIPELINE_KERNEL == "hann_then_bin"
+
+
 @pytest.mark.skipif(not NPZ_PATH.is_file(), reason="KILOGAS066.npz not on this machine")
 def test_mock_recovery_flux_pa_vsys_offset():
+    _assert_pipeline_hann_bin()
     t_load = time.perf_counter()
     window = subsample_native_uv(NPZ_PATH)
+    assert window.operator == PIPELINE_KERNEL
+    assert window.operator == "hann_then_bin"
     assert window.u_m.size <= N_ROW_MOCK
-    assert window.freqs_hz.size < 500
+    assert window.freqs_native.size < 500
     assert window.grid.cell_arcsec != pytest.approx(0.4)
-    tmpl = load_sb_template(window.grid)
+    ico = CANFAR_ICO if CANFAR_ICO.is_file() else None
+    tmpl = load_sb_template(window.grid, ico_path=ico)
     truth = stage_a_truth(flux=1.0)
     # Frozen i is an input, not a recovery parameter.
     assert inclination_deg() == pytest.approx(43.9, abs=0.05)
+    from kinuv.forward.model import predict_vis
     vis_true = predict_vis(
         window.u_m,
         window.v_m,
-        window.freqs_hz,
+        window.freqs_native,
         flux=truth["flux"],
         pa_rad=truth["pa_rad"],
         vsys_kms=truth["vsys_kms"],
@@ -62,7 +80,7 @@ def test_mock_recovery_flux_pa_vsys_offset():
     _ = predict_vis(
         window.u_m,
         window.v_m,
-        window.freqs_hz,
+        window.freqs_native,
         flux=truth["flux"],
         pa_rad=truth["pa_rad"],
         vsys_kms=truth["vsys_kms"],
@@ -93,7 +111,7 @@ def test_mock_recovery_flux_pa_vsys_offset():
     test_mock_recovery_flux_pa_vsys_offset.eval_s = eval_s
     test_mock_recovery_flux_pa_vsys_offset.operator = rec.operator
     test_mock_recovery_flux_pa_vsys_offset.n_row = int(window.u_m.size)
-    test_mock_recovery_flux_pa_vsys_offset.n_chan = int(window.freqs_hz.size)
+    test_mock_recovery_flux_pa_vsys_offset.n_chan = int(window.freqs_native.size)
     test_mock_recovery_flux_pa_vsys_offset.grid = window.grid
     test_mock_recovery_flux_pa_vsys_offset.load_s = time.perf_counter() - t_load
     print(
@@ -103,13 +121,10 @@ def test_mock_recovery_flux_pa_vsys_offset():
         f"vsys={rec.vsys_kms:.3f} km/s (truth {truth['vsys_kms']}) "
         f"dx={rec.dx_arcsec:.4f}\" dy={rec.dy_arcsec:.4f}\" "
         f"(inject {truth['dx_arcsec']}\") chi2={rec.chi2:.3e} nfev={rec.nfev} "
-        f"eval={eval_s:.3f}s n_row={window.u_m.size} n_chan={window.freqs_hz.size} "
+        f"eval={eval_s:.3f}s n_row={window.u_m.size} n_chan={window.freqs_native.size} "
         f"grid={window.grid.nx}²@{window.grid.cell_arcsec:.3f}\""
     )
-    assert rec.operator in {"native_diagonal", "hann_then_bin"}
-    if rec.operator == "native_diagonal":
-        # 066-8 must not skip DEC-066-SPECRESP; this mock is the 066-6 stand-in.
-        assert rec.operator == "native_diagonal"
+    assert rec.operator == "hann_then_bin"
     assert abs(rec.flux / truth["flux"] - 1.0) < FLUX_TOL
     assert abs(rec.pa_deg - truth["pa_deg"]) < PA_TOL_DEG
     assert abs(rec.vsys_kms - truth["vsys_kms"]) < VSYS_TOL_KM_S
@@ -121,5 +136,14 @@ def test_subsample_does_not_touch_full_cube():
     src = Path(__file__).resolve().parents[1] / "src" / "kinuv" / "forward" / "mocks.py"
     text = src.read_text(encoding="utf-8")
     assert "not the full 1920×43240" in text
-    assert "native_diagonal" in text
+    assert "from kinuv.response.spectral import bin_channels, hann_then_bin" in text
+    assert "from kinuv.likelihood import hann_then_bin" not in text
     assert "066-8" in text and "Hann+bin" in text
+
+
+def test_mock_pipeline_kernel_is_hann_then_bin():
+    _assert_pipeline_hann_bin()
+    src = Path(__file__).resolve().parents[1] / "src" / "kinuv" / "forward" / "mocks.py"
+    text = src.read_text(encoding="utf-8")
+    assert 'PIPELINE_KERNEL = "hann_then_bin"' in text
+    assert "kinuv.likelihood.hann_then_bin" not in text
