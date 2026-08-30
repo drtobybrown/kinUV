@@ -61,10 +61,10 @@ def rotate_by_pa(x_east, y_north, pa_rad):
     """Sky (E, N) → (major, minor). North at ``PA=0`` maps to +x."""
     from kinuv.xp import numpy_or_jax
 
-    xp = numpy_or_jax(x_east, y_north)
+    xp = numpy_or_jax(x_east, y_north, pa_rad)
     x_east = xp.asarray(x_east)
     y_north = xp.asarray(y_north)
-    s, c = xp.sin(pa_rad), xp.cos(pa_rad)
+    s, c = xp.sin(xp.asarray(pa_rad)), xp.cos(xp.asarray(pa_rad))
     return x_east * s + y_north * c, x_east * c - y_north * s
 
 

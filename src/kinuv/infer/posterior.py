@@ -219,23 +219,24 @@ def split_rhat(chains: np.ndarray) -> np.ndarray:
     half = n_d // 2
     split = np.concatenate([a[:, :half, :], a[:, n_d - half :, :]], axis=0)
     m, n = split.shape[0], split.shape[1]
-    mu_j = split.mean(axis=1)
-    mu = mu_j.mean(axis=0)
-    b = n * np.var(mu_j, axis=0, ddof=1)
-    w = np.mean(np.var(split, axis=1, ddof=1), axis=0)
-    var_hat = ((n - 1) / n) * w + b / n
-    with np.errstate(invalid="ignore", divide="ignore"):
+    with np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        mu_j = split.mean(axis=1)
+        mu = mu_j.mean(axis=0)
+        b = n * np.var(mu_j, axis=0, ddof=1)
+        w = np.mean(np.var(split, axis=1, ddof=1), axis=0)
+        var_hat = ((n - 1) / n) * w + b / n
         rhat = np.sqrt(var_hat / w)
     return np.asarray(rhat, dtype=np.float64)
 
 
 def _acf_fft(x: np.ndarray) -> np.ndarray:
     x = np.asarray(x, dtype=np.float64)
-    x = x - x.mean()
-    n = x.size
-    f = np.fft.rfft(x, n=2 * n)
-    ac = np.fft.irfft(f * np.conjugate(f), n=2 * n)[:n].real
-    ac /= ac[0] if ac[0] != 0.0 else 1.0
+    with np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        x = x - x.mean()
+        n = x.size
+        f = np.fft.rfft(x, n=2 * n)
+        ac = np.fft.irfft(f * np.conjugate(f), n=2 * n)[:n].real
+        ac /= ac[0] if ac[0] != 0.0 else 1.0
     return ac
 
 
@@ -261,6 +262,25 @@ def ess_bulk(chains: np.ndarray) -> np.ndarray:
             tau += 2.0 * pair
             t += 2
         out[p] = n_tot / max(tau, 1.0)
+    return out
+
+
+def ess_tail(chains: np.ndarray, *, prob: float = 0.05) -> np.ndarray:
+    """Tail ESS: min ESS of ``I(x<=q)`` and ``I(x>=1-q)`` (Vehtari et al. 2021)."""
+    a = np.asarray(chains, dtype=np.float64)
+    if a.ndim != 3:
+        raise ValueError("chains must be (n_chain, n_draw, n_param)")
+    n_p = a.shape[2]
+    out = np.empty(n_p, dtype=np.float64)
+    for p in range(n_p):
+        col = a[:, :, p]
+        q_lo = np.quantile(col, prob)
+        q_hi = np.quantile(col, 1.0 - prob)
+        i_lo = (col <= q_lo).astype(np.float64)
+        i_hi = (col >= q_hi).astype(np.float64)
+        e_lo = float(ess_bulk(i_lo[:, :, None])[0])
+        e_hi = float(ess_bulk(i_hi[:, :, None])[0])
+        out[p] = min(e_lo, e_hi)
     return out
 
 

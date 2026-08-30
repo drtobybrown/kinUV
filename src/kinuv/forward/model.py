@@ -62,7 +62,7 @@ def los_velocity(
     xg, yg = sky_to_galaxy(x_east_arcsec, y_north_arcsec, pa_rad, i_rad)
     from kinuv.xp import numpy_or_jax
 
-    xp = numpy_or_jax(xg, yg)
+    xp = numpy_or_jax(xg, yg, vsys_kms, v0_kms, r_t_arcsec)
     radius = xp.hypot(xg, yg)
     if r_knots_arcsec is None and v_knots_kms is None:
         vc = arctan_vc(radius, v0_kms, r_t_arcsec)
@@ -71,15 +71,16 @@ def los_velocity(
     else:
         vc = ring_vc(radius, r_knots_arcsec, v_knots_kms)
     cos_th = xp.where(radius > 0.0, xg / xp.where(radius > 0.0, radius, 1.0), 0.0)
-    return float(vsys_kms) + vc * xp.sin(i_rad) * cos_th
+    sini = xp.sin(xp.asarray(i_rad))
+    return xp.asarray(vsys_kms) + vc * sini * cos_th
 
 
 def _gaussian_pdf(v_kms, v_los, sigma_kms):
     from kinuv.xp import numpy_or_jax
 
-    xp = numpy_or_jax(v_kms, v_los)
-    sig = float(sigma_kms)
-    delta = (v_kms - v_los) / sig
+    xp = numpy_or_jax(v_kms, v_los, sigma_kms)
+    sig = xp.asarray(sigma_kms)
+    delta = (xp.asarray(v_kms) - xp.asarray(v_los)) / sig
     return xp.exp(-0.5 * delta**2) / (sig * xp.sqrt(2.0 * xp.pi))
 
 

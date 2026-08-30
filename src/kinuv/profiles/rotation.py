@@ -83,13 +83,15 @@ def arctan_vc(radius_arcsec, v0_kms: float, r_t_arcsec: float):
     """``V_c(r) = V_0 (2/π) arctan(r/r_t)`` for all ``R``. Do not flatten."""
     from kinuv.xp import is_jax, numpy_or_jax
 
-    xp = numpy_or_jax(radius_arcsec)
+    xp = numpy_or_jax(radius_arcsec, v0_kms, r_t_arcsec)
     r = xp.asarray(radius_arcsec)
+    v0 = xp.asarray(v0_kms)
+    rt = xp.asarray(r_t_arcsec)
     if (not is_jax(r)) and np.any(np.asarray(r) < 0.0):
         raise ValueError("radius_arcsec must be >= 0")
-    if r_t_arcsec <= 0.0:
+    if (not is_jax(rt)) and np.any(np.asarray(rt) <= 0.0):
         raise ValueError("r_t_arcsec must be positive")
-    return float(v0_kms) * (2.0 / np.pi) * xp.arctan(r / float(r_t_arcsec))
+    return v0 * (2.0 / np.pi) * xp.arctan(r / rt)
 
 
 @requires("DEC-066-VC")

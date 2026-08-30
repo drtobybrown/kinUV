@@ -22,6 +22,8 @@ STAGE_A_NAMES = (
     "v0_kms",
     "r_t_arcsec",
 )
+# JSON stays 8-col; the corner displays the six sampled names (dx, dy frozen).
+CORNER_SAMPLED_IDX = (0, 1, 2, 3, 6, 7)
 
 
 def binned_mean(x, y, n_bin: int = 16):
@@ -135,13 +137,30 @@ def _as_nuts_draws(rec):
 
 
 def plot_posterior_corner(rec, path, *, title=None) -> Path:
-    """Stage A corner from NUTS draws only. Not laplace_mh. ASCII names."""
-    draws = _as_nuts_draws(rec)
+    """Stage A corner from NUTS draws only. Not laplace_mh. ASCII names.
+
+    Provenance still requires 8 columns. Display is the six sampled axes
+    (frozen ``dx``, ``dy`` omitted). Serif, inward ticks, 16/50/84.
+    """
+    draws8 = _as_nuts_draws(rec)
+    idx = list(CORNER_SAMPLED_IDX)
+    draws = draws8[:, idx]
+    names = [STAGE_A_NAMES[i] for i in idx]
     apply_style()
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
 
+    mpl.rcParams.update(
+        {
+            "font.family": "serif",
+            "font.serif": ["DejaVu Serif", "Times New Roman", "Times", "serif"],
+            "xtick.direction": "in",
+            "ytick.direction": "in",
+        }
+    )
+
     n = draws.shape[1]
-    fig, axes = plt.subplots(n, n, figsize=(9.6, 9.6))
+    fig, axes = plt.subplots(n, n, figsize=(8.4, 8.4))
     for i in range(n):
         for j in range(n):
             ax = axes[i, j]
@@ -172,11 +191,11 @@ def plot_posterior_corner(rec, path, *, title=None) -> Path:
                     rasterized=True,
                 )
             if i == n - 1:
-                ax.set_xlabel(STAGE_A_NAMES[j], fontsize=8)
+                ax.set_xlabel(names[j], fontsize=8)
             else:
                 ax.set_xticklabels([])
             if j == 0:
-                ax.set_ylabel(STAGE_A_NAMES[i], fontsize=8)
+                ax.set_ylabel(names[i], fontsize=8)
             else:
                 ax.set_yticklabels([])
     fig.suptitle(

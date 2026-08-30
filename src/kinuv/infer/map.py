@@ -156,18 +156,27 @@ def predict_binned(
 ):
     """Native ``predict_vis`` (guards in) → Hann+bin to the fit array."""
     if xla:
-        from kinuv.xp import is_jax
+        from kinuv.xp import is_jax, numpy_or_jax
         import jax.numpy as jnp
 
         tmpl = jnp.asarray(template)
         n_g = int(data.n_guard)
         i_use = inclination_rad() if i_rad is None else float(i_rad)
+        xp = numpy_or_jax(
+            params["flux"],
+            params["pa_deg"],
+            params["vsys_kms"],
+            params["gas_sigma_kms"],
+            params["v0_kms"],
+            params["r_t_arcsec"],
+        )
+        pa_rad = xp.asarray(params["pa_deg"]) * (np.pi / 180.0)
         model_native = predict_vis(
             data.u_m,
             data.v_m,
             data.freqs_native,
             flux=params["flux"],
-            pa_rad=np.radians(params["pa_deg"]),
+            pa_rad=pa_rad,
             vsys_kms=params["vsys_kms"],
             dx_arcsec=params["dx_arcsec"],
             dy_arcsec=params["dy_arcsec"],
