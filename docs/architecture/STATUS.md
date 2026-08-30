@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-08-30-propose-g2-chart.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-08-30-review-a-ops-scratch.md
-last_review_b: docs/reviews/2026-08-30-review-b-ops-scratch.md
+last_review_a: docs/reviews/2026-08-30-review-a-g2-chart.md
+last_review_b: docs/reviews/2026-08-30-review-b-g2-chart.md
 user_review: docs/reviews/artifacts/2026-08-30-final-fit/
 open_questions: []
 deadlocks: []
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G2 unconstrained chart (board open)
-* **Last Action:** Parent proposed G2; waiting dual review
+* **Phase:** G2 unconstrained chart (dual accept, executing)
+* **Last Action:** Dual accept (major) on propose-g2-chart; implementer owns JIT-safe softplus and 8-vector JIT
 * **Decisions Made:** log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy; no logit of [0.5, 15]
-* **Blockers / Gates:** Board open; do not implement until dual accept; no NumPyro
-* **Next Step:** Dual review of `docs/reviews/2026-08-30-propose-g2-chart.md`
+* **Blockers / Gates:** Fix major comments during execute; no NumPyro; official MAP read-only
+* **Next Step:** Ship `kinuv.infer.chart` + `tests/test_g2_chart.py`
 
 # Architecture mailbox
+
+**2026-08-30 (G2 tally).** Dual accept (major): `review-a-g2-chart` and `review-b-g2-chart`. Execute: both-arm-finite softplus (no Python `if`); 8-vector JIT path; per-axis FD of `unconstrained_to_physical` (not chi2); no logit of `RT_BOUNDS`. Host `log_prob_unconstrained` is not autodiff. Do not start G3. Official MAP unchanged.
 
 **2026-08-30 (G2 propose).** Unconstrained Stage A chart + Jacobian. log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy. Do not logit `RT_BOUNDS_ARCSEC=(0.5, 15)`. No NumPyro, no NUTS label. Propose: `docs/reviews/2026-08-30-propose-g2-chart.md`. Official MAP unchanged.
 
