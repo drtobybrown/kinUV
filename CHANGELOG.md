@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — G1 CPU JAX `predict_binned`
+
+Dual accept (major). `predict_binned(..., xla=True)` keeps JAX arrays from sky through NUFFT, Hann+bin, and `chi2`. NumPy path stays the identity reference. Official Stage A `chi2` matches 168675.6 at frozen `s=0.5136`. Post-warmup 3.01 eval/s vs S2 FD 0.329. Tiny-grid `jax.grad` vs FD. Tests set CPU/x64/`/tmp` cache. No NUTS, no GPU, no G2 logit of the `r_t` floor. Official MAP unchanged.
+
 ## 2026-08-30 — G0 MAP quality flags (066 kernel)
 
 Dual accept (major) on the gold-standard sequence. Flags live in `kinuv.diagnostics.flags` (not `infer/`). Official 066 fires `r_t_at_floor` and leftover-vs-velocity vs leftover-vs-uv; PA=199.73 does not fire the 21.9 alias; `Delta_chi2` = +35553 records `beats_zero`. Roadmap rewritten as the 066 kernel sequence. No JAX, no NUTS, no GPU, no 400-galaxy runner. Official MAP unchanged.

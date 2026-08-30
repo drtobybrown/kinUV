@@ -152,9 +152,49 @@ def image_grid_for_vis(data: VisData):
 
 @requires("DEC-066-SPECRESP", "DEC-066-PB", "DEC-066-SHIFT", "DEC-066-GRID")
 def predict_binned(
-    data: VisData, params: dict[str, float], template, grid, *, i_rad=None
+    data: VisData, params: dict[str, float], template, grid, *, i_rad=None, xla=False
 ):
     """Native ``predict_vis`` (guards in) → Hann+bin to the fit array."""
+    if xla:
+        from kinuv.xp import is_jax
+        import jax.numpy as jnp
+
+        tmpl = jnp.asarray(template)
+        n_g = int(data.n_guard)
+        i_use = inclination_rad() if i_rad is None else float(i_rad)
+        model_native = predict_vis(
+            data.u_m,
+            data.v_m,
+            data.freqs_native,
+            flux=params["flux"],
+            pa_rad=np.radians(params["pa_deg"]),
+            vsys_kms=params["vsys_kms"],
+            dx_arcsec=params["dx_arcsec"],
+            dy_arcsec=params["dy_arcsec"],
+            gas_sigma_kms=params["gas_sigma_kms"],
+            template=tmpl,
+            grid=grid,
+            v0_kms=params["v0_kms"],
+            r_t_arcsec=params["r_t_arcsec"],
+            i_rad=i_use,
+        )
+        if not is_jax(model_native):
+            raise RuntimeError("xla predict_binned host-bounced before Hann")
+        vel_trim = data.vel_native[n_g:-n_g]
+        freqs_trim = data.freqs_native[n_g:-n_g]
+        model_binned = hann_then_bin(
+            model_native,
+            data.n_bin,
+            n_guard=n_g,
+            weights=jnp.asarray(data.weights_native),
+            vel=jnp.asarray(vel_trim),
+            freqs=jnp.asarray(freqs_trim),
+        )
+        if tuple(model_binned.shape) != tuple(data.vis.shape):
+            raise ValueError(
+                f"binned model {model_binned.shape} != data vis {data.vis.shape}"
+            )
+        return model_binned
     n_g = int(data.n_guard)
     i_use = inclination_rad() if i_rad is None else float(i_rad)
     model_native = predict_vis(

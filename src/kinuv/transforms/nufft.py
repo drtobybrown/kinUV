@@ -87,6 +87,52 @@ def nufft_backend() -> str:
     return BACKEND
 
 
+def _nufft2_degrid_xla(grid: ImageGrid, image, u_m, v_m, freqs_hz, *, eps: float):
+    """Stay on JAX arrays. Requires ``BACKEND == 'jax-finufft'``."""
+    if BACKEND != "jax-finufft":
+        raise RuntimeError(
+            "G1 XLA NUFFT needs jax-finufft; python-finufft is host-only"
+        )
+    import jax.numpy as jnp
+    from jax_finufft import nufft2 as jax_nufft2
+
+    from kinuv.constants import C_LIGHT_M_S
+    from kinuv.transforms.dft import NPZ_UV_SIGN
+
+    freqs = jnp.asarray(np.asarray(freqs_hz, dtype=np.float64))
+    img = jnp.asarray(image)
+    if img.ndim == 2:
+        if img.shape != (grid.ny, grid.nx):
+            raise ValueError(
+                f"image shape {img.shape} != grid (ny, nx)=({grid.ny}, {grid.nx})"
+            )
+        img = jnp.repeat(img[:, :, None], freqs.shape[0], axis=2)
+    elif img.ndim == 3:
+        want = (grid.ny, grid.nx, int(np.asarray(freqs_hz).shape[0]))
+        if img.shape != want:
+            raise ValueError(f"image shape {img.shape} != {want}")
+    else:
+        raise ValueError(f"image ndim must be 2 or 3, got {img.ndim}")
+
+    u = jnp.asarray(np.asarray(u_m, dtype=np.float64))
+    v = jnp.asarray(np.asarray(v_m, dtype=np.float64))
+    scale_uv = freqs / C_LIGHT_M_S
+    u_lam = float(NPZ_UV_SIGN) * u[:, None] * scale_uv[None, :]
+    v_lam = float(NPZ_UV_SIGN) * v[:, None] * scale_uv[None, :]
+    u_host = np.asarray(u_m, dtype=np.float64)
+    v_host = np.asarray(v_m, dtype=np.float64)
+    f_host = np.asarray(freqs_hz, dtype=np.float64)
+    u_l_h, v_l_h = vis_uv_wavelengths(u_host, v_host, f_host)
+    nyquist_assert(grid.cell_arcsec, float(np.hypot(u_l_h, v_l_h).max()))
+
+    source = jnp.transpose(img, (2, 1, 0)).astype(jnp.complex128)
+    cell_scale = 2.0 * np.pi * grid.cell_rad
+    x = jnp.transpose(cell_scale * u_lam)
+    y = jnp.transpose(cell_scale * v_lam)
+    vis = jax_nufft2(source, x, y, iflag=-1, eps=float(eps))
+    return jnp.transpose(vis)
+
+
 @requires("DEC-066-GRID")
 def nufft2_degrid(grid: ImageGrid, image, u_m, v_m, freqs_hz, *, eps: float = 1e-8):
     """Type-2 NUFFT: ``V[k,c] = sum_{x,y} I[y,x,c] exp(-2πi (u_λ l + v_λ m))``.
@@ -99,6 +145,10 @@ def nufft2_degrid(grid: ImageGrid, image, u_m, v_m, freqs_hz, *, eps: float = 1e
     """
     impl = _t2
     nufft_backend()
+    from kinuv.xp import is_jax
+
+    if is_jax(image):
+        return _nufft2_degrid_xla(grid, image, u_m, v_m, freqs_hz, eps=eps)
     freqs = np.asarray(freqs_hz, dtype=np.float64)
     image = np.asarray(image, dtype=np.float64)
     if image.ndim == 2:

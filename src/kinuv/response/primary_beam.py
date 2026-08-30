@@ -35,13 +35,16 @@ def primary_beam(
     ``x,y`` may be 1-D axes (meshgridded) or 2-D maps. ``A`` does not follow
     ``(dx, dy)``.
     """
-    x = np.asarray(x_arcsec, dtype=np.float64)
-    y = np.asarray(y_arcsec, dtype=np.float64)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(x_arcsec, y_arcsec)
+    x = xp.asarray(x_arcsec)
+    y = xp.asarray(y_arcsec)
     if x.ndim == 1 and y.ndim == 1:
-        x, y = np.meshgrid(x, y)
+        x, y = xp.meshgrid(x, y)
     fwhm = fwhm_pb_arcsec(nu_hz, d_ant_m)
     r2 = (x - float(x_phase_arcsec)) ** 2 + (y - float(y_phase_arcsec)) ** 2
-    return np.exp(-4.0 * np.log(2.0) * r2 / fwhm**2)
+    return xp.exp(-4.0 * xp.log(xp.asarray(2.0)) * r2 / fwhm**2)
 
 
 @requires("DEC-066-PB")
@@ -63,7 +66,9 @@ def attenuate(
         y_phase_arcsec=y_phase_arcsec,
         d_ant_m=d_ant_m,
     )
-    img = np.asarray(image, dtype=np.float64)
+    from kinuv.xp import numpy_or_jax
+
+    img = numpy_or_jax(image).asarray(image)
     if a.shape != img.shape:
         raise ValueError("primary beam and image shapes differ")
     return img * a

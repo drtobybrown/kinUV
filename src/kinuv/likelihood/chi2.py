@@ -49,20 +49,32 @@ def empirical_s(vis, weights, line_free_mask, *, sanity=S_SANITY) -> float:
     return s
 
 
-def _weighted_chi2_sum(vis, weights, model) -> float:
-    vis_c = np.asarray(vis, dtype=np.complex128)
-    model_c = np.asarray(model, dtype=np.complex128)
-    w = np.asarray(weights, dtype=np.float64)
+def _weighted_chi2_sum(vis, weights, model):
+    from kinuv.xp import is_jax, numpy_or_jax
+
+    xp = numpy_or_jax(vis, model, weights)
+    vis_c = xp.asarray(vis)
+    model_c = xp.asarray(model)
+    w = xp.asarray(weights)
     if vis_c.shape != w.shape or model_c.shape != w.shape:
         raise ValueError("vis, model, and weights must share a shape")
     residual = vis_c - model_c
-    return float(np.sum(w * _mag2(residual), dtype=np.float64))
+    mag2 = residual.real**2 + residual.imag**2
+    total = xp.sum(w * mag2)
+    if is_jax(total):
+        return total
+    return float(total)
 
 
 @requires("DEC-066-WEIGHT", "DEC-066-ZEROMODEL")
-def chi2(vis, model, weights, s) -> float:
+def chi2(vis, model, weights, s):
     """``Σ s w |d − m|²`` with float64 accumulation."""
-    return float(s) * _weighted_chi2_sum(vis, weights, model)
+    from kinuv.xp import is_jax
+
+    total = _weighted_chi2_sum(vis, weights, model) * s
+    if is_jax(total):
+        return total
+    return float(total)
 
 
 @requires("DEC-066-WEIGHT", "DEC-066-ZEROMODEL")

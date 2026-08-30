@@ -43,22 +43,20 @@ def hann_native(arr, *, axis: int = -1):
     Edge samples see implicit zeros. Pass ≥1 guard channel on each end and
     trim after convolution so those zeros never enter a science bin.
     """
-    a = np.asarray(arr)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(arr)
+    a = xp.asarray(arr)
     if a.size == 0:
-        return a.copy()
+        return a
     axis = int(axis) % a.ndim
-    a = np.moveaxis(a, axis, -1)
-    k = HANN_KERNEL
-    left = np.concatenate(
-        [np.zeros(a.shape[:-1] + (1,), dtype=a.dtype), a[..., :-1]],
-        axis=-1,
-    )
-    right = np.concatenate(
-        [a[..., 1:], np.zeros(a.shape[:-1] + (1,), dtype=a.dtype)],
-        axis=-1,
-    )
+    a = xp.moveaxis(a, axis, -1)
+    k = xp.asarray(HANN_KERNEL)
+    zeros = xp.zeros(a.shape[:-1] + (1,), dtype=a.dtype)
+    left = xp.concatenate([zeros, a[..., :-1]], axis=-1)
+    right = xp.concatenate([a[..., 1:], zeros], axis=-1)
     out = k[0] * left + k[1] * a + k[2] * right
-    return np.moveaxis(out, -1, axis)
+    return xp.moveaxis(out, -1, axis)
 
 
 def bin_channels(
@@ -75,15 +73,18 @@ def bin_channels(
     """
     if bin_factor < 1:
         raise ValueError(f"bin_factor must be >= 1, got {bin_factor}")
-    vis = np.asarray(vis)
-    weights = np.asarray(weights)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(vis, weights)
+    vis = xp.asarray(vis)
+    weights = xp.asarray(weights)
     if vis.shape != weights.shape:
         raise ValueError("vis and weights must have the same shape")
     if vis.ndim != 2:
         raise ValueError(f"vis must be 2D (n_row, n_chan); got {vis.shape}")
     n_chan = vis.shape[1]
-    vel = np.asarray(vel, dtype=np.float64).ravel()
-    freqs = np.asarray(freqs, dtype=np.float64).ravel()
+    vel = xp.asarray(vel).ravel()
+    freqs = xp.asarray(freqs).ravel()
     if vel.shape[0] != n_chan or freqs.shape[0] != n_chan:
         raise ValueError("vel and freqs must match spectral dimension of vis")
 
@@ -105,17 +106,12 @@ def bin_channels(
     nrow, n_b = vis.shape[0], n_use // bin_factor
     vis_r = vis.reshape(nrow, n_b, bin_factor)
     w_r = weights.reshape(nrow, n_b, bin_factor)
-    w_sum = np.sum(w_r, axis=2)
-    numer = np.sum(vis_r * w_r, axis=2)
-    vis_b = np.divide(
-        numer,
-        w_sum,
-        out=np.zeros(numer.shape, dtype=numer.dtype),
-        where=w_sum > 0,
-    )
-    weights_b = w_sum.astype(weights.dtype, copy=False)
-    vel_b = np.mean(vel.reshape(n_b, bin_factor), axis=1)
-    freqs_b = np.mean(freqs.reshape(n_b, bin_factor), axis=1)
+    w_sum = xp.sum(w_r, axis=2)
+    numer = xp.sum(vis_r * w_r, axis=2)
+    vis_b = xp.where(w_sum > 0, numer / xp.where(w_sum > 0, w_sum, 1.0), 0.0)
+    weights_b = w_sum.astype(weights.dtype)
+    vel_b = xp.mean(vel.reshape(n_b, bin_factor), axis=1)
+    freqs_b = xp.mean(freqs.reshape(n_b, bin_factor), axis=1)
     return vis_b, weights_b, vel_b, freqs_b, n_drop
 
 
@@ -142,7 +138,10 @@ def hann_then_bin(
     if n_guard < 1:
         raise ValueError("n_guard must be >= 1; implicit zero-pad is forbidden")
 
-    m = np.asarray(model_native)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(model_native, weights, vel, freqs)
+    m = xp.asarray(model_native)
     one_d = m.ndim == 1
     if one_d:
         m = m[None, :]
@@ -158,26 +157,26 @@ def hann_then_bin(
     n_trim = core.shape[1]
 
     if weights is None:
-        w = np.ones(core.shape, dtype=np.float64)
+        w = xp.ones(core.shape, dtype=core.dtype)
     else:
-        w = np.asarray(weights, dtype=np.float64)
+        w = xp.asarray(weights)
         if w.ndim == 1:
-            w = np.broadcast_to(w, core.shape).copy()
+            w = xp.broadcast_to(w, core.shape)
         if w.shape != core.shape:
             raise ValueError(
                 f"weights shape {w.shape} must match trimmed model {core.shape}"
             )
 
     if vel is None:
-        vel_in = np.arange(n_trim, dtype=np.float64)
+        vel_in = xp.arange(n_trim, dtype=core.real.dtype)
     else:
-        vel_in = np.asarray(vel, dtype=np.float64).ravel()
+        vel_in = xp.asarray(vel).ravel()
         if vel_in.shape[0] != n_trim:
             raise ValueError("vel must match the trimmed native axis")
     if freqs is None:
-        freqs_in = np.arange(n_trim, dtype=np.float64)
+        freqs_in = xp.arange(n_trim, dtype=core.real.dtype)
     else:
-        freqs_in = np.asarray(freqs, dtype=np.float64).ravel()
+        freqs_in = xp.asarray(freqs).ravel()
         if freqs_in.shape[0] != n_trim:
             raise ValueError("freqs must match the trimmed native axis")
 

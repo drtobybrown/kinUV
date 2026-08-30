@@ -1,4 +1,16 @@
-"""Shared fixtures. Float64 is mandatory."""
+"""Shared fixtures. Float64 is mandatory.
+
+G1: set CPU / x64 / compile cache before any test imports jax.
+"""
+
+from __future__ import annotations
+
+import os
+
+os.environ.setdefault("JAX_PLATFORMS", "cpu")
+os.environ.setdefault("JAX_ENABLE_X64", "1")
+os.environ.setdefault("XDG_CACHE_HOME", "/tmp/kinuv-xdg")
+os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", "/tmp/kinuv-jax-cache")
 
 import numpy as np
 import pytest

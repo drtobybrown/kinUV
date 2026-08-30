@@ -60,21 +60,27 @@ def los_velocity(
     ``ring_vc`` (solid-body inner, flat outer).
     """
     xg, yg = sky_to_galaxy(x_east_arcsec, y_north_arcsec, pa_rad, i_rad)
-    radius = np.hypot(xg, yg)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(xg, yg)
+    radius = xp.hypot(xg, yg)
     if r_knots_arcsec is None and v_knots_kms is None:
         vc = arctan_vc(radius, v0_kms, r_t_arcsec)
     elif r_knots_arcsec is None or v_knots_kms is None:
         raise ValueError("r_knots_arcsec and v_knots_kms must be provided together")
     else:
         vc = ring_vc(radius, r_knots_arcsec, v_knots_kms)
-    cos_th = np.divide(xg, radius, out=np.zeros_like(radius), where=radius > 0.0)
-    return float(vsys_kms) + vc * np.sin(i_rad) * cos_th
+    cos_th = xp.where(radius > 0.0, xg / xp.where(radius > 0.0, radius, 1.0), 0.0)
+    return float(vsys_kms) + vc * xp.sin(i_rad) * cos_th
 
 
 def _gaussian_pdf(v_kms, v_los, sigma_kms):
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(v_kms, v_los)
     sig = float(sigma_kms)
     delta = (v_kms - v_los) / sig
-    return np.exp(-0.5 * delta**2) / (sig * np.sqrt(2.0 * np.pi))
+    return xp.exp(-0.5 * delta**2) / (sig * xp.sqrt(2.0 * xp.pi))
 
 
 @requires("DEC-066-PB", "DEC-066-SHIFT", "DEC-066-VC", "DEC-066-PA", "DEC-066-INC")
@@ -101,16 +107,26 @@ def sky_cube(
     evaluated at the phase centre, not ``(dx, dy)``. Kinematics follow the
     galaxy: ``v_los`` is evaluated at ``(x−dx, y−dy)``.
     """
-    sb = np.asarray(template, dtype=np.float64)
+    from kinuv.xp import is_jax, numpy_or_jax
+
+    xp = numpy_or_jax(template)
+    sb = xp.asarray(template)
     if sb.shape != (grid.ny, grid.nx):
         raise ValueError(f"template {sb.shape} != grid {(grid.ny, grid.nx)}")
     i_use = inclination_rad() if i_rad is None else float(i_rad)
-    freqs = np.asarray(freqs_hz, dtype=np.float64)
+    if is_jax(freqs_hz):
+        raise TypeError("sky_cube freqs_hz must be NumPy; dv is a host scalar")
+    freqs_host = np.asarray(freqs_hz, dtype=np.float64)
+    dv = channel_width_kms(freqs_host)
+    nu_mid = float(np.median(freqs_host))
+    freqs = xp.asarray(freqs_host)
     vel = freq_to_velocity_kms(freqs)
-    dv = channel_width_kms(freqs)
     shifted = fourier_shift(sb, dx_arcsec, dy_arcsec, grid.cell_arcsec)
     x, y = image_grid_xy_arcsec(grid)
-    xe, yn = np.meshgrid(x, y, indexing="xy")
+    if is_jax(sb):
+        x = xp.asarray(x)
+        y = xp.asarray(y)
+    xe, yn = xp.meshgrid(x, y, indexing="xy")
     v_los = los_velocity(
         xe - float(dx_arcsec),
         yn - float(dy_arcsec),
@@ -124,10 +140,9 @@ def sky_cube(
     )
     phi = _gaussian_pdf(vel[None, None, :], v_los[:, :, None], gas_sigma_kms)
     d_omega = grid.cell_arcsec**2
-    cube = float(flux) * shifted[:, :, None] * d_omega * phi * dv
-    nu_mid = float(np.median(freqs))
-    att = attenuate(np.ones((grid.ny, grid.nx), dtype=np.float64), x, y, nu_mid)
-    # ``primary_beam`` is the envelope; keep a named use so PB stays in the path.
+    cube = flux * shifted[:, :, None] * d_omega * phi * dv
+    ones = xp.ones((grid.ny, grid.nx), dtype=sb.dtype)
+    att = attenuate(ones, x, y, nu_mid)
     _ = primary_beam(x, y, nu_mid)
     return cube * att[:, :, None]
 

@@ -1,0 +1,13 @@
+{
+  "backend": "jax-finufft",
+  "JAX_PLATFORMS": "cpu",
+  "JAX_ENABLE_X64": "1",
+  "chi2": 168675.59555208948,
+  "chi2_warmup": 168675.59555208948,
+  "s": 0.5136098555284736,
+  "seconds_post_warmup": 0.3320125564932823,
+  "eval_per_s": 3.0119342791188477,
+  "s2_fd_eval_per_s": 0.329,
+  "beats_s2_fd": true,
+  "identity_ok": true
+}

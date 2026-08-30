@@ -59,18 +59,24 @@ def pa_seed_rad() -> float:
 @requires("DEC-066-PA")
 def rotate_by_pa(x_east, y_north, pa_rad):
     """Sky (E, N) → (major, minor). North at ``PA=0`` maps to +x."""
-    x_east = np.asarray(x_east, dtype=np.float64)
-    y_north = np.asarray(y_north, dtype=np.float64)
-    s, c = np.sin(pa_rad), np.cos(pa_rad)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(x_east, y_north)
+    x_east = xp.asarray(x_east)
+    y_north = xp.asarray(y_north)
+    s, c = xp.sin(pa_rad), xp.cos(pa_rad)
     return x_east * s + y_north * c, x_east * c - y_north * s
 
 
 @requires("DEC-066-INC")
 def incline(x_maj, y_min, i_rad):
     """Deproject minor axis by ``1/cos(i)``. Identity at ``i=0``."""
-    x_maj = np.asarray(x_maj, dtype=np.float64)
-    y_min = np.asarray(y_min, dtype=np.float64)
-    return x_maj, y_min / np.cos(i_rad)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(x_maj, y_min)
+    x_maj = xp.asarray(x_maj)
+    y_min = xp.asarray(y_min)
+    return x_maj, y_min / xp.cos(i_rad)
 
 
 @requires("DEC-066-INC", "DEC-066-PA")

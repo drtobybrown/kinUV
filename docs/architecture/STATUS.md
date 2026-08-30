@@ -2,7 +2,7 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: implementer
+next_role: proposer
 board: accepted
 build_licensed: true
 pending: []
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G1 CPU JAX `predict_binned` (implementing)
-* **Last Action:** Dual accept (major) on G1; Gate 2/spectral/flags 16 passed
-* **Decisions Made:** XLA path from sky through NUFFT/Hann/`chi2`; NumPy stays identity; no GPU/NUTS/G2
-* **Blockers / Gates:** `|chi2 - 168675.6| < 1`; tiny `jax.grad` vs FD; `BACKEND=jax-finufft`; x64; `/tmp` cache
-* **Next Step:** Land JAX `predict_binned` identity; do not write official MAP
+* **Phase:** G1 CPU JAX `predict_binned` (landed)
+* **Last Action:** Dual accept (major) executed; identity `chi2=168675.6`; 3.01 eval/s vs S2 0.329
+* **Decisions Made:** XLA sky+NUFFT+Hann+`chi2`; NumPy identity kept; no GPU/NUTS/G2
+* **Blockers / Gates:** G1 gates passed (`jax-finufft`, x64, tiny `jax.grad` vs FD)
+* **Next Step:** G2 unconstrained chart (separate propose); do not logit the 0.5" `r_t` floor
 
 # Architecture mailbox
+
+**2026-08-30 (G1 executed).** Dual accept (major). JAX `predict_binned(..., xla=True)` stays on device through NUFFT/Hann/`chi2`. Official Stage A `chi2=168675.6` (same `s=0.5136`). Post-warmup 3.01 eval/s vs S2 FD 0.329. Tiny `jax.grad` vs FD. Timing: `docs/reviews/artifacts/2026-08-30-g1-jax/timing.json`. No G2/G3/GPU. Official MAP unchanged.
 
 **2026-08-30 (G1 tally).** Dual accept (major): `review-a-g1-jax` and `review-b-g1-jax`. Execute: XLA sky+NUFFT+Hann+`chi2` (no host bounce); tiny `jax.grad` vs FD; frozen `s`; x64; `/tmp` cache; official `|chi2-168675.6|<1` when npz exists. Do not start G2/G3/GPU. Official MAP unchanged.
 

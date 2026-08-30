@@ -111,7 +111,10 @@ def freq_to_velocity_kms(freq_hz, f_rest_hz: float = F_REST_CO21_HZ):
 
     .. math:: v = c\\,(\\nu_{\\rm rest} - \\nu) / \\nu_{\\rm rest}
     """
-    freq_hz = np.asarray(freq_hz, dtype=np.float64)
+    from kinuv.xp import numpy_or_jax
+
+    xp = numpy_or_jax(freq_hz)
+    freq_hz = xp.asarray(freq_hz)
     return C_LIGHT_KM_S * (f_rest_hz - freq_hz) / f_rest_hz
 
 
