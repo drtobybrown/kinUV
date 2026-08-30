@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: proposer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-30-propose-g1-jax.md
+last_propose: docs/reviews/2026-08-30-propose-ops-scratch.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g1-jax.md
 last_review_b: docs/reviews/2026-08-30-review-b-g1-jax.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G1 CPU JAX `predict_binned` (landed)
-* **Last Action:** Dual accept (major) executed; identity `chi2=168675.6`; 3.01 eval/s vs S2 0.329
-* **Decisions Made:** XLA sky+NUFFT+Hann+`chi2`; NumPy identity kept; no GPU/NUTS/G2
-* **Blockers / Gates:** G1 gates passed (`jax-finufft`, x64, tiny `jax.grad` vs FD)
-* **Next Step:** G2 unconstrained chart (separate propose); do not logit the 0.5" `r_t` floor
+* **Phase:** Ops /scratch + corner plotter (board open)
+* **Last Action:** G1 landed `b67365f`; proposed scratch I/O, STATUS Composer-2.5, NUTS-only corners
+* **Decisions Made:** No Laplace 16/50/84 product; no G2/G3 this card; `/scratch` exists (local)
+* **Blockers / Gates:** Dual review of `2026-08-30-propose-ops-scratch.md`
+* **Next Step:** Dual accept -> docs + refuse-`laplace_mh` corner plotter; handoff note
 
 # Architecture mailbox
+
+**2026-08-30 (ops propose).** User asked `/scratch` I/O, Composer 2.5 STATUS push, posterior corners, senior handoff. Propose: `docs/reviews/2026-08-30-propose-ops-scratch.md`. Board open. No NUTS; no S2 Laplace corners as 16/50/84 product. Official MAP unchanged.
 
 **2026-08-30 (G1 executed).** Dual accept (major). JAX `predict_binned(..., xla=True)` stays on device through NUFFT/Hann/`chi2`. Official Stage A `chi2=168675.6` (same `s=0.5136`). Post-warmup 3.01 eval/s vs S2 FD 0.329. Tiny `jax.grad` vs FD. Timing: `docs/reviews/artifacts/2026-08-30-g1-jax/timing.json`. No G2/G3/GPU. Official MAP unchanged.
 
