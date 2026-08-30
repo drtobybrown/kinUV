@@ -2,10 +2,10 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: proposer
+next_role: implementer
 board: accepted
 build_licensed: true
-pending: []
+pending: ["kgas066-nuts headless h2dlc07f"]
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G3 landed (tiny-mock NUTS); 066 NUTS skipped on wall cap
-* **Last Action:** Autodiff `U(z)` + CPU NumPyro tiny-mock 4-chain `sampler: nuts`; 066 projection 29845 s > 7200 s
-* **Decisions Made:** U = 0.5(chi2 + shift_prior_const) - log|J|; freeze (dx, dy) as host MAP floats; six sampled names; no logit of [0.5, 15]; no GPU; no 066 `sampler: nuts` under the cap
-* **Blockers / Gates:** 066 NUTS projected 8.3 h on CPU (t_grad 0.434 s × 28.6 leapfrog); no GPU; do not start G4 SBC
-* **Next Step:** Leave 066 NUTS unlabelled; G4 is a separate propose. Official MAP unchanged
+* **Phase:** G3 066 NUTS dispatched to CANFAR headless (DEC-067-RUNNER)
+* **Last Action:** Submitted session `h2dlc07f` (`kinuv-KGAS066-352e5e-nuts`); 4 chains × 600 draws; flexible CPU; no GPU (venv is jax 0.11.1 CPU)
+* **Decisions Made:** Interactive 7200 s cap does not bound batch jobs; wall > 15 min → `canfar create headless`; GPU only if JAX sees CUDA
+* **Blockers / Gates:** Waiting on `/arc/home/thbrown/kinuv_runs/kgas066-nuts/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
+* **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-30 (DEC-067-RUNNER).** User: relax 7200 s interactive cap for batch; jobs > 15 min go to CANFAR headless. Session `h2dlc07f` Running, image `skaha/astroml:latest`, flexible CPU/RAM, no `--gpu` (recovery venv is CPU jax-finufft). Manifest: `/arc/home/thbrown/kinuv_runs/kgas066-nuts/`. 4×600 at MAP PA 199.73. Do not start G4. Official MAP unchanged.
 
 **2026-08-30 (G3 executed).** Dual accept (major). JAX `U(z)=0.5(chi2+shift_prior_const)-log|J|`; sampled-name `float()` off the XLA vis path; `(dx, dy)` frozen at MAP host floats. Tiny-mock 4-chain NUTS mixed (`R_hat<1.01`, ESS>200) → `sampler: nuts`. 066 `jax.grad` 0.434 s; projected 29845 s > 7200 s cap → no 066 `sampler: nuts`, no GPU. numpyro 0.21.0 `--no-deps` keeps jax 0.11.1 / jax-finufft. Artifacts: `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Receding init is MAP 199.73, not seed 205.2. Do not quote S2 16/50/84 or inner `dV/dr`. Official MAP unchanged. Do not start G4.
 
