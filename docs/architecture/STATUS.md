@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: proposer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-30-propose-ops-scratch.md
+last_propose: docs/reviews/2026-08-30-propose-g2-chart.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-ops-scratch.md
 last_review_b: docs/reviews/2026-08-30-review-b-ops-scratch.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** Ops /scratch + NUTS-only corner plotter (landed)
-* **Last Action:** Dual accept (major) executed; S2 `laplace_mh` corners refused; G1 still identity
-* **Decisions Made:** TMP/JAX cache on `/scratch` if writable; Composer edits only Agent Run Status; no G2/G3
-* **Blockers / Gates:** No NUTS posterior yet; do not logit the 0.5" `r_t` floor
-* **Next Step:** G2 unconstrained chart (separate propose); handoff `docs/reviews/2026-08-30-handoff-senior.md`
+* **Phase:** G2 unconstrained chart (board open)
+* **Last Action:** Parent proposed G2; waiting dual review
+* **Decisions Made:** log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy; no logit of [0.5, 15]
+* **Blockers / Gates:** Board open; do not implement until dual accept; no NumPyro
+* **Next Step:** Dual review of `docs/reviews/2026-08-30-propose-g2-chart.md`
 
 # Architecture mailbox
+
+**2026-08-30 (G2 propose).** Unconstrained Stage A chart + Jacobian. log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy. Do not logit `RT_BOUNDS_ARCSEC=(0.5, 15)`. No NumPyro, no NUTS label. Propose: `docs/reviews/2026-08-30-propose-g2-chart.md`. Official MAP unchanged.
 
 **2026-08-30 (ops executed).** Dual accept (major) on `2026-08-30-propose-ops-scratch`. Scratch policy `docs/diagnostics/scratch.md`. Corner plotter refuses `laplace_mh` and S2 interval tables. Handoff: `docs/reviews/2026-08-30-handoff-senior.md`. No NUTS, no G2, official MAP unchanged.
 
