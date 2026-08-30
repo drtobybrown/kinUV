@@ -1,14 +1,16 @@
 ---
-description: kinUV two-agent SSoT — read the repo mailbox every turn
+description: kinUV SSoT — dual-review board; read the repo mailbox every turn
 alwaysApply: true
 ---
 
 # Single source of truth
 
-Start of every turn: `AGENTS.md` → `field-guide/index.md` → `docs/architecture/STATUS.md` → latest `docs/reviews/*.md`. Handshake: `DEC-066-AGENTS`. Ranking: `DEC-066-INDEX`.
+Start of every turn: `AGENTS.md` → `field-guide/index.md` → `docs/architecture/STATUS.md` → `docs/reviews/BOARD.md`. Handshake: `DEC-066-AGENTS`. Ranking: `DEC-066-INDEX`. Human science: `docs/methodology.md`.
 
-- If `STATUS.code_freeze` is true, do not write Python.
-- Follow `STATUS.next_role` (`proposer` | `reviewer` | `user`). Do not ACK in the same turn as proposing.
+- If `STATUS.code_freeze` is true, do not write Python unless the user unfreezes.
+- Parent proposes. Two independent sub-agents write `review-a` / `review-b` in parallel (do not read each other). Dual `accept` → implement the named stages; no third review.
+- User **build** / **build and execute**: run propose → board → execute through all licensed stages. `build_licensed` is false until that command.
 - Rubber-stamp reviews are invalid. New `DEC-*` ids are user-only.
-- Cursor `~/.cursor/plans/*.plan.md` is not canon unless it headers `canon_generation` matching STATUS. Prefer repo ADRs.
+- Commit and push `origin/dev` after propose, tally, and each stage deliverable.
+- Cursor `~/.cursor/plans/*.plan.md` is not canon unless it headers `canon_generation` matching STATUS.
 - Physics lives in `docs/decisions/DEC-*.md`. Do not paste ADR essays into this rule.

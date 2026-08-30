@@ -1,6 +1,6 @@
 # S2 hybrid coverage (Stage A)
 
-User-licensed hybrid after S1. Sampler is `laplace_mh`, **not** autodiff NUTS. Propose: [`docs/reviews/2026-08-29-propose-s2.md`](../reviews/2026-08-29-propose-s2.md). Artifacts: [`docs/reviews/artifacts/2026-08-29-s2/`](../reviews/artifacts/2026-08-29-s2/).
+User-licensed hybrid after S1. Sampler is `laplace_mh`, **not** autodiff NUTS. Propose: [`docs/reviews/2026-08-29-propose-s2.md`](../reviews/2026-08-29-propose-s2.md). Runner: [`scripts/run_s2_coverage.py`](../../scripts/run_s2_coverage.py). Artifacts: [`docs/reviews/artifacts/2026-08-29-s2/`](../reviews/artifacts/2026-08-29-s2/).
 
 ASCII only: `chi2`, `chi2_red`, `gas_sigma`, `r_t`, `R_hat`, `ESS`, `T_dof`, `T_nvis`.
 

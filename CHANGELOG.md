@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — Dual-review board; human methodology
+
+User-directed handshake: the parent proposes; two independent reviewer sub-agents accept or reject (major/minor) on `docs/reviews/`. Dual accept → implement and execute the named stages with no third review. A user **build** command runs that loop end-to-end. Docs: `docs/methodology.md`, `docs/reviews/BOARD.md`, amended `DEC-066-AGENTS`. `build_licensed` stays false until that command. Official MAP unchanged. No new `DEC-*`.
+
 ## 2026-08-29 — S1/S2 land; kernel hygiene; diagnostic suite
 
 ### Production pointer

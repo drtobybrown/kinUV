@@ -1,10 +1,10 @@
 # kinUV Field Guide (066)
 
-Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-INDEX`. Handshake: `DEC-066-AGENTS`.
+Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-INDEX`. Handshake: `DEC-066-AGENTS` (dual-review board).
 
-## Mailbox (two agents)
+## Mailbox
 
-Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and review only via `docs/reviews/` (see `_template.md`). Rubber-stamp ACK is a process failure. Cursor plans without `canon_generation` matching STATUS are stale. `code_freeze: false` for 066-8 MAP (Hann+bin, Δχ² vs V=0). No NUTS. Do not create a `DEC-*` id.
+Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User **build** = that loop end-to-end. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh`, not NUTS.
 
 ## Stop conditions
 
@@ -21,15 +21,15 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 1. Analytic Gaussian + thin-ring, transform error < 1e-7.
 2. Mock on real 066 uv: recover flux, PA, vsys, 0.3″ (dx,dy).
 3. Real MAP: report Δχ² vs V=0, not reduced χ².
-4. Injected V_c within beam-scale covariance.
-5. Then NUTS: R̂<1.01, ESS>200 on PA, vsys, flux.
+4. Injected V_c within beam-scale covariance (S1 vis recovered; cube did not).
+5. Then sampling: report `R_hat`/`ESS`; do not call Laplace-MH "NUTS". Laplace SBC failed 68/95.
 
 ## DEC ids (closed)
 
 | ID | Answer |
 |---|---|
 | INDEX | ADRs > Field Guide > STATUS > PLAN.md > Cursor plans |
-| AGENTS | adversarial propose/review; user ties; no new DEC ids |
+| AGENTS | parent proposes; dual-board accept; user ties; no new DEC ids |
 | TARGET | KGAS066 only |
 | INC | 43.9° freeze, ±5° |
 | PA | fit; seed 205.2° receding |
@@ -38,10 +38,10 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 | VC | arctan then 6–8 rings; outer flat; inner solid-body |
 | OSCMETRIC | r0≥0.5 BMAJ; Ω/Δv<0.3; 20×5 λ; AIC |
 | SHIFT | Fourier/spline image shift then PB; σ=0.5″ |
-| INFER | MAP then NUTS |
+| INFER | MAP then sample; Laplace CIs not calibrated |
 | VIS | aggregated npz; record N, Δv |
 | SPECRESP | Hann native+guards then bin; empirical s |
-| WEIGHT | s=2/⟨w\|V\|²⟩; not 0.5; not 12/29 |
+| WEIGHT | s=2/⟨w\|V|²⟩; not 0.5; not 12/29 |
 | POL | XX+YY re-export |
 | GRID | Nyquist vs 305 kλ; npz `(u,v)→(−u,−v)` in −2πi kernel |
 | ZEROMODEL | V=0; Δχ² |
@@ -52,9 +52,9 @@ Read `docs/architecture/STATUS.md` every turn. Follow `next_role`. Propose and r
 ## Imaging products (CANFAR)
 
 Root: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/`
-- Ico / vis-trim / SB: `30kms/` (`KGAS66_Ico_K_kms-1.fits`, `KGAS66_clipped_cube.fits`)
-- Stage B vs imaging: `10kms/` (`KGAS66_clipped_cube.fits`, `KGAS66_mask_cube.fits`). Δv≈10.4 km/s vs σ≈12 and vis Δv≈5.1; do not use 30 km/s for mom2/PV. Method: `docs/diagnostics/stage-b-vs-imaging.md`. Plot style: `docs/diagnostics/plotting.md` (`kinuv.diagnostics.style`; do not copy rcParams).
+- Ico / vis-trim / SB: `30kms/`
+- Stage B vs imaging: `10kms/`. Method: `docs/diagnostics/stage-b-vs-imaging.md`. Style: `docs/diagnostics/plotting.md`.
 
 ## Git
 
-Branch `dev`. One component id per commit (`feat(066-N): …`). Do not mix 066-6/7/8 in one commit.
+Branch `dev`. Commit and push `origin/dev` after each propose, board tally, and stage deliverable. Conventional subject; do not skip hooks.
