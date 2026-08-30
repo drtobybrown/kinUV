@@ -2,7 +2,7 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: implementer
+next_role: proposer
 board: accepted
 build_licensed: true
 pending: []
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G2 unconstrained chart (dual accept, executing)
-* **Last Action:** Dual accept (major) on propose-g2-chart; implementer owns JIT-safe softplus and 8-vector JIT
+* **Phase:** G2 unconstrained chart (landed)
+* **Last Action:** Dual accept (major) executed; 8-vector JIT chart; official r_t=0.5 finite z
 * **Decisions Made:** log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy; no logit of [0.5, 15]
-* **Blockers / Gates:** Fix major comments during execute; no NumPyro; official MAP read-only
-* **Next Step:** Ship `kinuv.infer.chart` + `tests/test_g2_chart.py`
+* **Blockers / Gates:** No NUTS posterior; predict_binned still host-converts (G3); do not quote inner dV/dr
+* **Next Step:** G3 NumPyro is a separate propose; do not start it here
 
 # Architecture mailbox
+
+**2026-08-30 (G2 executed).** Dual accept (major). `kinuv.infer.chart` 8-vector log/softplus/identity maps; `jax.jit` type preservation; per-axis FD Jacobian; official `|chi2-168675.6|<1` after roundtrip. `log_prob_unconstrained` is host-only. No NumPyro, no NUTS label. Official MAP unchanged.
 
 **2026-08-30 (G2 tally).** Dual accept (major): `review-a-g2-chart` and `review-b-g2-chart`. Execute: both-arm-finite softplus (no Python `if`); 8-vector JIT path; per-axis FD of `unconstrained_to_physical` (not chi2); no logit of `RT_BOUNDS`. Host `log_prob_unconstrained` is not autodiff. Do not start G3. Official MAP unchanged.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — G2 unconstrained Stage A chart + Jacobian
+
+Dual accept (major). `kinuv.infer.chart`: log on flux / gas_sigma / r_t, stable `logaddexp` softplus on `V_0` (no Python `if`; `V_0=0` is `-inf`), identity on PA / vsys / (dx, dy). JIT surface is a length-8 vector; `log_prob_unconstrained` is host `log_prob(θ)+log|J|`, not autodiff. Official `r_t=0.5` maps to finite `z`. No NumPyro, no NUTS label, official MAP unchanged.
+
 ## 2026-08-30 — /scratch I/O, NUTS-only corners, senior handoff
 
 Dual accept (major) on ops-scratch. High-frequency writes go to `/scratch/kinuv-$USER` (else `/tmp`), never NFS `/arc`. `plot_posterior_corner` requires `sampler == "nuts"` and an 8-column draw array; S2 `laplace_mh` JSON raises. Handoff: `docs/reviews/2026-08-30-handoff-senior.md`. No NUTS run, no G2, official MAP unchanged.
