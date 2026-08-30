@@ -9,8 +9,8 @@ Start of every turn: `AGENTS.md` → `field-guide/index.md` → `docs/architectu
 
 - If `STATUS.code_freeze` is true, do not write Python unless the user unfreezes.
 - Parent proposes. Two independent sub-agents write `review-a` / `review-b` in parallel (do not read each other). Dual `accept` → implement the named stages; no third review.
-- User **build** / **build and execute**: run propose → board → execute through all licensed stages. `build_licensed` is false until that command.
-- Rubber-stamp reviews are invalid. New `DEC-*` ids are user-only.
+- User **build** / **build and execute**, or "stop babysitting / review plots at the end": run propose → board → execute through licensed stages to the **final fit plot folder**. Do not pause at physics gates for a human ACK. Implementer records gate calls on STATUS.
+- Rubber-stamp reviews are invalid. New `DEC-*` ids are user-only. Do not overwrite `kinuv-KGAS066-uvsign-map` in place.
 - Commit and push `origin/dev` after propose, tally, and each stage deliverable.
 - Cursor `~/.cursor/plans/*.plan.md` is not canon unless it headers `canon_generation` matching STATUS.
 - Physics lives in `docs/decisions/DEC-*.md`. Do not paste ADR essays into this rule.

@@ -19,7 +19,11 @@ Launch reviewer A and B in the same turn, in parallel. Give each the propose pat
 
 ## After dual accept
 
-No third review. Parent becomes implementer: write code, run the licensed stages, update human docs (`docs/methodology.md`, `CHANGELOG.md`, diagnostic notes), commit, and push `origin/dev` after each stage.
+No third review. Parent becomes implementer: write code, run the licensed stages, **decide each gate**, update human docs, commit, and push `origin/dev` after each stage. Do not ping the user mid-gate. Hand the user the final plot folder (moments / spectra / PV / leftover `chi2`).
+
+## User role
+
+The user is not a gate sitter. They review whether the **final** Data | Model | Residual (and leftover) plots work.
 
 ## Historical notes
 

@@ -2,6 +2,8 @@
 
 This is the science write-up. Agent process is in [`docs/reviews/BOARD.md`](reviews/BOARD.md) and [`DEC-066-AGENTS`](decisions/DEC-066-AGENTS.md). Official 066 product: **`kinuv-KGAS066-uvsign-map`**.
 
+**Your job:** look at the latest Data | Model | Residual moments / spectra / PV and leftover `chi2` in the plot folder named on STATUS. You are not sitting gates. Agents decide those and keep going.
+
 ## What we fit
 
 Kinematics are inferred from **ALMA visibilities**, not from the CLEANed cube. The number we minimise is
@@ -46,7 +48,7 @@ Runner: `scripts/plot_fit_diagnostics.py`.
 
 ## What a "build" will do
 
-The parent proposes a scope, two independent reviewers accept or reject on the board, then the parent executes every accepted stage (MAP, diagnostics, optional sampling) and commits. KGAS066 stays the code target until you add a TARGET stub for more galaxies. uvkin (KinMS/emcee) is a separate repo; it is not the production vis MAP.
+The parent proposes a scope, two independent reviewers accept or reject on the board, then the parent executes every accepted stage, **chooses each gate**, and stops at a plot folder for you. KGAS066 stays the code target until you add a TARGET stub. uvkin is not the production vis MAP.
 
 ## Where to look
 

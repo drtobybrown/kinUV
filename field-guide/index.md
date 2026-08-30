@@ -4,17 +4,11 @@ Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-IND
 
 ## Mailbox
 
-Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User **build** = that loop end-to-end. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh`, not NUTS.
+Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh`, not NUTS.
 
-## Stop conditions
+## Gates (implementer decides)
 
-- Need a new design choice → stop; do not create a `DEC-*` id.
-- MAP cannot beat zero model → stop; do not try dynesty/NUTS.
-- Restored Ico into FINUFFT as intrinsic SB → stop (DEC-066-SB).
-- Hann on already-binned channels → stop (DEC-066-SPECRESP).
-- `(dx,dy)` frozen at 0 before MAP → stop (DEC-066-SHIFT).
-- Visibility phase ramp of `(dx,dy)` after PB → stop (DEC-066-SHIFT / PB).
-- Growing a file past 400 lines of Python → flag `BLOATED:`, do not add more.
+Prefer the DEC. If you leave it, STATUS one-liner and continue. Do not wait for the user. Still forbidden: new `DEC-*`, in-place overwrite of `kinuv-KGAS066-uvsign-map`, labeling Laplace-MH as NUTS, committing secrets. Split files if BLOATED; do not stop the build.
 
 ## 066 gates (in order)
 

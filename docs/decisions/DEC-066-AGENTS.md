@@ -16,6 +16,8 @@ They do not share memory. The repo is the mailbox. The **parent chat is the prop
 
 User 2026-08-30: methodology is licensed. After a dual accept, the parent **implements and executes** the accepted scope without a second review cycle. A user **build** command means run that loop through all licensed stages (propose → board → execute), not stop at the propose.
 
+User 2026-08-30 (later): **physics stops are not user-blocking.** The implementer decides whether to proceed through each gate, records the call on STATUS, and continues. The user is not babysitting. The user reviews **final fit comparison plots** (Data | Model | Residual moments/spectra/PV and leftover `chi2`) at the end. Do not pause for a human ACK at a gate.
+
 ## Canon ranking
 
 1. `docs/decisions/DEC-*.md` — physics. `accepted` only after dual-board accept (or a user tie).
@@ -65,6 +67,15 @@ If the two reviewers still disagree after one revise cycle, `next_role: user` an
 
 Neither agent. Recommend in a review file; the user adds the stub.
 
-## Physics stops (unchanged)
+## Gates (implementer decides)
 
-Hann on binned channels, restored Ico as intrinsic SB, vis phase ramp after PB, `(dx,dy)` frozen at 0, MAP that cannot beat V=0, new `DEC-*` without a user stub — stop. Dual accept does not override these.
+The old hard stops (Hann-on-binned, Ico-as-intrinsic-SB, vis phase ramp after PB, `(dx,dy)=0`, MAP vs V=0, file BLOATED) are **judgment calls**. Prefer the DEC answer; if you leave it, write one STATUS line (what you did and why) and keep going. Do not wait for the user.
+
+Still not allowed (not gates — repo integrity):
+
+- Create a new `DEC-*` id (user only).
+- Delete or overwrite `kinuv-KGAS066-uvsign-map` in place; write a new tree if you refit.
+- Call Laplace-MH "NUTS".
+- Commit secrets.
+
+User review surface: the final plot folder named in the propose, not a mid-gate chat.

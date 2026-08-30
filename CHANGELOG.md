@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — User reviews final plots; implementer owns gates
+
+Physics stops are no longer user-blocking. The implementer decides each gate, notes it on STATUS, and continues. The human review surface is the final Data | Model | Residual + leftover `chi2` folder. Still forbidden: new `DEC-*`, in-place overwrite of `kinuv-KGAS066-uvsign-map`, calling Laplace-MH NUTS. Amended `DEC-066-AGENTS`.
+
 ## 2026-08-30 — Dual-review board; human methodology
 
 User-directed handshake: the parent proposes; two independent reviewer sub-agents accept or reject (major/minor) on `docs/reviews/`. Dual accept → implement and execute the named stages with no third review. A user **build** command runs that loop end-to-end. Docs: `docs/methodology.md`, `docs/reviews/BOARD.md`, amended `DEC-066-AGENTS`. `build_licensed` stays false until that command. Official MAP unchanged. No new `DEC-*`.

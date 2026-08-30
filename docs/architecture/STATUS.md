@@ -2,14 +2,15 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: proposer
-board: idle
-build_licensed: false
+next_role: board
+board: open
+build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-29-propose-s2.md
+last_propose: docs/reviews/2026-08-30-propose-final-plots.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: null
 last_review_b: null
+user_review: null
 open_questions: []
 deadlocks: []
 canon_generation: 4
@@ -17,7 +18,9 @@ canon_generation: 4
 
 # Architecture mailbox
 
-**2026-08-30 (handshake).** User: methodology is good; relax stage stops. Parent proposes; two independent sub-agents accept/reject (major/minor) on `docs/reviews/`. Dual accept → implement/execute with no third review. User **build** runs that loop through licensed stages. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. Amended `DEC-066-AGENTS`. `build_licensed: false` until the user says build. Official MAP unchanged (`kinuv-KGAS066-uvsign-map`).
+**2026-08-30 (gates).** User: not babysitting; implementer decides each gate; human reviews **final fit plots** only. Physics stops are judgment, not a user ACK. Board open: `docs/reviews/2026-08-30-propose-final-plots.md` (regenerate leftover + Stage B D/M/R into `2026-08-30-final-fit/`). Official MAP unchanged.
+
+**2026-08-30 (handshake).** User: methodology is good; relax stage stops. Parent proposes; two independent sub-agents accept/reject (major/minor) on `docs/reviews/`. Dual accept → implement/execute with no third review. User **build** runs that loop through licensed stages. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. Amended `DEC-066-AGENTS`. `build_licensed: true` (user reviews plots at the end). Official MAP unchanged (`kinuv-KGAS066-uvsign-map`).
 
 **2026-08-29 (hygiene).** `native_diagonal` raises; vis SPECRESP / `NPZ_UV_SIGN` / Ico east / `chi2` stay in kinUV only (`docs/diagnostics/repos.md`). Standard leftover + slice plotters: `kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`. Guide: `docs/diagnostics/plotting.md`. Changelog: `CHANGELOG.md`. Official MAP unchanged (`kinuv-KGAS066-uvsign-map`). No new DEC.
 
