@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-30-propose-final-plots.md
+last_propose: docs/reviews/2026-08-30-propose-gold-standard.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-final-plots.md
 last_review_b: docs/reviews/2026-08-30-review-b-final-plots.md
@@ -18,7 +18,9 @@ canon_generation: 4
 
 # Architecture mailbox
 
-**2026-08-30 (tally).** Dual accept (major): `review-a` and `review-b` on `2026-08-30-propose-final-plots`. Execute plots only from official Stage A/B MAP; no refit; `--matched-fits` and leftover `--out` under `2026-08-30-final-fit/`; leftover `chi2` must match 168675.6 within 1; 10 km/s cube only for D/M/R. Official MAP read-only.
+**2026-08-30 (gold-standard propose).** Architect sequence: no fake NUTS; JAX likelihood then NumPyro then Talts SBC; GPU after CPU smoke; hierarchical and 400-galaxy runner deferred; hard targets get flags until user stubs. Propose: `docs/reviews/2026-08-30-propose-gold-standard.md`. Draft note: `docs/diagnostics/gold-standard-roadmap.md`. Official MAP unchanged. Board open.
+
+**2026-08-30 (tally).** Dual accept (major): `review-a` and `review-b` on `2026-08-30-propose-final-plots`. Execute plots only from official Stage A/B MAP; no refit. Official MAP read-only.
 
 **2026-08-30 (gates).** User: not babysitting; implementer decides each gate; human reviews **final fit plots** only. Physics stops are judgment, not a user ACK. Official MAP unchanged.
 
