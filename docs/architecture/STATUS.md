@@ -2,21 +2,33 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: proposer
+next_role: implementer
 board: accepted
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-30-propose-gold-standard.md
+last_propose: docs/reviews/2026-08-30-propose-g1-jax.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-08-30-review-a-gold-standard.md
-last_review_b: docs/reviews/2026-08-30-review-b-gold-standard.md
+last_review_a: docs/reviews/2026-08-30-review-a-g1-jax.md
+last_review_b: docs/reviews/2026-08-30-review-b-g1-jax.md
 user_review: docs/reviews/artifacts/2026-08-30-final-fit/
 open_questions: []
 deadlocks: []
 canon_generation: 4
 ---
 
+## Agent Run Status
+
+* **Phase:** G1 CPU JAX `predict_binned` (implementing)
+* **Last Action:** Dual accept (major) on G1; Gate 2/spectral/flags 16 passed
+* **Decisions Made:** XLA path from sky through NUFFT/Hann/`chi2`; NumPy stays identity; no GPU/NUTS/G2
+* **Blockers / Gates:** `|chi2 - 168675.6| < 1`; tiny `jax.grad` vs FD; `BACKEND=jax-finufft`; x64; `/tmp` cache
+* **Next Step:** Land JAX `predict_binned` identity; do not write official MAP
+
 # Architecture mailbox
+
+**2026-08-30 (G1 tally).** Dual accept (major): `review-a-g1-jax` and `review-b-g1-jax`. Execute: XLA sky+NUFFT+Hann+`chi2` (no host bounce); tiny `jax.grad` vs FD; frozen `s`; x64; `/tmp` cache; official `|chi2-168675.6|<1` when npz exists. Do not start G2/G3/GPU. Official MAP unchanged.
+
+**2026-08-30 (G1 propose).** User gold-standard/hygiene/GPU dump mapped onto G1 only. Propose: `docs/reviews/2026-08-30-propose-g1-jax.md`. ntfy: `kinuv_canfar_agent_thbrown`. Official MAP unchanged.
 
 **2026-08-30 (G0 executed).** Dual accept (major) on `2026-08-30-propose-gold-standard`. `kinuv.diagnostics.flags.map_quality_flags`: leftover-vs-velocity vs leftover-vs-uv, `r_t_at_floor`, PA vs 21.9, `beats_zero`. Official 066 fires leftover structure and the `r_t` floor. Roadmap rewritten as the 066 kernel sequence. Methodology + survey-readiness point at it. No JAX / NUTS / GPU this card. Next wave is G1 CPU JAX `predict_binned` (separate propose). Official MAP unchanged.
 

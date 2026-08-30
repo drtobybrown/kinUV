@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": ".cursor/notify.sh",
+        "timeout": 15
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": ".cursor/notify.sh",
+        "timeout": 15
+      }
+    ]
+  }
+}
