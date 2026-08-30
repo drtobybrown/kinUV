@@ -32,6 +32,7 @@ DX_IDX = 4
 DY_IDX = 5
 FROZEN_NAMES = ("dx_arcsec", "dy_arcsec")
 NUTS_SAMPLER = "nuts"
+# Interactive/subagent cap only. Headless workers (DEC-067-RUNNER) ignore this.
 WALL_CAP_S = 7200.0
 # Identity-chart PA / vsys / V_0 dwarf log-flux in an identity metric.
 Z6_SCALES = (0.3, 8.0, 25.0, 0.3, 25.0, 0.3)
