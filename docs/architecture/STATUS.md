@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: proposer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-30-propose-g2-chart.md
+last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g2-chart.md
 last_review_b: docs/reviews/2026-08-30-review-b-g2-chart.md
@@ -18,13 +18,19 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G2 unconstrained chart (landed)
-* **Last Action:** Dual accept (major) executed; 8-vector JIT chart; official r_t=0.5 finite z
-* **Decisions Made:** log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy; no logit of [0.5, 15]
-* **Blockers / Gates:** No NUTS posterior; predict_binned still host-converts (G3); do not quote inner dV/dr
-* **Next Step:** G3 NumPyro is a separate propose; do not start it here
+* **Phase:** G2 unconstrained chart landed on origin/dev (ee459af); G3 NumPyro NUTS proposed, board open
+* **Last Action:** Re-verified `tests/test_g2_chart.py` (17 passed): official Stage A `|chi2-168675.6|<1` after chart roundtrip; finite z at `r_t=0.5`; no NumPyro in `chart.py`; `SAMPLER_NAME` stays `laplace_mh`. G3 propose written: `docs/reviews/2026-08-30-propose-g3-nuts.md`
+* **Decisions Made:** No new G2 commit this turn; official MAP `kinuv-KGAS066-uvsign-map` unchanged; no NUTS run yet; no GPU; do not logit `RT_BOUNDS_ARCSEC=(0.5, 15)`; frozen i; no `h_z`
+* **Blockers / Gates:** G3 execution blocked until dual review of `2026-08-30-propose-g3-nuts.md`; do not start NUTS or GPU this card
+* **Next Step:** Dual review of G3 NumPyro NUTS propose — not executing NUTS
 
 # Architecture mailbox
+
+**2026-08-30 (G3 propose).** Autodiff `chi2(θ(z))` + CPU NumPyro NUTS. G2 already on `origin/dev` (`ee459af`, 17/17 this turn). Freeze `(dx, dy)` at MAP. Two PA runs (199.73 and 25.2), 4 chains. `sampler: nuts` only after autodiff. No logit of `[0.5, 15]`. No GPU. Official MAP unchanged. Propose: `docs/reviews/2026-08-30-propose-g3-nuts.md`.
+
+**2026-08-30 (G2 verified).** Already executed (`ee459af`). Re-ran `tests/test_g2_chart.py`: 17 passed, including official `|chi2-168675.6|<1`. Host `log_prob_unconstrained` is not autodiff. Do not re-land the chart. Official MAP unchanged.
+
+**2026-08-30 (spectral vsys).** User-directed: diagnose Stage B vs 10 km/s redshift. Root cause is vis-weighted MAP \(V_{\rm sys}\) (optical ~8323.6 km/s) vs CLEAN/catalogue (~8299.6), not radio/optical, `RESTFRQ`, `CRPIX3`, or Hann phase. Tests lock Hann impulse + m/s axis + rebin delta. Write path `SPECSYS=LSRK`. Spectra annotate \(\Delta v_{\rm M-D}\`. No silent fudge. Official MAP unchanged.
 
 **2026-08-30 (G2 executed).** Dual accept (major). `kinuv.infer.chart` 8-vector log/softplus/identity maps; `jax.jit` type preservation; per-axis FD Jacobian; official `|chi2-168675.6|<1` after roundtrip. `log_prob_unconstrained` is host-only. No NumPyro, no NUTS label. Official MAP unchanged.
 

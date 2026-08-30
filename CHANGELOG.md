@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — G3 NumPyro NUTS propose
+
+Board open. Autodiff `chi2(θ(z))` + two CPU Stage A NUTS runs (PA 199.73 and 25.2, 4 chains). Freeze `(dx, dy)` at MAP. `sampler: nuts` only after autodiff. G2 already on `origin/dev` (`ee459af`, 17/17). No GPU, no logit of `[0.5, 15]`, official MAP unchanged.
+
 ## 2026-08-30 — G2 unconstrained Stage A chart + Jacobian
 
 Dual accept (major). `kinuv.infer.chart`: log on flux / gas_sigma / r_t, stable `logaddexp` softplus on `V_0` (no Python `if`; `V_0=0` is `-inf`), identity on PA / vsys / (dx, dy). JIT surface is a length-8 vector; `log_prob_unconstrained` is host `log_prob(θ)+log|J|`, not autodiff. Official `r_t=0.5` maps to finite `z`. No NumPyro, no NUTS label, official MAP unchanged.
