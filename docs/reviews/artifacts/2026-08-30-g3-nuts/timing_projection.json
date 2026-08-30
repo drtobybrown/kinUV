@@ -1,0 +1,32 @@
+{
+  "backend": "jax-finufft",
+  "JAX_PLATFORMS": "cpu",
+  "JAX_ENABLE_X64": "1",
+  "tiny_sampler": "nuts",
+  "tiny_mixing_pass": true,
+  "tiny_mean_num_steps": 28.6484375,
+  "tiny_eval_s": 64.08081327959118,
+  "g1_eval_s": 3.0119,
+  "s2_eval_s": 0.329,
+  "066_grad": {
+    "t_grad_s": 0.4340723119676113,
+    "t_fwd_s": 0.8001986518502235,
+    "eval_s": 1.2496896835401994,
+    "chi2_identity_note": "see pytest official chi2"
+  },
+  "projection": {
+    "n_chain": 4,
+    "n_warmup": 200,
+    "n_samples": 400,
+    "mean_num_steps": 28.6484375,
+    "t_grad_s": 0.4340723119676113,
+    "projected_s": 29845.184399723075,
+    "wall_cap_s": 7200.0,
+    "under_cap": false,
+    "formula": "n_chain * (warmup+draw) * mean_num_steps * t_grad_066"
+  },
+  "s": 0.5136098555284736,
+  "official_pa_deg": 199.72980072503037,
+  "approach_pa_deg": 25.2,
+  "gpu": false
+}

@@ -2,7 +2,7 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: implementer
+next_role: proposer
 board: accepted
 build_licensed: true
 pending: []
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G3 autodiff + CPU NumPyro NUTS (dual accept, executing)
-* **Last Action:** Dual accept (major) on `2026-08-30-propose-g3-nuts.md`; reviews a/b on disk
-* **Decisions Made:** U = 0.5(chi2 + shift_prior_const) - log|J|; freeze (dx, dy) as host MAP floats; six sampled names; no logit of [0.5, 15]; no GPU
-* **Blockers / Gates:** Gate 1 six-axis jax.grad(U); pin numpyro without moving jax 0.11.1; 066 ESS>400 or no 066 sampler: nuts if wall-clock cap
-* **Next Step:** Execute autodiff potential then tiny-mock NUTS then 066 if projected cost allows
+* **Phase:** G3 landed (tiny-mock NUTS); 066 NUTS skipped on wall cap
+* **Last Action:** Autodiff `U(z)` + CPU NumPyro tiny-mock 4-chain `sampler: nuts`; 066 projection 29845 s > 7200 s
+* **Decisions Made:** U = 0.5(chi2 + shift_prior_const) - log|J|; freeze (dx, dy) as host MAP floats; six sampled names; no logit of [0.5, 15]; no GPU; no 066 `sampler: nuts` under the cap
+* **Blockers / Gates:** 066 NUTS projected 8.3 h on CPU (t_grad 0.434 s × 28.6 leapfrog); no GPU; do not start G4 SBC
+* **Next Step:** Leave 066 NUTS unlabelled; G4 is a separate propose. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-30 (G3 executed).** Dual accept (major). JAX `U(z)=0.5(chi2+shift_prior_const)-log|J|`; sampled-name `float()` off the XLA vis path; `(dx, dy)` frozen at MAP host floats. Tiny-mock 4-chain NUTS mixed (`R_hat<1.01`, ESS>200) → `sampler: nuts`. 066 `jax.grad` 0.434 s; projected 29845 s > 7200 s cap → no 066 `sampler: nuts`, no GPU. numpyro 0.21.0 `--no-deps` keeps jax 0.11.1 / jax-finufft. Artifacts: `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Receding init is MAP 199.73, not seed 205.2. Do not quote S2 16/50/84 or inner `dV/dr`. Official MAP unchanged. Do not start G4.
 
 **2026-08-30 (G3 tally).** Dual accept (major): `review-a-g3-nuts` and `review-b-g3-nuts`. Execute: U not 2U; six-axis grad not flux-only; freeze (dx, dy) as host floats (no live shift_prior in U); 8-col draws; mixing on six names; pin numpyro without upgrading jax; `sampler: nuts` only after autodiff (066 only after mixing). No GPU. Official MAP unchanged.
 

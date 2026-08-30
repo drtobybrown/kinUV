@@ -57,8 +57,8 @@ G1_EVAL_S = 3.0119
 S2_EVAL_S = 0.329
 OFFICIAL_PA = 199.72980072503037
 APPROACH_PA = 25.2
-TINY_WARMUP = 128
-TINY_SAMPLES = 256
+TINY_WARMUP = 192
+TINY_SAMPLES = 320
 N066_WARMUP = 200
 N066_SAMPLES = 400
 
@@ -206,11 +206,12 @@ def run_tiny() -> dict:
     rec["autodiff_ok"] = autodiff_ok
     ART.mkdir(parents=True, exist_ok=True)
     _dump(ART / "tiny_mock_nuts.json", rec)
-    plot_posterior_corner(
-        rec,
-        ART / "tiny_mock_corner.png",
-        title="tiny-mock NUTS 6D; not 066; not calibrated; not S2 Laplace",
-    )
+    if rec["sampler"] == "nuts":
+        plot_posterior_corner(
+            rec,
+            ART / "tiny_mock_corner.png",
+            title="tiny-mock NUTS 6D; not 066; not calibrated; not S2 Laplace",
+        )
     _checkpoint(
         "tiny_mix.json",
         {k: rec[k] for k in rec if k != "draws"},
@@ -357,18 +358,20 @@ def main() -> None:
         return
     receding = run_066_pa(data, tmpl, grid, params, OFFICIAL_PA, seed=11)
     _dump(ART / "kgas066_nuts_pa199.73.json", receding)
-    plot_posterior_corner(
-        receding,
-        ART / "kgas066_nuts_pa199.73_corner.png",
-        title="066 NUTS PA 199.73; 6 sampled; not calibrated; leftover structured; r_t floor",
-    )
+    if receding["sampler"] == "nuts":
+        plot_posterior_corner(
+            receding,
+            ART / "kgas066_nuts_pa199.73_corner.png",
+            title="066 NUTS PA 199.73; 6 sampled; not calibrated; leftover structured; r_t floor",
+        )
     approaching = run_066_pa(data, tmpl, grid, params, APPROACH_PA, seed=22)
     _dump(ART / "kgas066_nuts_pa25.2.json", approaching)
-    plot_posterior_corner(
-        approaching,
-        ART / "kgas066_nuts_pa25.2_corner.png",
-        title="066 NUTS PA 25.2; 6 sampled; not calibrated; leftover structured; r_t floor",
-    )
+    if approaching["sampler"] == "nuts":
+        plot_posterior_corner(
+            approaching,
+            ART / "kgas066_nuts_pa25.2_corner.png",
+            title="066 NUTS PA 25.2; 6 sampled; not calibrated; leftover structured; r_t floor",
+        )
     print("066 receding sampler", receding["sampler"], receding["mixing_pass"], flush=True)
     print(
         "066 approaching sampler",

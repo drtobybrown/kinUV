@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — G3 autodiff potential + CPU NumPyro NUTS
+
+Dual accept (major). JAX `U(z)=0.5(chi2+shift_prior_const)-log|J|` on the G2 chart; sampled-name `float()` removed on the XLA vis path. `(dx, dy)` frozen at MAP host floats. Tiny-mock 4-chain NUTS mixed (`R_hat<1.01`, ESS>200) → `sampler: nuts`. 066 wall projection 8.3 h > 2 h cap; no 066 `sampler: nuts`; no GPU. numpyro 0.21.0 `--no-deps` keeps jax 0.11.1. Official MAP unchanged. Do not quote S2 16/50/84 or inner `dV/dr`.
+
 ## 2026-08-30 — G3 NumPyro NUTS propose
 
 Board open. Autodiff `chi2(θ(z))` + two CPU Stage A NUTS runs (PA 199.73 and 25.2, 4 chains). Freeze `(dx, dy)` at MAP. `sampler: nuts` only after autodiff. G2 already on `origin/dev` (`ee459af`, 17/17). No GPU, no logit of `[0.5, 15]`, official MAP unchanged.
