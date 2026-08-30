@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-08-30-review-a-g2-chart.md
-last_review_b: docs/reviews/2026-08-30-review-b-g2-chart.md
+last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
+last_review_b: docs/reviews/2026-08-30-review-b-g3-nuts.md
 user_review: docs/reviews/artifacts/2026-08-30-final-fit/
 open_questions: []
 deadlocks: []
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G2 unconstrained chart landed on origin/dev (ee459af); G3 NumPyro NUTS proposed, board open
-* **Last Action:** Re-verified `tests/test_g2_chart.py` (17 passed): official Stage A `|chi2-168675.6|<1` after chart roundtrip; finite z at `r_t=0.5`; no NumPyro in `chart.py`; `SAMPLER_NAME` stays `laplace_mh`. G3 propose written: `docs/reviews/2026-08-30-propose-g3-nuts.md`
-* **Decisions Made:** No new G2 commit this turn; official MAP `kinuv-KGAS066-uvsign-map` unchanged; no NUTS run yet; no GPU; do not logit `RT_BOUNDS_ARCSEC=(0.5, 15)`; frozen i; no `h_z`
-* **Blockers / Gates:** G3 execution blocked until dual review of `2026-08-30-propose-g3-nuts.md`; do not start NUTS or GPU this card
-* **Next Step:** Dual review of G3 NumPyro NUTS propose — not executing NUTS
+* **Phase:** G3 autodiff + CPU NumPyro NUTS (dual accept, executing)
+* **Last Action:** Dual accept (major) on `2026-08-30-propose-g3-nuts.md`; reviews a/b on disk
+* **Decisions Made:** U = 0.5(chi2 + shift_prior_const) - log|J|; freeze (dx, dy) as host MAP floats; six sampled names; no logit of [0.5, 15]; no GPU
+* **Blockers / Gates:** Gate 1 six-axis jax.grad(U); pin numpyro without moving jax 0.11.1; 066 ESS>400 or no 066 sampler: nuts if wall-clock cap
+* **Next Step:** Execute autodiff potential then tiny-mock NUTS then 066 if projected cost allows
 
 # Architecture mailbox
+
+**2026-08-30 (G3 tally).** Dual accept (major): `review-a-g3-nuts` and `review-b-g3-nuts`. Execute: U not 2U; six-axis grad not flux-only; freeze (dx, dy) as host floats (no live shift_prior in U); 8-col draws; mixing on six names; pin numpyro without upgrading jax; `sampler: nuts` only after autodiff (066 only after mixing). No GPU. Official MAP unchanged.
 
 **2026-08-30 (G3 propose).** Autodiff `chi2(θ(z))` + CPU NumPyro NUTS. G2 already on `origin/dev` (`ee459af`, 17/17 this turn). Freeze `(dx, dy)` at MAP. Two PA runs (199.73 and 25.2), 4 chains. `sampler: nuts` only after autodiff. No logit of `[0.5, 15]`. No GPU. Official MAP unchanged. Propose: `docs/reviews/2026-08-30-propose-g3-nuts.md`.
 
