@@ -18,6 +18,8 @@ Use `kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`. Do not in
 
 Preview writes go to `docs/reviews/artifacts/fit-diagnostics/` (gitignored). Canon PNGs stay under dated `docs/reviews/artifacts/YYYY-MM-DD-<slug>/`.
 
+4. **NUTS corner (later)** — `plot_posterior_corner`: 8 Stage A names, 16/50/84 from **draws**, only if `sampler == "nuts"`. Refuses `laplace_mh` and S2 interval tables. Not part of every MAP handoff.
+
 ## Required imports
 
 ```python

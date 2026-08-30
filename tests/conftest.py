@@ -1,16 +1,45 @@
 """Shared fixtures. Float64 is mandatory.
 
-G1: set CPU / x64 / compile cache before any test imports jax.
+Set CPU / x64 / scratch cache before any test imports jax.
 """
 
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 os.environ.setdefault("JAX_PLATFORMS", "cpu")
 os.environ.setdefault("JAX_ENABLE_X64", "1")
-os.environ.setdefault("XDG_CACHE_HOME", "/tmp/kinuv-xdg")
-os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", "/tmp/kinuv-jax-cache")
+
+_USER = os.environ.get("USER") or os.environ.get("LOGNAME") or "kinuv"
+_SESS = os.environ.get("SKAHA_SESSION_ID") or os.environ.get("HOSTNAME") or "local"
+_ROOT = None
+for _base in ("/scratch", "/tmp"):
+    _cand = Path(_base) / f"kinuv-{_USER}" / str(_SESS)
+    try:
+        _cand.mkdir(parents=True, exist_ok=True)
+        _probe = _cand / ".w"
+        _probe.write_text("ok")
+        _probe.unlink()
+        _ROOT = _cand
+        break
+    except OSError:
+        continue
+if _ROOT is None:
+    _ROOT = Path("/tmp") / f"kinuv-{_USER}" / str(_SESS)
+    _ROOT.mkdir(parents=True, exist_ok=True)
+
+_tmp = _ROOT / "tmp"
+_cache = _ROOT / "jax-cache"
+_xdg = _ROOT / "xdg"
+_tmp.mkdir(exist_ok=True)
+_cache.mkdir(exist_ok=True)
+_xdg.mkdir(exist_ok=True)
+os.environ.setdefault("TMPDIR", str(_tmp))
+os.environ.setdefault("TEMP", str(_tmp))
+os.environ.setdefault("TMP", str(_tmp))
+os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", str(_cache))
+os.environ.setdefault("XDG_CACHE_HOME", str(_xdg))
 
 import numpy as np
 import pytest

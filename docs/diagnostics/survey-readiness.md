@@ -1,6 +1,6 @@
 # Survey-readiness (checklist only)
 
-Not a DEC. Not a 400-galaxy runner. Sequence for the **066 kernel** (flags, then CPU JAX, then NUTS, then SBC): [`gold-standard-roadmap.md`](gold-standard-roadmap.md). [`DEC-066-TARGET`](../decisions/DEC-066-TARGET.md) still locks **code** to KGAS066 until MAP beats \(V=0\) (passed) **and** injected vsys/PA/flux recover on 066 uv (Hann+bin mock; see methodology). [`DEC-HIER-SELFUNC`](../decisions/DEC-HIER-SELFUNC.md) stays Phase 5. G0 flags on one Stage A JSON are not a subset dispatcher.
+Not a DEC. Not a 400-galaxy runner. Sequence for the **066 kernel** (flags, then CPU JAX, then NUTS, then SBC): [`gold-standard-roadmap.md`](gold-standard-roadmap.md). CANFAR I/O: [`scratch.md`](scratch.md). [`DEC-066-TARGET`](../decisions/DEC-066-TARGET.md) still locks **code** to KGAS066 until MAP beats \(V=0\) (passed) **and** injected vsys/PA/flux recover on 066 uv (Hann+bin mock; see methodology). [`DEC-HIER-SELFUNC`](../decisions/DEC-HIER-SELFUNC.md) stays Phase 5. G0 flags on one Stage A JSON are not a subset dispatcher.
 
 Recommended user stubs (you add them): TARGET subset; optional `h_z`; unfreeze `i` with an optical prior; warp/strip/KDC classes. Do not treat Stage B rings as a warp.
 

@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: board
-board: open
+next_role: proposer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-08-30-propose-ops-scratch.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-08-30-review-a-g1-jax.md
-last_review_b: docs/reviews/2026-08-30-review-b-g1-jax.md
+last_review_a: docs/reviews/2026-08-30-review-a-ops-scratch.md
+last_review_b: docs/reviews/2026-08-30-review-b-ops-scratch.md
 user_review: docs/reviews/artifacts/2026-08-30-final-fit/
 open_questions: []
 deadlocks: []
@@ -18,15 +18,19 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** Ops /scratch + corner plotter (board open)
-* **Last Action:** G1 landed `b67365f`; proposed scratch I/O, STATUS Composer-2.5, NUTS-only corners
-* **Decisions Made:** No Laplace 16/50/84 product; no G2/G3 this card; `/scratch` exists (local)
-* **Blockers / Gates:** Dual review of `2026-08-30-propose-ops-scratch.md`
-* **Next Step:** Dual accept -> docs + refuse-`laplace_mh` corner plotter; handoff note
+* **Phase:** Ops /scratch + NUTS-only corner plotter (landed)
+* **Last Action:** Dual accept (major) executed; S2 `laplace_mh` corners refused; G1 still identity
+* **Decisions Made:** TMP/JAX cache on `/scratch` if writable; Composer edits only Agent Run Status; no G2/G3
+* **Blockers / Gates:** No NUTS posterior yet; do not logit the 0.5" `r_t` floor
+* **Next Step:** G2 unconstrained chart (separate propose); handoff `docs/reviews/2026-08-30-handoff-senior.md`
 
 # Architecture mailbox
 
-**2026-08-30 (ops propose).** User asked `/scratch` I/O, Composer 2.5 STATUS push, posterior corners, senior handoff. Propose: `docs/reviews/2026-08-30-propose-ops-scratch.md`. Board open. No NUTS; no S2 Laplace corners as 16/50/84 product. Official MAP unchanged.
+**2026-08-30 (ops executed).** Dual accept (major) on `2026-08-30-propose-ops-scratch`. Scratch policy `docs/diagnostics/scratch.md`. Corner plotter refuses `laplace_mh` and S2 interval tables. Handoff: `docs/reviews/2026-08-30-handoff-senior.md`. No NUTS, no G2, official MAP unchanged.
+
+**2026-08-30 (ops tally).** Dual accept (major): `review-a-ops-scratch` and `review-b-ops-scratch`. Provenance gate on corners; Composer edits only Agent Run Status; no vis checkpoints.
+
+**2026-08-30 (ops propose).** User asked `/scratch` I/O, Composer 2.5 STATUS push, posterior corners, senior handoff. Propose: `docs/reviews/2026-08-30-propose-ops-scratch.md`. No NUTS; no S2 Laplace corners as 16/50/84 product. Official MAP unchanged.
 
 **2026-08-30 (G1 executed).** Dual accept (major). JAX `predict_binned(..., xla=True)` stays on device through NUFFT/Hann/`chi2`. Official Stage A `chi2=168675.6` (same `s=0.5136`). Post-warmup 3.01 eval/s vs S2 FD 0.329. Tiny `jax.grad` vs FD. Timing: `docs/reviews/artifacts/2026-08-30-g1-jax/timing.json`. No G2/G3/GPU. Official MAP unchanged.
 

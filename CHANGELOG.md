@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — /scratch I/O, NUTS-only corners, senior handoff
+
+Dual accept (major) on ops-scratch. High-frequency writes go to `/scratch/kinuv-$USER` (else `/tmp`), never NFS `/arc`. `plot_posterior_corner` requires `sampler == "nuts"` and an 8-column draw array; S2 `laplace_mh` JSON raises. Handoff: `docs/reviews/2026-08-30-handoff-senior.md`. No NUTS run, no G2, official MAP unchanged.
+
 ## 2026-08-30 — G1 CPU JAX `predict_binned`
 
 Dual accept (major). `predict_binned(..., xla=True)` keeps JAX arrays from sky through NUFFT, Hann+bin, and `chi2`. NumPy path stays the identity reference. Official Stage A `chi2` matches 168675.6 at frozen `s=0.5136`. Post-warmup 3.01 eval/s vs S2 FD 0.329. Tiny-grid `jax.grad` vs FD. Tests set CPU/x64/`/tmp` cache. No NUTS, no GPU, no G2 logit of the `r_t` floor. Official MAP unchanged.

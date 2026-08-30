@@ -12,6 +12,17 @@ import numpy as np
 
 from kinuv.diagnostics.style import COLOUR, apply_style, intensity_cmap, save_fig
 
+STAGE_A_NAMES = (
+    "flux",
+    "pa_deg",
+    "vsys_kms",
+    "gas_sigma_kms",
+    "dx_arcsec",
+    "dy_arcsec",
+    "v0_kms",
+    "r_t_arcsec",
+)
+
 
 def binned_mean(x, y, n_bin: int = 16):
     """Mean ``y`` in percentile-clipped bins of ``x``."""
@@ -89,5 +100,88 @@ def plot_chi2_slices(
     axes[1].plot(mark["gas_sigma_kms"], mark["i_deg"], "o", color=COLOUR["data"], ms=4)
     _contour(axes[2], pa, r_t, z_pa_rt, "PA (deg)", "r_t (arcsec)", "PA-r_t")
     axes[2].plot(mark["pa_deg"], mark["r_t_arcsec"], "o", color=COLOUR["data"], ms=4)
+    fig.tight_layout()
+    return save_fig(fig, path)
+
+
+def _as_nuts_draws(rec):
+    """Require provenance ``sampler == 'nuts'`` and an 8-column draw array."""
+    if isinstance(rec, (str, Path)):
+        raise ValueError("plot_posterior_corner takes a draws record, not a path")
+    if isinstance(rec, dict):
+        sampler = rec.get("sampler")
+        draws = rec.get("draws")
+        intervals = rec.get("intervals")
+    else:
+        sampler = getattr(rec, "sampler", None)
+        draws = getattr(rec, "draws", None)
+        intervals = getattr(rec, "intervals", None)
+    if sampler != "nuts":
+        raise ValueError(
+            f"plot_posterior_corner requires sampler == 'nuts'; got {sampler!r}"
+        )
+    if draws is None:
+        raise ValueError(
+            "draws array required; p16/p84 interval tables are not a NUTS posterior"
+        )
+    arr = np.asarray(draws, dtype=np.float64)
+    if arr.ndim == 3:
+        arr = arr.reshape(-1, arr.shape[-1])
+    if arr.ndim != 2 or arr.shape[1] != 8:
+        raise ValueError("draws must be (n_draw, 8) or (n_chain, n_draw, 8)")
+    if intervals is not None and np.size(draws) <= 8:
+        raise ValueError("interval tables with no chain draws are refused")
+    return arr
+
+
+def plot_posterior_corner(rec, path, *, title=None) -> Path:
+    """Stage A corner from NUTS draws only. Not laplace_mh. ASCII names."""
+    draws = _as_nuts_draws(rec)
+    apply_style()
+    import matplotlib.pyplot as plt
+
+    n = draws.shape[1]
+    fig, axes = plt.subplots(n, n, figsize=(9.6, 9.6))
+    for i in range(n):
+        for j in range(n):
+            ax = axes[i, j]
+            if j > i:
+                ax.axis("off")
+                continue
+            if i == j:
+                ax.hist(
+                    draws[:, i],
+                    bins=24,
+                    color=COLOUR["model"],
+                    histtype="stepfilled",
+                    alpha=0.35,
+                    density=True,
+                )
+                q16, q50, q84 = np.quantile(draws[:, i], [0.16, 0.50, 0.84])
+                ax.axvline(q16, color=COLOUR["vsys"], lw=0.8, ls="--")
+                ax.axvline(q50, color=COLOUR["data"], lw=0.9)
+                ax.axvline(q84, color=COLOUR["vsys"], lw=0.8, ls="--")
+            else:
+                ax.plot(
+                    draws[:, j],
+                    draws[:, i],
+                    ".",
+                    color=COLOUR["zero"],
+                    ms=1.5,
+                    alpha=0.35,
+                    rasterized=True,
+                )
+            if i == n - 1:
+                ax.set_xlabel(STAGE_A_NAMES[j], fontsize=8)
+            else:
+                ax.set_xticklabels([])
+            if j == 0:
+                ax.set_ylabel(STAGE_A_NAMES[i], fontsize=8)
+            else:
+                ax.set_yticklabels([])
+    fig.suptitle(
+        title or "synthetic nuts fixture; not 066; not laplace_mh",
+        fontsize=11,
+    )
     fig.tight_layout()
     return save_fig(fig, path)

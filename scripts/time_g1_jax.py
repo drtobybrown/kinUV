@@ -3,14 +3,17 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import time
 from pathlib import Path
 
-os.environ.setdefault("JAX_PLATFORMS", "cpu")
-os.environ.setdefault("JAX_ENABLE_X64", "1")
-os.environ.setdefault("JAX_COMPILATION_CACHE_DIR", "/tmp/kinuv-jax-cache")
+_scratch_py = Path(__file__).resolve().parents[1] / "src/kinuv/scratch.py"
+_spec = importlib.util.spec_from_file_location("_kinuv_scratch", _scratch_py)
+_scratch = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_scratch)
+_scratch.apply_scratch_env()
 
 import numpy as np
 
