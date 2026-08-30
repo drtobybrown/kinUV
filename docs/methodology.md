@@ -4,6 +4,8 @@ This is the science write-up. Agent process is in [`docs/reviews/BOARD.md`](revi
 
 **Your job:** look at the latest Data | Model | Residual moments / spectra / PV and leftover `chi2` in the plot folder named on STATUS. You are not sitting gates. Agents decide those and keep going.
 
+066 kernel sequence (autodiff likelihood, NUTS, SBC on the exact mock; not a 400-galaxy runner; `DEC-HIER-SELFUNC` stays Phase 5): [`docs/diagnostics/gold-standard-roadmap.md`](diagnostics/gold-standard-roadmap.md). G0 MAP flags live in `kinuv.diagnostics.flags`. Official 066 fires `r_t_at_floor` and leftover-vs-velocity (vs leftover-vs-uv). Do not quote inner `dV/dr` while `r_t` sits on the 0.5 arcsec L-BFGS floor. That box is not a science prior for later HMC.
+
 ## What we fit
 
 Kinematics are inferred from **ALMA visibilities**, not from the CLEANed cube. The number we minimise is
@@ -54,6 +56,7 @@ The parent proposes a scope, two independent reviewers accept or reject on the b
 
 | Item | Path |
 |---|---|
+| 066 kernel sequence | [`docs/diagnostics/gold-standard-roadmap.md`](diagnostics/gold-standard-roadmap.md) |
 | Official MAP | `/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/` |
 | S1 artifacts | `docs/reviews/artifacts/2026-08-29-s1-mock/` |
 | S2 artifacts | `docs/reviews/artifacts/2026-08-29-s2/` |

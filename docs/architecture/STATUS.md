@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: board
-board: open
+next_role: proposer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-08-30-propose-gold-standard.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-08-30-review-a-final-plots.md
-last_review_b: docs/reviews/2026-08-30-review-b-final-plots.md
+last_review_a: docs/reviews/2026-08-30-review-a-gold-standard.md
+last_review_b: docs/reviews/2026-08-30-review-b-gold-standard.md
 user_review: docs/reviews/artifacts/2026-08-30-final-fit/
 open_questions: []
 deadlocks: []
@@ -18,7 +18,11 @@ canon_generation: 4
 
 # Architecture mailbox
 
-**2026-08-30 (gold-standard propose).** Architect sequence: no fake NUTS; JAX likelihood then NumPyro then Talts SBC; GPU after CPU smoke; hierarchical and 400-galaxy runner deferred; hard targets get flags until user stubs. Propose: `docs/reviews/2026-08-30-propose-gold-standard.md`. Draft note: `docs/diagnostics/gold-standard-roadmap.md`. Official MAP unchanged. Board open.
+**2026-08-30 (G0 executed).** Dual accept (major) on `2026-08-30-propose-gold-standard`. `kinuv.diagnostics.flags.map_quality_flags`: leftover-vs-velocity vs leftover-vs-uv, `r_t_at_floor`, PA vs 21.9, `beats_zero`. Official 066 fires leftover structure and the `r_t` floor. Roadmap rewritten as the 066 kernel sequence. Methodology + survey-readiness point at it. No JAX / NUTS / GPU this card. Next wave is G1 CPU JAX `predict_binned` (separate propose). Official MAP unchanged.
+
+**2026-08-30 (gold-standard tally).** Dual accept (major): `review-a` and `review-b` on `2026-08-30-propose-gold-standard`. Execute G0 flags + rewrite roadmap. Do not start G1.
+
+**2026-08-30 (gold-standard propose).** Architect sequence: no fake NUTS; JAX likelihood then NumPyro then Talts SBC; GPU after CPU NUTS smoke; hierarchical and 400-galaxy runner deferred; hard targets get flags until user stubs. Propose: `docs/reviews/2026-08-30-propose-gold-standard.md`. Official MAP unchanged.
 
 **2026-08-30 (tally).** Dual accept (major): `review-a` and `review-b` on `2026-08-30-propose-final-plots`. Execute plots only from official Stage A/B MAP; no refit. Official MAP read-only.
 

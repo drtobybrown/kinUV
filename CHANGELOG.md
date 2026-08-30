@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — G0 MAP quality flags (066 kernel)
+
+Dual accept (major) on the gold-standard sequence. Flags live in `kinuv.diagnostics.flags` (not `infer/`). Official 066 fires `r_t_at_floor` and leftover-vs-velocity vs leftover-vs-uv; PA=199.73 does not fire the 21.9 alias; `Delta_chi2` = +35553 records `beats_zero`. Roadmap rewritten as the 066 kernel sequence. No JAX, no NUTS, no GPU, no 400-galaxy runner. Official MAP unchanged.
+
 ## 2026-08-30 — Final-fit plot handoff
 
 Dual accept (major). Regenerated Stage A leftover + Stage B D/M/R into `docs/reviews/artifacts/2026-08-30-final-fit/`. Leftover `chi2` = 168675.6. Official MAP not written. Matched cube stays in the artifact dir (not committed).

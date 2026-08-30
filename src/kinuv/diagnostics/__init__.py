@@ -1,5 +1,6 @@
 """Image-plane diagnostics. Not part of the visibility likelihood."""
 
+from .flags import map_quality_flags
 from .imaging import (
     jy_per_pixel_to_k,
     match_model_to_imaging,
@@ -13,6 +14,7 @@ from .imaging import (
 )
 
 __all__ = [
+    "map_quality_flags",
     "jy_per_pixel_to_k",
     "match_model_to_imaging",
     "masked_moments",
