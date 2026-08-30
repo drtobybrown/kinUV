@@ -14,6 +14,7 @@ from kinuv.diagnostics.s1 import (
     CANFAR_ICO,
     CANFAR_NPZ,
     MAP_DIR,
+    assert_hann_bin_operator,
     leftover_chi2,
 )
 from kinuv.forward.sb import load_sb_template
@@ -34,6 +35,7 @@ def main(argv=None) -> None:
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
 
+    kernel = assert_hann_bin_operator()
     cube30 = CANFAR_CUBE_30 if CANFAR_CUBE_30.is_file() else None
     ico = CANFAR_ICO if CANFAR_ICO.is_file() else None
     data = load_kgas066(args.npz, cube_path=cube30)
@@ -61,10 +63,17 @@ def main(argv=None) -> None:
         "n_chan": int(data.vis.shape[1]),
         "s": float(data.s),
         "pol": "XX",
+        "pipeline_kernel": kernel,
         "mean_chi2_per_row": float(np.mean(per_row)),
         "mean_chi2_per_chan": float(np.mean(per_chan)),
         "note": "Spiral leftover in image-plane M0 is SB misspecification, not CLEAN.",
     }
+    if abs(total - float(rec["chi2_map"])) >= 1.0:
+        raise SystemExit(
+            f"leftover chi2_sum={total:.1f} != stage_a chi2_map={rec['chi2_map']:.1f}"
+        )
+    if int(data.vis.shape[0]) != 881 or int(data.vis.shape[1]) != 95:
+        raise SystemExit(f"fit array {data.vis.shape} != (881, 95)")
     (out / "leftover_chi2.json").write_text(json.dumps(summary, indent=2) + "\n")
     np.savez(
         out / "leftover_chi2.npz",

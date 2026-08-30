@@ -57,5 +57,6 @@ The parent proposes a scope, two independent reviewers accept or reject on the b
 | Official MAP | `/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/` |
 | S1 artifacts | `docs/reviews/artifacts/2026-08-29-s1-mock/` |
 | S2 artifacts | `docs/reviews/artifacts/2026-08-29-s2/` |
-| Moment maps | `docs/reviews/artifacts/2026-08-28-stage-b-imaging/moments.png` |
+| **Your review folder** | [`docs/reviews/artifacts/2026-08-30-final-fit/`](reviews/artifacts/2026-08-30-final-fit/) |
+| Moment maps | [`docs/reviews/artifacts/2026-08-30-final-fit/moments.png`](reviews/artifacts/2026-08-30-final-fit/moments.png) |
 | Decisions | `docs/decisions/DEC-066-INDEX.md` |

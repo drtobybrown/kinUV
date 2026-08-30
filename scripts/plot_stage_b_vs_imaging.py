@@ -211,6 +211,9 @@ def main(argv=None) -> int:
     p.add_argument("--out-dir", type=Path, default=None)
     p.add_argument("--matched-fits", type=Path, default=MAP_DIR / "stage_b_model_on_10kms.fits")
     args = p.parse_args(argv)
+    for label, path in (("data-cube", args.data_cube), ("mask-cube", args.mask_cube)):
+        if "30kms" in str(path):
+            raise SystemExit(f"{label} must be the 10 km/s cube, not 30kms: {path}")
 
     out_dir = args.out_dir
     if out_dir is None:

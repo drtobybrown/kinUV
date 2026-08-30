@@ -1,0 +1,13 @@
+{
+  "map": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map",
+  "chi2_sum": 168675.59555208945,
+  "chi2_map_json": 168675.59555208942,
+  "n_row": 881,
+  "n_chan": 95,
+  "s": 0.5136098555284736,
+  "pol": "XX",
+  "pipeline_kernel": "hann_then_bin",
+  "mean_chi2_per_row": 191.4592458025987,
+  "mean_chi2_per_chan": 1775.532584758836,
+  "note": "Spiral leftover in image-plane M0 is SB misspecification, not CLEAN."
+}

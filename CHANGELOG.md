@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-30 — Final-fit plot handoff
+
+Dual accept (major). Regenerated Stage A leftover + Stage B D/M/R into `docs/reviews/artifacts/2026-08-30-final-fit/`. Leftover `chi2` = 168675.6. Official MAP not written. Matched cube stays in the artifact dir (not committed).
+
 ## 2026-08-30 — User reviews final plots; implementer owns gates
 
 Physics stops are no longer user-blocking. The implementer decides each gate, notes it on STATUS, and continues. The human review surface is the final Data | Model | Residual + leftover `chi2` folder. Still forbidden: new `DEC-*`, in-place overwrite of `kinuv-KGAS066-uvsign-map`, calling Laplace-MH NUTS. Amended `DEC-066-AGENTS`.

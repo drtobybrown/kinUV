@@ -1,0 +1,18 @@
+{
+  "data_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+  "mask_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+  "model_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/stage_b_model_cube.fits",
+  "matched_fits": "docs/reviews/artifacts/2026-08-30-final-fit/model_on_10kms.fits",
+  "pa_deg": 199.72980072503037,
+  "dx_arcsec": 0.09104737371760792,
+  "dy_arcsec": 0.018566961155444102,
+  "vsys_optical_kms": 8323.63275478255,
+  "mom0_sum_data": 27863.685648623163,
+  "mom0_sum_model": 28480.04853046732,
+  "plots": [
+    "docs/reviews/artifacts/2026-08-30-final-fit/moments.png",
+    "docs/reviews/artifacts/2026-08-30-final-fit/spectra.png",
+    "docs/reviews/artifacts/2026-08-30-final-fit/pv_major.png",
+    "docs/reviews/artifacts/2026-08-30-final-fit/pv_minor.png"
+  ]
+}
