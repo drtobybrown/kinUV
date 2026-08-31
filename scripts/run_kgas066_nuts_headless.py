@@ -20,9 +20,8 @@ _scratch.apply_scratch_env()
 
 import numpy as np
 
-from kinuv.infer.chart import PARAM_NAMES, params_to_unconstrained
+from kinuv.infer.chart import PARAM_NAMES
 from kinuv.infer.nuts import (
-    SAMPLED_IDX,
     make_potential,
     mixing_ok,
     mixing_sampled,
@@ -33,6 +32,13 @@ from kinuv.infer.nuts import (
 )
 from kinuv.infer.posterior import params_to_vec
 from kinuv.runner.canfar import RUNS_ROOT, utc_now, write_json, write_status
+from kinuv.runner.log import (
+    host_snapshot,
+    install_crash_hook,
+    logs_dir,
+    rss_mb,
+    setup_worker_logging,
+)
 from kinuv.transforms.nufft import BACKEND
 
 MAP = Path(
@@ -67,9 +73,18 @@ def _load_066():
     return data, tmpl, grid, params, rec
 
 
-def _heartbeat(run_id: str, stop: threading.Event, state: dict) -> None:
+def _heartbeat(run_id: str, stop: threading.Event, state: dict, log) -> None:
     while not stop.wait(30.0):
-        write_status(run_id, dict(state, updated_at=utc_now()))
+        rec = dict(state)
+        rec["rss_mb"] = rss_mb()
+        rec["updated_at"] = utc_now()
+        write_status(run_id, rec)
+        log.info(
+            "heartbeat step=%s chain=%s rss_mb=%s",
+            rec.get("step"),
+            rec.get("chain"),
+            None if rec["rss_mb"] is None else f"{rec['rss_mb']:.0f}",
+        )
 
 
 def main() -> int:
@@ -80,6 +95,11 @@ def main() -> int:
     dest = RUNS_ROOT / run_id
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "posteriors").mkdir(exist_ok=True)
+    logs_dir(run_id)
+    log = setup_worker_logging(run_id)
+    install_crash_hook(run_id, log)
+    snap = host_snapshot()
+    log.info("worker start snapshot=%s", json.dumps(snap, default=str))
 
     state = {
         "state": "RUNNING",
@@ -89,9 +109,19 @@ def main() -> int:
         "n_warmup": N_WARMUP,
         "n_samples": N_SAMPLES,
         "backend": BACKEND,
+        "rss_mb": rss_mb(),
+        "hostname": snap.get("hostname"),
+        "session_id": snap.get("session_id"),
+        "pid": snap.get("pid"),
     }
     write_status(run_id, state)
     data, tmpl, grid, params, map_rec = _load_066()
+    log.info(
+        "loaded 066 vis.shape=%s backend=%s rss_mb=%s",
+        tuple(np.asarray(data.vis).shape),
+        BACKEND,
+        rss_mb(),
+    )
     dx, dy = params["dx_arcsec"], params["dy_arcsec"]
     start = dict(params)
     start["pa_deg"] = float(OFFICIAL_PA)
@@ -103,11 +133,14 @@ def main() -> int:
     U = make_potential(data, tmpl, grid, dx, dy)
     u_jit = jax.jit(U)
     state["step"] = "compile"
+    state["rss_mb"] = rss_mb()
     write_status(run_id, state)
-    _ = float(u_jit(jnp.asarray(z6)))
+    log.info("compile U at MAP z6 rss_mb=%s", rss_mb())
+    u0 = float(u_jit(jnp.asarray(z6)))
+    log.info("compiled U=%.6f rss_mb=%s", u0, rss_mb())
 
     stop = threading.Event()
-    t = threading.Thread(target=_heartbeat, args=(run_id, stop, state), daemon=True)
+    t = threading.Thread(target=_heartbeat, args=(run_id, stop, state, log), daemon=True)
     t.start()
     z_parts = []
     step_parts = []
@@ -116,7 +149,17 @@ def main() -> int:
         for c in range(N_CHAINS):
             state["step"] = f"{c}/{N_CHAINS}"
             state["chain"] = c + 1
+            state["rss_mb"] = rss_mb()
             write_status(run_id, state)
+            log.info(
+                "chain %d/%d start warmup=%d samples=%d rss_mb=%s",
+                c + 1,
+                N_CHAINS,
+                N_WARMUP,
+                N_SAMPLES,
+                rss_mb(),
+            )
+            tc = time.perf_counter()
             z_c, mean_steps, _ = run_nuts_z6(
                 u_jit,
                 z6,
@@ -125,11 +168,30 @@ def main() -> int:
                 num_samples=N_SAMPLES,
                 num_chains=1,
                 jitter=0.02,
+                progress_bar=True,
             )
+            elapsed_c = time.perf_counter() - tc
             z_parts.append(np.asarray(z_c)[0])
             step_parts.append(mean_steps)
+            chain_rec = {
+                "chain": c + 1,
+                "elapsed_s": elapsed_c,
+                "mean_num_steps": float(mean_steps),
+                "rss_mb": rss_mb(),
+                "updated_at": utc_now(),
+            }
+            write_json(logs_dir(run_id) / f"chain_{c + 1}.json", chain_rec)
             state["step"] = f"{c + 1}/{N_CHAINS}"
+            state["rss_mb"] = rss_mb()
             write_status(run_id, state)
+            log.info(
+                "chain %d/%d done elapsed_s=%.1f mean_steps=%.1f rss_mb=%s",
+                c + 1,
+                N_CHAINS,
+                elapsed_c,
+                float(mean_steps),
+                rss_mb(),
+            )
     finally:
         stop.set()
 
@@ -170,9 +232,17 @@ def main() -> int:
             "mixing_pass": mix_pass,
             "sampler": rec["sampler"],
             "elapsed_s": rec["elapsed_s"],
+            "rss_mb": rss_mb(),
         },
     )
     (dest / ".trigger_complete").write_text(utc_now() + "\n")
+    log.info(
+        "done mixing_pass=%s sampler=%s elapsed_s=%.1f rss_mb=%s",
+        mix_pass,
+        rec["sampler"],
+        rec["elapsed_s"],
+        rss_mb(),
+    )
     return 0 if mix_pass else 2
 
 

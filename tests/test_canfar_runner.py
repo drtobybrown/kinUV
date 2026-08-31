@@ -19,10 +19,15 @@ def test_parse_info_status():
 
 
 def test_dec_067_on_disk():
+    from pathlib import Path
+
     from kinuv.decisions import load_decision_index
 
     index = load_decision_index()
     assert index["DEC-067-RUNNER"] == "accepted"
+    text = (Path(__file__).resolve().parents[1] / "docs/decisions/DEC-067-RUNNER.md").read_text()
+    assert "1 hour" in text
+    assert "worker.log" in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
@@ -34,3 +39,45 @@ def test_entrypoint_uses_scratch_and_venv():
     assert "kinuv-venv-recovery" in text
     assert "run_kgas066_nuts_headless.py" in text
     assert "canfar create" not in text
+    assert "worker.log" in text
+    assert "tee -a" in text
+    assert "PYTHONUNBUFFERED" in text
+
+
+def test_watch_script_exists():
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    text = (repo / "scripts/watch_headless.py").read_text()
+    assert "canfar logs expire" in text or "Persist canfar logs" in text
+    assert "stream_logs" in text
+    assert "stream_events" in text
+
+
+def test_job_log_and_archive(tmp_path, monkeypatch):
+    import json
+
+    import kinuv.runner.canfar as canfar
+    from kinuv.runner.canfar import archive_run, write_json, write_status
+    from kinuv.runner.log import append_log, setup_worker_logging
+
+    monkeypatch.setattr(canfar, "RUNS_ROOT", tmp_path)
+    monkeypatch.setenv("KINUV_RUNS", str(tmp_path))
+    import kinuv.runner.log as logmod
+
+    monkeypatch.setattr(logmod, "RUNS_ROOT", tmp_path)
+
+    write_status("job1", {"state": "RUNNING"})
+    append_log(tmp_path / "job1" / "worker.log", "hello from worker")
+    logger = setup_worker_logging("job1")
+    logger.info("structured")
+    write_json(tmp_path / "job1" / "logs" / "chain_1.json", {"chain": 1})
+    dest = archive_run("job1")
+    assert dest is not None
+    assert dest.name.startswith("job1.archive.")
+    assert (dest / "worker.log").read_text().strip() == "hello from worker"
+    assert "structured" in (dest / "logs" / "run.log").read_text()
+    rec = json.loads((dest / "status.json").read_text())
+    assert rec["state"] == "RUNNING"
+    assert not (tmp_path / "job1").exists()
+    assert archive_run("missing") is None

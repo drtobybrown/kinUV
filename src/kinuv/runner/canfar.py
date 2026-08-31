@@ -36,10 +36,35 @@ def run_dir(run_id: str) -> Path:
 
 
 def write_json(path: Path, rec: dict) -> None:
+    """Atomic JSON write with fsync so a SIGKILL still leaves the last heartbeat."""
     path.parent.mkdir(parents=True, exist_ok=True)
+    payload = (json.dumps(rec, indent=2) + "\n").encode("utf-8")
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(rec, indent=2) + "\n")
-    tmp.replace(path)
+    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    try:
+        os.write(fd, payload)
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    os.replace(str(tmp), str(path))
+    try:
+        dfd = os.open(str(path.parent), os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    except OSError:
+        pass
+
+
+def archive_run(run_id: str) -> Path | None:
+    """Rename ``<run_id>/`` so a relaunch does not overwrite the previous attempt."""
+    src = run_dir(run_id)
+    if not src.exists():
+        return None
+    dest = RUNS_ROOT / f"{run_id}.archive.{utc_now().replace(':', '')}"
+    src.rename(dest)
+    return dest
 
 
 def parse_session_id(create_text: str) -> str | None:
@@ -111,10 +136,19 @@ def submit_headless(
     command: list[str],
     image: str = DEFAULT_IMAGE,
     gpu: int | None = None,
+    cpu: int | None = None,
+    memory: int | None = None,
     env: dict[str, str] | None = None,
 ) -> dict:
-    """``canfar create headless``. Flexible CPU/RAM. GPU only if ``gpu`` is set."""
+    """``canfar create headless``. Flexible CPU/RAM unless ``cpu``/``memory`` set.
+
+    GPU only if ``gpu`` is set. Pin RAM after a session vanishes under flexible.
+    """
     argv = [CANFAR_BIN, "create", "headless", image, "--name", name]
+    if cpu:
+        argv.extend(["--cpu", str(int(cpu))])
+    if memory:
+        argv.extend(["--memory", str(int(memory))])
     if gpu:
         argv.extend(["--gpu", str(int(gpu))])
     if env:
@@ -134,6 +168,8 @@ def submit_headless(
         "image": image,
         "name": name,
         "gpu": gpu,
+        "cpu": cpu,
+        "memory": memory,
         "argv": argv,
     }
 

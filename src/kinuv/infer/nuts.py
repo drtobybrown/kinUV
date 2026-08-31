@@ -193,6 +193,7 @@ def run_nuts_z6(
     num_samples: int = 64,
     num_chains: int = 4,
     jitter: float = 0.02,
+    progress_bar: bool = False,
 ):
     """Sequential CPU NUTS on ``U(z6)``. Returns unconstrained ``(n_chain, n_draw, 6)``."""
     import jax
@@ -221,7 +222,7 @@ def run_nuts_z6(
         num_samples=int(num_samples),
         num_chains=int(num_chains),
         chain_method="sequential",
-        progress_bar=False,
+        progress_bar=bool(progress_bar),
         jit_model_args=False,
     )
     mcmc.run(

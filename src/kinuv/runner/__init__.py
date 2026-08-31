@@ -2,6 +2,7 @@
 
 from kinuv.runner.canfar import (
     RUNS_ROOT,
+    archive_run,
     cleanup,
     get_status,
     parse_session_id,
@@ -12,6 +13,7 @@ from kinuv.runner.canfar import (
 
 __all__ = [
     "RUNS_ROOT",
+    "archive_run",
     "cleanup",
     "get_status",
     "parse_session_id",

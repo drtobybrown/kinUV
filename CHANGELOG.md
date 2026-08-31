@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-08-31 — Headless job-owned logs
+
+Platform `canfar logs` expire in ~1 hour and vanish on 404. Each job tees stdout/stderr to `/arc/home/thbrown/kinuv_runs/<run_id>/worker.log`, writes `logs/run.log` + fsync heartbeats, and a submit-host watcher copies `canfar logs`/`info`/`events`. Official MAP unchanged.
+
+
 ## 2026-08-30 — CANFAR headless runner (DEC-067-RUNNER)
 
 User: jobs > 15 min run as `canfar create headless` (flexible CPU/RAM). Interactive 7200 s cap is not a batch ceiling. GPU only if the live JAX build sees CUDA. KGAS066 NUTS 4×600 dispatched as session `h2dlc07f`. Official MAP unchanged.
