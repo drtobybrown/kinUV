@@ -5,7 +5,7 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["kgas066-nuts headless m7pd3tib"]
+pending: ["kgas066-nuts headless ckhi0px1"]
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** G3 066 NUTS relaunched on CANFAR headless (DEC-067-RUNNER)
-* **Last Action:** Session `m7pd3tib` (`kinuv-KGAS066-ba3590-nuts`); 8 CPU / 64 GB; job-owned logs on `/arc/home/thbrown/kinuv_runs/kgas066-nuts/`; no GPU
-* **Decisions Made:** Platform `canfar logs` expire in ~1 h; worker tees `worker.log` and a submit-host watcher copies info/logs/events. Pin RAM after a vanished flexible session
-* **Blockers / Gates:** Waiting on `/arc/home/thbrown/kinuv_runs/kgas066-nuts/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
+* **Last Action:** Session `ckhi0px1` (`kinuv-KGAS066-587f87-nuts`); 8 CPU / 64 GB; durable dir `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/kgas066-nuts/`; compute on `/scratch`; no GPU
+* **Decisions Made:** Run products on project `/arc`, never `$HOME`. Logs fsync to `/arc` so fail/OOM/success all leave them. `m7pd3tib` crashed on 1-chain `(6,1)` stitch; ravel_z6 landed
+* **Blockers / Gates:** Waiting on `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/kgas066-nuts/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
 * **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-31 (project runs).** User: all work ends on `/arc/projects/KILOGAS/analysis/toby_sandbox`, not `$HOME`. Jobs run on ephemeral `/scratch` and checkpoint logs/draws to `toby_sandbox/kinuv_runs`. `m7pd3tib` Failed (1-chain stitch `(6,1)`); relaunch `ckhi0px1` 8 CPU / 64 GB. Official MAP unchanged. Do not start G4.
 
 **2026-08-31 (job logs).** User: platform `canfar logs` expire in ~1 hour. Persist each job onto `/arc/home/thbrown/kinuv_runs/<run_id>/`. `h2dlc07f` vanished without a product (likely OOM under flexible ≤32 GB). Relaunch `m7pd3tib` 8 CPU / 64 GB, image `skaha/astroml:latest`, no `--gpu`. Official MAP unchanged. Do not start G4.
 
