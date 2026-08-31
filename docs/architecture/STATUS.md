@@ -5,7 +5,7 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["KGAS066-20260831T080540Z-nuts headless on109zo9"]
+pending: ["KGAS066-20260831T194009Z-nuts headless sd3ckpf2"]
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** G3 066 NUTS relaunched on CANFAR headless (DEC-067-RUNNER)
-* **Last Action:** Session `on109zo9` (`kinuv-KGAS066-b9156b-nuts`); **flexible** CPU/RAM; run dir `KGAS066-20260831T080540Z-nuts`; symlink `KGAS066-latest`; no GPU
-* **Decisions Made:** Do not pin 64 GB. Run folders are `{KGASID}-{UTC}-{kind}`. Durable path `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/`
+* **Last Action:** Session `sd3ckpf2` (`kinuv-KGAS066-3de838-nuts`); flexible; run dir `KGAS066-20260831T194009Z-nuts`; scratch-then-/arc chain `npz`
+* **Decisions Made:** `savez(.tmp)` is forbidden. Draws land on `/scratch` then copy+fsync to `/arc`; crash/SIGTERM flushes scratch `*.npz`
 * **Blockers / Gates:** Waiting on `.../kinuv_runs/KGAS066-latest/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
 * **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-31 (checkpoints).** `on109zo9` died after chain 1 (`savez` appended `.npz` onto `.tmp`). Dual checkpoint scratch→`/arc` via file handle. Relaunch `sd3ckpf2` flexible `KGAS066-20260831T194009Z-nuts`. Official MAP unchanged. Do not start G4.
 
 **2026-08-31 (flexible + dated runs).** User: 64 GB fights the scheduler; flexible grows to 32 GB. Run dir `{KGASID}-{YYYYMMDDTHHMMSSZ}-nuts` plus `KGAS066-latest`. Killed `ckhi0px1` (pinned 64 GB). Session `on109zo9` flexible. Official MAP unchanged. Do not start G4.
 
