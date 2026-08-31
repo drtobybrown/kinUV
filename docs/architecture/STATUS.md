@@ -5,7 +5,7 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["kgas066-nuts headless h2dlc07f"]
+pending: ["kgas066-nuts headless m7pd3tib"]
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G3 066 NUTS dispatched to CANFAR headless (DEC-067-RUNNER)
-* **Last Action:** Submitted session `h2dlc07f` (`kinuv-KGAS066-352e5e-nuts`); 4 chains × 600 draws; flexible CPU; no GPU (venv is jax 0.11.1 CPU)
-* **Decisions Made:** Interactive 7200 s cap does not bound batch jobs; wall > 15 min → `canfar create headless`; GPU only if JAX sees CUDA
+* **Phase:** G3 066 NUTS relaunched on CANFAR headless (DEC-067-RUNNER)
+* **Last Action:** Session `m7pd3tib` (`kinuv-KGAS066-ba3590-nuts`); 8 CPU / 64 GB; job-owned logs on `/arc/home/thbrown/kinuv_runs/kgas066-nuts/`; no GPU
+* **Decisions Made:** Platform `canfar logs` expire in ~1 h; worker tees `worker.log` and a submit-host watcher copies info/logs/events. Pin RAM after a vanished flexible session
 * **Blockers / Gates:** Waiting on `/arc/home/thbrown/kinuv_runs/kgas066-nuts/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
 * **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-31 (job logs).** User: platform `canfar logs` expire in ~1 hour. Persist each job onto `/arc/home/thbrown/kinuv_runs/<run_id>/`. `h2dlc07f` vanished without a product (likely OOM under flexible ≤32 GB). Relaunch `m7pd3tib` 8 CPU / 64 GB, image `skaha/astroml:latest`, no `--gpu`. Official MAP unchanged. Do not start G4.
 
 **2026-08-30 (DEC-067-RUNNER).** User: relax 7200 s interactive cap for batch; jobs > 15 min go to CANFAR headless. Session `h2dlc07f` Running, image `skaha/astroml:latest`, flexible CPU/RAM, no `--gpu` (recovery venv is CPU jax-finufft). Manifest: `/arc/home/thbrown/kinuv_runs/kgas066-nuts/`. 4×600 at MAP PA 199.73. Do not start G4. Official MAP unchanged.
 
