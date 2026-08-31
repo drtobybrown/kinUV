@@ -31,7 +31,8 @@ from kinuv.infer.nuts import (
     sampled_z_from_physical,
 )
 from kinuv.infer.posterior import params_to_vec
-from kinuv.runner.canfar import RUNS_ROOT, fsync_path, utc_now, write_json, write_status
+from kinuv.runner.canfar import RUNS_ROOT, utc_now, write_json, write_status
+from kinuv.runner.checkpoint import dual_checkpoint, flush_scratch_to_arc
 from kinuv.runner.log import (
     host_snapshot,
     install_crash_hook,
@@ -39,6 +40,7 @@ from kinuv.runner.log import (
     rss_mb,
     setup_worker_logging,
 )
+from kinuv.scratch import kinuv_scratch_root
 from kinuv.transforms.nufft import BACKEND
 
 MAP = Path(
@@ -95,10 +97,17 @@ def main() -> int:
     dest = RUNS_ROOT / run_id
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "posteriors").mkdir(exist_ok=True)
-    (dest / "checkpoints").mkdir(exist_ok=True)
+    arc_ckpt = dest / "checkpoints"
+    arc_ckpt.mkdir(exist_ok=True)
+    scratch_ckpt = kinuv_scratch_root() / "checkpoints"
+    scratch_ckpt.mkdir(parents=True, exist_ok=True)
     logs_dir(run_id)
     log = setup_worker_logging(run_id)
-    install_crash_hook(run_id, log)
+    install_crash_hook(
+        run_id,
+        log,
+        on_fail=lambda: flush_scratch_to_arc(scratch_ckpt, arc_ckpt),
+    )
     snap = host_snapshot()
     log.info("worker start snapshot=%s", json.dumps(snap, default=str))
 
@@ -186,12 +195,25 @@ def main() -> int:
                 "z6_shape": list(z_arr.shape),
             }
             write_json(logs_dir(run_id) / f"chain_{c + 1}.json", chain_rec)
-            ckpt = dest / "checkpoints" / f"chain_{c + 1}.npz"
-            tmp = ckpt.with_suffix(".npz.tmp")
-            np.savez(tmp, z6=z_arr, mean_steps=np.asarray(mean_steps))
-            fsync_path(tmp)
-            os.replace(tmp, ckpt)
-            fsync_path(ckpt)
+            try:
+                scratch_path, arc_path = dual_checkpoint(
+                    scratch_ckpt,
+                    arc_ckpt,
+                    f"chain_{c + 1}.npz",
+                    z6=z_arr,
+                    mean_steps=np.asarray(mean_steps),
+                )
+                log.info(
+                    "checkpoint chain %d scratch=%s arc=%s",
+                    c + 1,
+                    scratch_path,
+                    arc_path,
+                )
+            except OSError:
+                log.exception(
+                    "checkpoint chain %d failed; draws kept in memory",
+                    c + 1,
+                )
             state["step"] = f"{c + 1}/{N_CHAINS}"
             state["rss_mb"] = rss_mb()
             write_status(run_id, state)
@@ -205,6 +227,11 @@ def main() -> int:
             )
     finally:
         stop.set()
+        try:
+            n = len(flush_scratch_to_arc(scratch_ckpt, arc_ckpt))
+            log.info("flushed %d scratch checkpoints to /arc", n)
+        except OSError:
+            log.exception("final scratch→arc flush failed")
 
     z_draws = np.stack(z_parts, axis=0)
     phys8 = physical_sampled_from_z6(z_draws, dx, dy)

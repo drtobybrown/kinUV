@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-31 — Scratch-then-/arc chain checkpoints
+
+`np.savez('*.tmp')` appended `.npz` and dropped chain-1 draws after 67 min. Checkpoints now write via a file handle on `/scratch`, then copy+fsync to `/arc`; crash/SIGTERM flushes scratch `*.npz`. Official MAP unchanged.
+
 ## 2026-08-31 — Flexible RAM; dated KGAS run dirs
 
 Headless jobs stay flexible (≤8 CPU / ≤32 GB). Run dir is `{KGASID}-{YYYYMMDDTHHMMSSZ}-{kind}` with `{KGASID}-latest` pointing at the newest. Official MAP unchanged.

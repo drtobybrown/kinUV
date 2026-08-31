@@ -94,10 +94,19 @@ def setup_worker_logging(run_id: str) -> logging.Logger:
     return log
 
 
-def install_crash_hook(run_id: str, log: logging.Logger) -> None:
+def install_crash_hook(run_id: str, log: logging.Logger, on_fail=None) -> None:
     prev = sys.excepthook
 
+    def _flush() -> None:
+        if on_fail is None:
+            return
+        try:
+            on_fail()
+        except Exception:
+            log.exception("checkpoint flush failed")
+
     def _hook(exc_type, exc, tb) -> None:
+        _flush()
         text = "".join(traceback.format_exception(exc_type, exc, tb))
         crash = run_dir(run_id) / "crash.log"
         append_log(crash, text)
@@ -121,6 +130,7 @@ def install_crash_hook(run_id: str, log: logging.Logger) -> None:
         except ValueError:
             name = str(signum)
         log.warning("signal %s", name)
+        _flush()
         write_status(
             run_id,
             {

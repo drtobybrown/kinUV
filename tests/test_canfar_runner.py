@@ -118,3 +118,29 @@ def test_job_log_and_archive(tmp_path, monkeypatch):
     assert rec["state"] == "RUNNING"
     assert not (tmp_path / "job1").exists()
     assert archive_run("missing") is None
+
+
+def test_save_npz_atomic_does_not_append_extra_npz(tmp_path):
+    import numpy as np
+
+    from kinuv.runner.checkpoint import dual_checkpoint, flush_scratch_to_arc, save_npz_atomic
+
+    dest = tmp_path / "chain_1.npz"
+    save_npz_atomic(dest, z6=np.arange(6.0), mean_steps=np.array(1.5))
+    assert dest.is_file()
+    leftover = [p.name for p in tmp_path.iterdir() if p.suffix == ".npz" or ".npz" in p.name]
+    assert leftover == ["chain_1.npz"]
+    got = np.load(dest)
+    np.testing.assert_array_equal(got["z6"], np.arange(6.0))
+    assert float(got["mean_steps"]) == 1.5
+
+    scratch, arc = tmp_path / "scratch", tmp_path / "arc"
+    s, a = dual_checkpoint(scratch, arc, "chain_2.npz", z6=np.ones(3))
+    assert s.is_file() and a is not None and a.is_file()
+    np.testing.assert_array_equal(np.load(a)["z6"], np.ones(3))
+    extra = list(scratch.glob("*"))
+    assert [p.name for p in extra] == ["chain_2.npz"]
+    (scratch / "chain_3.npz").write_bytes(s.read_bytes())
+    copied = flush_scratch_to_arc(scratch, arc)
+    assert any(p.name == "chain_3.npz" for p in copied)
+    assert (arc / "chain_3.npz").is_file()
