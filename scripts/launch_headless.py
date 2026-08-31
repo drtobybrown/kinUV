@@ -17,8 +17,9 @@ from kinuv.runner.canfar import (  # noqa: E402
     DEFAULT_IMAGE,
     FALLBACK_IMAGE,
     REPO as KINUV_REPO,
-    archive_run,
     ensure_cert,
+    make_run_id,
+    point_latest,
     run_dir,
     submit_headless,
     utc_now,
@@ -72,29 +73,34 @@ def start_watcher(run_id: str, session_id: str) -> int | None:
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Launch kinUV headless (DEC-067-RUNNER)")
-    p.add_argument("--run-id", default="kgas066-nuts")
+    p.add_argument(
+        "--run-id",
+        default=None,
+        help="default: {KGASID}-{YYYYMMDDTHHMMSSZ}-nuts",
+    )
     p.add_argument("--galaxy", default="KGAS066")
+    p.add_argument("--kind", default="nuts")
     p.add_argument("--gpu", type=int, default=0, help="GPUs; 0 = omit (CPU jax venv)")
     p.add_argument("--cpu", type=int, default=0, help="CPU cores; 0 = flexible")
     p.add_argument("--memory", type=int, default=0, help="RAM GB; 0 = flexible")
     p.add_argument("--image", default=DEFAULT_IMAGE)
     p.add_argument("--skip-pull", action="store_true")
     p.add_argument("--dry-run", action="store_true")
-    p.add_argument("--no-archive", action="store_true")
     p.add_argument("--no-watch", action="store_true")
     args = p.parse_args()
 
     gpu = int(args.gpu) if int(args.gpu) > 0 else None
     cpu = int(args.cpu) if int(args.cpu) > 0 else None
     memory = int(args.memory) if int(args.memory) > 0 else None
-    name = session_name("nuts")
+    run_id = args.run_id or make_run_id(args.galaxy, args.kind)
+    name = session_name(args.kind)
     entry = str(KINUV_REPO / "scripts/canfar_entrypoint.sh")
     cert = ensure_cert()
     env = {
-        "KINUV_RUN_ID": args.run_id,
+        "KINUV_RUN_ID": run_id,
         "KINUV_GALAXY": args.galaxy,
         "KINUV_PROJECT": str(KINUV_REPO.parent),
-        "KINUV_RUNS": str(run_dir(args.run_id).parent),
+        "KINUV_RUNS": str(run_dir(run_id).parent),
         "JAX_PLATFORMS": "cpu" if gpu is None else "cuda",
         "JAX_ENABLE_X64": "1",
         "PYTHONUNBUFFERED": "1",
@@ -102,14 +108,8 @@ def main() -> int:
     if args.skip_pull:
         env["KINUV_SKIP_PULL"] = "1"
 
-    archived = None
-    if not args.no_archive:
-        archived = archive_run(args.run_id)
-        if archived is not None:
-            archived = str(archived)
-
     manifest = {
-        "run_id": args.run_id,
+        "run_id": run_id,
         "galaxy": args.galaxy,
         "session_name": name,
         "git_commit": git_sha6(),
@@ -118,27 +118,27 @@ def main() -> int:
         "cpu": cpu,
         "memory_gb": memory,
         "flexible": cpu is None and memory is None,
-        "archived": archived,
         "cert": {k: cert[k] for k in cert if k != "stderr"},
         "created_at": utc_now(),
-        "command": ["/bin/bash", entry, args.run_id],
+        "command": ["/bin/bash", entry, run_id],
         "warmup": 200,
         "num_samples": 600,
         "num_chains": 4,
         "pa_init_deg": 199.72980072503037,
     }
-    write_manifest(args.run_id, manifest)
+    write_manifest(run_id, manifest)
     write_status(
-        args.run_id,
+        run_id,
         {"state": "SUBMITTING", "step": "0/4", "session_id": None},
     )
+    point_latest_path = point_latest(args.galaxy, run_id)
     if args.dry_run:
         print(json.dumps(manifest, indent=2))
         return 0
 
     result = submit_headless(
         name=name,
-        command=["/bin/bash", entry, args.run_id],
+        command=["/bin/bash", entry, run_id],
         image=args.image,
         gpu=gpu,
         cpu=cpu,
@@ -148,7 +148,7 @@ def main() -> int:
     if (not result["ok"]) and args.image == DEFAULT_IMAGE:
         result = submit_headless(
             name=name,
-            command=["/bin/bash", entry, args.run_id],
+            command=["/bin/bash", entry, run_id],
             image=FALLBACK_IMAGE,
             gpu=gpu,
             cpu=cpu,
@@ -161,35 +161,36 @@ def main() -> int:
     manifest["submit_ok"] = bool(result.get("ok"))
     manifest["submit_stdout"] = (result.get("stdout") or "")[-2000:]
     manifest["submit_stderr"] = (result.get("stderr") or "")[-2000:]
-    write_manifest(args.run_id, manifest)
+    write_manifest(run_id, manifest)
     write_status(
-        args.run_id,
+        run_id,
         {
             "state": "PENDING" if result.get("ok") else "FAILED_SUBMIT",
             "step": "0/4",
             "session_id": result.get("session_id"),
         },
     )
-    dest = run_dir(args.run_id)
-    logs_dir(args.run_id)
+    dest = run_dir(run_id)
+    logs_dir(run_id)
     (dest / "stream.log").write_text(manifest.get("submit_stdout") or "")
     watcher_pid = None
     if result.get("ok") and result.get("session_id") and not args.no_watch:
-        watcher_pid = start_watcher(args.run_id, result["session_id"])
+        watcher_pid = start_watcher(run_id, result["session_id"])
         manifest["watcher_pid"] = watcher_pid
-        write_manifest(args.run_id, manifest)
+        write_manifest(run_id, manifest)
     print(
         json.dumps(
             {
                 "ok": result.get("ok"),
                 "session_id": result.get("session_id"),
                 "run_dir": str(dest),
+                "latest": str(point_latest_path),
                 "name": name,
                 "image": manifest["image"],
                 "gpu": gpu,
                 "cpu": cpu,
                 "memory_gb": memory,
-                "archived": archived,
+                "flexible": cpu is None and memory is None,
                 "watcher_pid": watcher_pid,
             },
             indent=2,

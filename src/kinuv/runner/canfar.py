@@ -38,6 +38,33 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def galaxy_tag(galaxy: str) -> str:
+    """``KGAS066`` / ``kgas066`` / ``KILOGAS066`` → ``KGAS066``."""
+    raw = str(galaxy).strip().upper().replace("KILOGAS", "KGAS")
+    if raw.startswith("KGAS"):
+        return raw
+    m = re.search(r"(\d+)", raw)
+    if m:
+        return f"KGAS{m.group(1).zfill(3)}"
+    return raw or "KGAS066"
+
+
+def make_run_id(galaxy: str, kind: str = "nuts", when: datetime | None = None) -> str:
+    """``KGAS066-20260831T080112Z-nuts``. Unique per launch so logs do not clobber."""
+    ts = (when or datetime.now(timezone.utc)).strftime("%Y%m%dT%H%M%SZ")
+    return f"{galaxy_tag(galaxy)}-{ts}-{kind}"
+
+
+def point_latest(galaxy: str, run_id: str) -> Path:
+    """Relative symlink ``{KGASID}-latest`` → this run dir."""
+    RUNS_ROOT.mkdir(parents=True, exist_ok=True)
+    link = RUNS_ROOT / f"{galaxy_tag(galaxy)}-latest"
+    if link.is_symlink() or link.exists():
+        link.unlink()
+    link.symlink_to(str(run_id), target_is_directory=True)
+    return link
+
+
 def run_dir(run_id: str) -> Path:
     return RUNS_ROOT / str(run_id)
 

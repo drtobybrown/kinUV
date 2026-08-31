@@ -30,6 +30,8 @@ def test_dec_067_on_disk():
     assert "worker.log" in text
     assert "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs" in text
     assert "/arc/home/thbrown/kinuv_runs" not in text
+    assert "YYYYMMDDTHHMMSSZ" in text
+    assert "symlink to the newest run" in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
@@ -67,6 +69,26 @@ def test_default_runs_root_is_project_not_home():
     src = (Path(__file__).resolve().parents[1] / "src/kinuv/runner/canfar.py").read_text()
     assert 'PROJECT_ROOT / "kinuv_runs"' in src
     assert '"/arc/home/thbrown/kinuv_runs"' not in src
+
+
+def test_make_run_id_and_latest(tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+
+    import kinuv.runner.canfar as canfar
+    from kinuv.runner.canfar import galaxy_tag, make_run_id, point_latest
+
+    monkeypatch.setattr(canfar, "RUNS_ROOT", tmp_path)
+    assert galaxy_tag("kgas066") == "KGAS066"
+    assert galaxy_tag("KILOGAS066") == "KGAS066"
+    when = datetime(2026, 8, 31, 8, 1, 12, tzinfo=timezone.utc)
+    rid = make_run_id("KGAS066", "nuts", when=when)
+    assert rid == "KGAS066-20260831T080112Z-nuts"
+    (tmp_path / rid).mkdir()
+    link = point_latest("KGAS066", rid)
+    assert link.name == "KGAS066-latest"
+    assert link.resolve() == (tmp_path / rid).resolve()
+    rid2 = make_run_id("066", "nuts", when=when)
+    assert rid2.startswith("KGAS066-")
 
 
 def test_job_log_and_archive(tmp_path, monkeypatch):

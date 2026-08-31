@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-31 — Flexible RAM; dated KGAS run dirs
+
+Headless jobs stay flexible (≤8 CPU / ≤32 GB). Run dir is `{KGASID}-{YYYYMMDDTHHMMSSZ}-{kind}` with `{KGASID}-latest` pointing at the newest. Official MAP unchanged.
+
 ## 2026-08-31 — Project-volume runs, scratch compute
 
 Durable logs, checkpoints, and posteriors go to `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/`, not `$HOME`. Jobs run on ephemeral `/scratch`; tee + fsync keep logs on `/arc` after fail/OOM/success. Official MAP unchanged.
