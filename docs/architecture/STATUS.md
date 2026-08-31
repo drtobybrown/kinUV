@@ -5,7 +5,7 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["kgas066-nuts headless ckhi0px1"]
+pending: ["KGAS066-20260831T080540Z-nuts headless on109zo9"]
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** G3 066 NUTS relaunched on CANFAR headless (DEC-067-RUNNER)
-* **Last Action:** Session `ckhi0px1` (`kinuv-KGAS066-587f87-nuts`); 8 CPU / 64 GB; durable dir `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/kgas066-nuts/`; compute on `/scratch`; no GPU
-* **Decisions Made:** Run products on project `/arc`, never `$HOME`. Logs fsync to `/arc` so fail/OOM/success all leave them. `m7pd3tib` crashed on 1-chain `(6,1)` stitch; ravel_z6 landed
-* **Blockers / Gates:** Waiting on `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/kgas066-nuts/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
+* **Last Action:** Session `on109zo9` (`kinuv-KGAS066-b9156b-nuts`); **flexible** CPU/RAM; run dir `KGAS066-20260831T080540Z-nuts`; symlink `KGAS066-latest`; no GPU
+* **Decisions Made:** Do not pin 64 GB. Run folders are `{KGASID}-{UTC}-{kind}`. Durable path `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/`
+* **Blockers / Gates:** Waiting on `.../kinuv_runs/KGAS066-latest/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
 * **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-31 (flexible + dated runs).** User: 64 GB fights the scheduler; flexible grows to 32 GB. Run dir `{KGASID}-{YYYYMMDDTHHMMSSZ}-nuts` plus `KGAS066-latest`. Killed `ckhi0px1` (pinned 64 GB). Session `on109zo9` flexible. Official MAP unchanged. Do not start G4.
 
 **2026-08-31 (project runs).** User: all work ends on `/arc/projects/KILOGAS/analysis/toby_sandbox`, not `$HOME`. Jobs run on ephemeral `/scratch` and checkpoint logs/draws to `toby_sandbox/kinuv_runs`. `m7pd3tib` Failed (1-chain stitch `(6,1)`); relaunch `ckhi0px1` 8 CPU / 64 GB. Official MAP unchanged. Do not start G4.
 
