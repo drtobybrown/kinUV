@@ -47,12 +47,18 @@ def sampled_z_from_physical(theta8):
     return z8[list(SAMPLED_IDX)]
 
 
+def ravel_z6(z6):
+    """Force a length-6 vector. NumPyro 1-chain init is often ``(1, 6)`` or ``(6, 1)``."""
+    xp = numpy_or_jax(z6)
+    return xp.reshape(xp.asarray(z6), (6,))
+
+
 def stitch_z8(z6, dx_map, dy_map):
     """Insert host MAP ``(dx, dy)`` (identity chart) into a length-8 ``z``."""
     xp = numpy_or_jax(z6)
-    z = xp.asarray(z6)
-    dx = xp.asarray(dx_map)
-    dy = xp.asarray(dy_map)
+    z = ravel_z6(z6)
+    dx = xp.reshape(xp.asarray(dx_map), ())
+    dy = xp.reshape(xp.asarray(dy_map), ())
     return xp.stack((z[0], z[1], z[2], z[3], dx, dy, z[4], z[5]))
 
 
@@ -97,6 +103,7 @@ def make_potential(data, template, grid, dx_map, dy_map):
     prior = float(shift_prior(dx, dy))
 
     def U(z6):
+        z6 = ravel_z6(z6)
         z8 = stitch_z8(z6, dx, dy)
         theta = unconstrained_to_physical(z8)
         params = params_from_theta(theta, dx, dy)
@@ -208,6 +215,7 @@ def run_nuts_z6(
     scales_j = jnp.asarray(scales)
 
     def U_unit(u):
+        u = jnp.reshape(u, (6,))
         return U(u * scales_j)
 
     kernel = NUTS(
@@ -225,9 +233,12 @@ def run_nuts_z6(
         progress_bar=bool(progress_bar),
         jit_model_args=False,
     )
+    init_params = jnp.asarray(inits)
+    if int(num_chains) == 1:
+        init_params = init_params.reshape((6,))
     mcmc.run(
         jax.random.PRNGKey(int(rng_seed)),
-        init_params=jnp.asarray(inits),
+        init_params=init_params,
         extra_fields=("num_steps",),
     )
     u_draws = np.asarray(mcmc.get_samples(group_by_chain=True), dtype=np.float64)

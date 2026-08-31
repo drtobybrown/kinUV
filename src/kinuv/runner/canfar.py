@@ -16,10 +16,17 @@ from pathlib import Path
 from kinuv.decisions import requires
 
 CANFAR_BIN = os.environ.get("CANFAR_BIN", "canfar")
-RUNS_ROOT = Path(os.environ.get("KINUV_RUNS", "/arc/home/thbrown/kinuv_runs"))
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "KINUV_PROJECT",
+        "/arc/projects/KILOGAS/analysis/toby_sandbox",
+    )
+)
+# Durable products live on the project volume, never $HOME. /scratch is ephemeral.
+RUNS_ROOT = Path(os.environ.get("KINUV_RUNS", str(PROJECT_ROOT / "kinuv_runs")))
 DEFAULT_IMAGE = "skaha/astroml:latest"
 FALLBACK_IMAGE = "skaha/base-notebook:latest"
-REPO = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV")
+REPO = PROJECT_ROOT / "kinUV"
 CERT_PATH = Path.home() / ".ssl" / "cadcproxy.pem"
 
 _SESSION_ID_RE = re.compile(r"\(ID:\s*([A-Za-z0-9]+)\)")
@@ -48,6 +55,23 @@ def write_json(path: Path, rec: dict) -> None:
         os.close(fd)
     os.replace(str(tmp), str(path))
     try:
+        dfd = os.open(str(path.parent), os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    except OSError:
+        pass
+
+
+def fsync_path(path: Path) -> None:
+    """Best-effort file+dir fsync so an OOM still leaves the last checkpoint on /arc."""
+    try:
+        fd = os.open(str(path), os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
         dfd = os.open(str(path.parent), os.O_RDONLY)
         try:
             os.fsync(dfd)

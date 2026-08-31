@@ -93,6 +93,8 @@ def main() -> int:
     env = {
         "KINUV_RUN_ID": args.run_id,
         "KINUV_GALAXY": args.galaxy,
+        "KINUV_PROJECT": str(KINUV_REPO.parent),
+        "KINUV_RUNS": str(run_dir(args.run_id).parent),
         "JAX_PLATFORMS": "cpu" if gpu is None else "cuda",
         "JAX_ENABLE_X64": "1",
         "PYTHONUNBUFFERED": "1",

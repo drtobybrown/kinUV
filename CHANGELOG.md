@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-31 — Project-volume runs, scratch compute
+
+Durable logs, checkpoints, and posteriors go to `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/`, not `$HOME`. Jobs run on ephemeral `/scratch`; tee + fsync keep logs on `/arc` after fail/OOM/success. Official MAP unchanged.
+
 ## 2026-08-31 — Headless job-owned logs
 
 Platform `canfar logs` expire in ~1 hour and vanish on 404. Each job tees stdout/stderr to `/arc/home/thbrown/kinuv_runs/<run_id>/worker.log`, writes `logs/run.log` + fsync heartbeats, and a submit-host watcher copies `canfar logs`/`info`/`events`. Official MAP unchanged.

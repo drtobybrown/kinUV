@@ -29,6 +29,7 @@ from kinuv.infer.nuts import (
     sampled_z_from_physical,
     stitch_draws_8col,
     stitch_z8,
+    ravel_z6,
 )
 from kinuv.infer.posterior import SAMPLER_NAME, params_to_vec
 from kinuv.io.vis import VisData
@@ -201,6 +202,21 @@ def test_plot_posterior_corner_still_refuses_laplace_mh():
         plot_posterior_corner({"sampler": "laplace_mh", "draws": np.zeros((4, 8))}, Path("/tmp/x.png"))
 
 
+def test_stitch_z8_ravels_row_and_column():
+    """NumPyro 1-chain init is (1, 6) or (6, 1); u * scales must not become (6, 6)."""
+    z = np.arange(6.0)
+    dx, dy = 0.1, -0.2
+    a = stitch_z8(z, dx, dy)
+    b = stitch_z8(z.reshape(1, 6), dx, dy)
+    c = stitch_z8(z.reshape(6, 1), dx, dy)
+    assert a.shape == (8,)
+    np.testing.assert_allclose(a, b)
+    np.testing.assert_allclose(a, c)
+    assert a[4] == pytest.approx(dx)
+    assert a[5] == pytest.approx(dy)
+    np.testing.assert_allclose(ravel_z6(z.reshape(6, 1)), z)
+
+
 def test_stitch_8col_freeze_constant():
     rng = np.random.default_rng(1)
     d6 = rng.normal(size=(2, 5, 6))
@@ -295,6 +311,26 @@ def test_official_chi2_after_chart_xla():
     c = chi2(data.vis, vis, data.weights, data.s)
     assert abs(float(c) - 168675.6) < 1.0
     assert abs(float(data.s) - 0.5136098555284736) < 1e-6
+
+
+def test_run_nuts_one_chain_quadratic():
+    """066 worker runs 1 chain at a time; init must not crash stitch_z8."""
+    _require_numpyro()
+    import jax.numpy as jnp
+
+    from kinuv.infer.nuts import run_nuts_z6
+
+    def U(z):
+        z = jnp.reshape(z, (6,))
+        return jnp.sum(z * z)
+
+    z0 = np.zeros(6)
+    draws, mean_steps, _ = run_nuts_z6(
+        U, z0, rng_seed=0, num_warmup=2, num_samples=2, num_chains=1, jitter=0.05
+    )
+    assert draws.shape == (1, 2, 6)
+    assert np.all(np.isfinite(draws))
+    assert np.isfinite(mean_steps)
 
 
 def test_tiny_mock_nuts_mixing():

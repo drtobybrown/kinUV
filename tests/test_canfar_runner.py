@@ -28,6 +28,8 @@ def test_dec_067_on_disk():
     text = (Path(__file__).resolve().parents[1] / "docs/decisions/DEC-067-RUNNER.md").read_text()
     assert "1 hour" in text
     assert "worker.log" in text
+    assert "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs" in text
+    assert "/arc/home/thbrown/kinuv_runs" not in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
@@ -42,6 +44,11 @@ def test_entrypoint_uses_scratch_and_venv():
     assert "worker.log" in text
     assert "tee -a" in text
     assert "PYTHONUNBUFFERED" in text
+    assert "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs" in text
+    assert "/arc/home/thbrown/kinuv_runs" not in text
+    assert "checkpoints" in text
+    assert "SCRATCH_LOG" in text
+    assert "ARC_LOG" in text
 
 
 def test_watch_script_exists():
@@ -52,6 +59,14 @@ def test_watch_script_exists():
     assert "canfar logs expire" in text or "Persist canfar logs" in text
     assert "stream_logs" in text
     assert "stream_events" in text
+
+
+def test_default_runs_root_is_project_not_home():
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "src/kinuv/runner/canfar.py").read_text()
+    assert 'PROJECT_ROOT / "kinuv_runs"' in src
+    assert '"/arc/home/thbrown/kinuv_runs"' not in src
 
 
 def test_job_log_and_archive(tmp_path, monkeypatch):

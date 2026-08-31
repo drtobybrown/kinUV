@@ -1,6 +1,7 @@
 """CANFAR headless job wrappers (DEC-067-RUNNER)."""
 
 from kinuv.runner.canfar import (
+    PROJECT_ROOT,
     RUNS_ROOT,
     archive_run,
     cleanup,
@@ -12,6 +13,7 @@ from kinuv.runner.canfar import (
 )
 
 __all__ = [
+    "PROJECT_ROOT",
     "RUNS_ROOT",
     "archive_run",
     "cleanup",

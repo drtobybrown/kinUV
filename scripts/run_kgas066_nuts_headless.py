@@ -31,7 +31,7 @@ from kinuv.infer.nuts import (
     sampled_z_from_physical,
 )
 from kinuv.infer.posterior import params_to_vec
-from kinuv.runner.canfar import RUNS_ROOT, utc_now, write_json, write_status
+from kinuv.runner.canfar import RUNS_ROOT, fsync_path, utc_now, write_json, write_status
 from kinuv.runner.log import (
     host_snapshot,
     install_crash_hook,
@@ -95,6 +95,7 @@ def main() -> int:
     dest = RUNS_ROOT / run_id
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "posteriors").mkdir(exist_ok=True)
+    (dest / "checkpoints").mkdir(exist_ok=True)
     logs_dir(run_id)
     log = setup_worker_logging(run_id)
     install_crash_hook(run_id, log)
@@ -171,7 +172,10 @@ def main() -> int:
                 progress_bar=True,
             )
             elapsed_c = time.perf_counter() - tc
-            z_parts.append(np.asarray(z_c)[0])
+            z_arr = np.asarray(z_c, dtype=np.float64)
+            if z_arr.ndim == 3:
+                z_arr = z_arr[0]
+            z_parts.append(z_arr)
             step_parts.append(mean_steps)
             chain_rec = {
                 "chain": c + 1,
@@ -179,8 +183,15 @@ def main() -> int:
                 "mean_num_steps": float(mean_steps),
                 "rss_mb": rss_mb(),
                 "updated_at": utc_now(),
+                "z6_shape": list(z_arr.shape),
             }
             write_json(logs_dir(run_id) / f"chain_{c + 1}.json", chain_rec)
+            ckpt = dest / "checkpoints" / f"chain_{c + 1}.npz"
+            tmp = ckpt.with_suffix(".npz.tmp")
+            np.savez(tmp, z6=z_arr, mean_steps=np.asarray(mean_steps))
+            fsync_path(tmp)
+            os.replace(tmp, ckpt)
+            fsync_path(ckpt)
             state["step"] = f"{c + 1}/{N_CHAINS}"
             state["rss_mb"] = rss_mb()
             write_status(run_id, state)
