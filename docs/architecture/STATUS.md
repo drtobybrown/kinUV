@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** G3 066 NUTS relaunched on CANFAR headless (DEC-067-RUNNER)
-* **Last Action:** Session `sd3ckpf2` (`kinuv-KGAS066-3de838-nuts`); flexible; run dir `KGAS066-20260831T194009Z-nuts`; scratch-then-/arc chain `npz`
-* **Decisions Made:** `savez(.tmp)` is forbidden. Draws land on `/scratch` then copy+fsync to `/arc`; crash/SIGTERM flushes scratch `*.npz`
+* **Last Action:** Session `sd3ckpf2` left Running. Stopped teeing tqdm onto `/arc`; watcher no longer appends full CANFAR dumps
+* **Decisions Made:** Chain `npz` (kB draws) still scratch-then-/arc after each chain. JAX cache, vis, cubes, and per-sample stdout stay off `/arc`
 * **Blockers / Gates:** Waiting on `.../kinuv_runs/KGAS066-latest/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
 * **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
 
 # Architecture mailbox
+
+**2026-08-31 (do not balloon /arc).** User: do not copy scratch onto `/arc` wholesale. Durable on `/arc` is status, `run.log`, overwrite-copied `worker.log`, and kB chain-draw `npz`. No JAX cache, vis, cubes, or per-sample tqdm tee. Watcher overwrites `canfar-*.txt`; does not append dumps into `platform.log`. Live `sd3ckpf2` kept Running (entrypoint already in flight). Official MAP unchanged. Do not start G4.
 
 **2026-08-31 (checkpoints).** `on109zo9` died after chain 1 (`savez` appended `.npz` onto `.tmp`). Dual checkpoint scratch→`/arc` via file handle. Relaunch `sd3ckpf2` flexible `KGAS066-20260831T194009Z-nuts`. Official MAP unchanged. Do not start G4.
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Headless entrypoint (DEC-067-RUNNER). Compute on /scratch; durable I/O on project /arc.
-# Platform canfar logs expire in ~1 hour. Tee worker stdout onto /arc so OOM/fail still leaves logs.
+# Platform canfar logs expire in ~1 hour. Verbose stdout stays on scratch; worker.log
+# is overwrite-copied to /arc every 60 s and on exit (not a per-sample NFS tee).
 set -euo pipefail
 
 RUN_ID="${1:-kgas066-nuts}"
@@ -28,12 +29,26 @@ export KINUV_PROJECT="${PROJECT}"
 
 SCRATCH_LOG="${SCRATCH_JOB}/worker.log"
 ARC_LOG="${RUN_DIR}/worker.log"
-# Line-buffered tee to scratch (fast) and /arc (durable across OOM/fail).
+# High-frequency stdout (NumPyro tqdm) stays on scratch. Overwrite-copy to /arc
+# every 60 s and on exit — do not tee every sample onto NFS.
 if command -v stdbuf >/dev/null 2>&1; then
-  exec > >(stdbuf -oL -eL tee -a "${SCRATCH_LOG}" "${ARC_LOG}") 2>&1
+  exec > >(stdbuf -oL -eL tee -a "${SCRATCH_LOG}") 2>&1
 else
-  exec > >(tee -a "${SCRATCH_LOG}" "${ARC_LOG}") 2>&1
+  exec > >(tee -a "${SCRATCH_LOG}") 2>&1
 fi
+copy_worker_log() {
+  if [[ -f "${SCRATCH_LOG}" ]]; then
+    cp -f "${SCRATCH_LOG}" "${ARC_LOG}.copying" 2>/dev/null || return 0
+    mv -f "${ARC_LOG}.copying" "${ARC_LOG}" 2>/dev/null || true
+  fi
+}
+(
+  while true; do
+    sleep 60
+    copy_worker_log
+  done
+) &
+LOG_SYNC_PID=$!
 
 utc() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 echo "=== kinuv entrypoint start utc=$(utc) host=$(hostname) pid=$$ run_id=${RUN_ID} ==="
@@ -60,9 +75,10 @@ python -c "import jax; print('jax', jax.__version__, 'devices', jax.devices())" 
 flush_logs() {
   ec=$?
   echo "=== kinuv entrypoint exit utc=$(utc) code=${ec} ==="
-  cp -f "${SCRATCH_LOG}" "${ARC_LOG}.scratchcopy" 2>/dev/null || true
+  kill "${LOG_SYNC_PID}" 2>/dev/null || true
+  wait "${LOG_SYNC_PID}" 2>/dev/null || true
+  copy_worker_log
   sync -f "${ARC_LOG}" 2>/dev/null || sync || true
-  sleep 0.2 || true
 }
 trap flush_logs EXIT
 python "${REPO}/scripts/run_kgas066_nuts_headless.py" --run-id "${RUN_ID}"

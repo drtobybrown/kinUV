@@ -8,8 +8,8 @@ Root: `/scratch/kinuv-$USER/$SKAHA_SESSION_ID` (mode 0700), else `/tmp/kinuv-$US
 
 - `export TMPDIR=$root/tmp` (and `TEMP`, `TMP`) in long workers.
 - JAX: `JAX_PLATFORMS=cpu`, `JAX_ENABLE_X64=1`, compile cache under that root. Cache is disposable; a preempted node recompiles. Do not rsync the JAX cache onto NFS.
-- Worker stdout: tee to `$root/worker.log` **and** the project run dir on `/arc` (line-buffered). Structured `logs/run.log` and `status.json` fsync to `/arc` so fail/OOM/success all leave logs.
-- After each NUTS chain: write `checkpoints/chain_N.npz` on `/scratch`, then copy+fsync to the project run dir. Use a file handle for `np.savez` (a `.tmp` path becomes `.tmp.npz` and the replace misses). Crash/SIGTERM copies scratch `*.npz` onto `/arc`.
+- Worker stdout (NumPyro tqdm): tee to `$root/worker.log` on scratch only. Overwrite-copy that file to the project run dir every 60 s and on exit. Do not tee every sample onto NFS `/arc`. Structured `logs/run.log` and `status.json` stay small on `/arc`.
+- After each NUTS chain: write `checkpoints/chain_N.npz` on `/scratch`, then copy+fsync **that** file (parameter draws, kB) to the project run dir. File-handle `np.savez` (a `.tmp` path becomes `.tmp.npz` and the replace misses). Crash/SIGTERM copies checkpoint `*.npz` onto `/arc`. Never rsync the JAX cache, vis, cubes, or `/scratch` tmp onto `/arc`.
 - Checkpoints are kB-MB: parameter vectors, RNG, chain metadata. Native 066 vis (43240 x 1920 complex128 ~ 1.3 GB) is **not** a per-eval checkpoint, including on `/scratch` and `/dev/shm`.
 
 ## Do not

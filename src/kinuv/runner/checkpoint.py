@@ -41,7 +41,11 @@ def copy_fsync(src: Path, dest: Path) -> Path:
 
 
 def dual_checkpoint(scratch_dir: Path, arc_dir: Path, name: str, **arrays) -> tuple[Path, Path | None]:
-    """Persist draws on node-local scratch, then copy to /arc. Arc copy is best-effort."""
+    """Scratch-first chain ``npz`` (parameter draws, kB). Copy that file to /arc.
+
+    Do not put vis, cubes, or the JAX cache here — those stay on scratch and die
+    with the node. Arc copy is best-effort so a finished chain is not aborted.
+    """
     scratch = save_npz_atomic(Path(scratch_dir) / name, **arrays)
     try:
         arc = copy_fsync(scratch, Path(arc_dir) / name)
@@ -51,7 +55,7 @@ def dual_checkpoint(scratch_dir: Path, arc_dir: Path, name: str, **arrays) -> tu
 
 
 def flush_scratch_to_arc(scratch_dir: Path, arc_dir: Path) -> list[Path]:
-    """Copy any ``*.npz`` from scratch onto /arc (crash / SIGTERM)."""
+    """Copy checkpoint ``*.npz`` only (crash / SIGTERM). Never the JAX cache or vis."""
     scratch_dir = Path(scratch_dir)
     copied: list[Path] = []
     if not scratch_dir.is_dir():

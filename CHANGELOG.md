@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-31 — Do not balloon /arc
+
+Verbose NUTS stdout stays on scratch and is overwrite-copied to `worker.log` every 60 s. Watcher snapshots platform logs without appending full dumps. Chain checkpoints remain kB parameter `npz` only — no JAX cache, vis, or cubes on `/arc`. Official MAP unchanged.
+
 ## 2026-08-31 — Scratch-then-/arc chain checkpoints
 
 `np.savez('*.tmp')` appended `.npz` and dropped chain-1 draws after 67 min. Checkpoints now write via a file handle on `/scratch`, then copy+fsync to `/arc`; crash/SIGTERM flushes scratch `*.npz`. Official MAP unchanged.

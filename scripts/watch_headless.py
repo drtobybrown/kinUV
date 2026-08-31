@@ -50,6 +50,12 @@ def main() -> int:
     p.add_argument("--run-id", required=True)
     p.add_argument("--session-id", required=True)
     p.add_argument("--interval", type=float, default=20.0)
+    p.add_argument(
+        "--log-interval",
+        type=float,
+        default=600.0,
+        help="seconds between canfar-logs.txt snapshots (tqdm dumps; do not write every poll)",
+    )
     p.add_argument("--max-hours", type=float, default=24.0)
     p.add_argument("--gone-polls", type=int, default=8)
     args = p.parse_args()
@@ -64,9 +70,11 @@ def main() -> int:
     last = {"logs": "", "info": "", "events": ""}
     gone = 0
     polls = 0
+    last_logs_at = 0.0
     append_log(
         platform,
-        f"{utc_now()} watcher start session={args.session_id} interval={args.interval}s",
+        f"{utc_now()} watcher start session={args.session_id} interval={args.interval}s "
+        f"log_interval={args.log_interval}s",
     )
 
     while True:
@@ -82,6 +90,7 @@ def main() -> int:
         if trigger.is_file():
             rec["state"] = "TRIGGER"
             write_json(watcher_json, rec)
+            _snapshot(logd / "canfar-logs.txt", stream_logs(args.session_id))
             append_log(platform, f"{utc_now()} stop: .trigger_complete")
             return 0
         status_path = dest / "status.json"
@@ -93,23 +102,34 @@ def main() -> int:
             if worker_state in DONE_STATES:
                 rec["state"] = f"WORKER_{worker_state}"
                 write_json(watcher_json, rec)
+                _snapshot(logd / "canfar-logs.txt", stream_logs(args.session_id))
                 append_log(platform, f"{utc_now()} stop: worker state {worker_state}")
                 return 0
 
         info = get_status(args.session_id)
         raw_info = str(info.get("raw") or "")
-        logs = stream_logs(args.session_id)
         events = stream_events(args.session_id)
-        missing = (not info.get("ok")) or ("404" in raw_info) or ("not found" in raw_info.lower())
+        raw_l = raw_info.lower()
+        state = str(info.get("state") or "").lower()
+        alive = state in {"running", "pending", "queued", "starting"} or any(
+            s in raw_l for s in ("running", "pending", "queued")
+        )
+        missing = (not alive) and (
+            (not info.get("ok")) or ("404" in raw_info) or ("not found" in raw_l)
+        )
         rec["canfar_state"] = info.get("state")
         rec["canfar_ok"] = bool(info.get("ok"))
         rec["gone_polls"] = gone if missing else 0
 
-        for label, text, filename in (
+        snapshots = [
             ("info", raw_info, "canfar-info.txt"),
-            ("logs", logs, "canfar-logs.txt"),
             ("events", events, "canfar-events.txt"),
-        ):
+        ]
+        now = time.time()
+        if now - last_logs_at >= float(args.log_interval):
+            snapshots.append(("logs", stream_logs(args.session_id), "canfar-logs.txt"))
+            last_logs_at = now
+        for label, text, filename in snapshots:
             digest = _digest(text)
             if digest != last[label]:
                 _snapshot(logd / filename, text)
@@ -117,8 +137,6 @@ def main() -> int:
                     platform,
                     f"{utc_now()} {label} changed sha={digest} bytes={len(text.encode('utf-8'))}",
                 )
-                if text.strip():
-                    append_log(platform, text.rstrip() + "\n")
                 last[label] = digest
 
         if missing:
