@@ -100,6 +100,22 @@ def test_bin_channels_weighted_mean_and_summed_weights():
     np.testing.assert_allclose(fb, [4.5, 6.5])
 
 
+def test_hann_impulse_is_not_rigidly_shifted():
+    """Kernel [0.25, 0.5, 0.25] is centred; peak stays in the same N=4 bin.
+
+    An impulse at trimmed channel 16 is the first sample of bin 4. Hann leaks
+    0.25 into channel 15 (bin 3), so the centroid is 3.75, not a whole bin.
+    """
+    n_trim, n_bin, n_g = 40, 4, 1
+    peak = 16
+    native = np.zeros(n_trim + 2 * n_g)
+    native[n_g + peak] = 1.0
+    out = hann_then_bin(native, n_bin, n_guard=n_g)
+    assert int(np.argmax(out)) == peak // n_bin
+    cent = float(np.sum(np.arange(out.size) * out) / np.sum(out))
+    assert cent == pytest.approx(3.75, abs=1e-12)
+
+
 def test_native_diagonal_is_removed():
     with pytest.raises(RuntimeError, match="hann_then_bin"):
         native_diagonal()

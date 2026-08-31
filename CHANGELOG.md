@@ -4,7 +4,6 @@
 
 Platform `canfar logs` expire in ~1 hour and vanish on 404. Each job tees stdout/stderr to `/arc/home/thbrown/kinuv_runs/<run_id>/worker.log`, writes `logs/run.log` + fsync heartbeats, and a submit-host watcher copies `canfar logs`/`info`/`events`. Official MAP unchanged.
 
-
 ## 2026-08-30 — CANFAR headless runner (DEC-067-RUNNER)
 
 User: jobs > 15 min run as `canfar create headless` (flexible CPU/RAM). Interactive 7200 s cap is not a batch ceiling. GPU only if the live JAX build sees CUDA. KGAS066 NUTS 4×600 dispatched as session `h2dlc07f`. Official MAP unchanged.
@@ -12,6 +11,10 @@ User: jobs > 15 min run as `canfar create headless` (flexible CPU/RAM). Interact
 ## 2026-08-30 — G3 autodiff potential + CPU NumPyro NUTS
 
 Dual accept (major). JAX `U(z)=0.5(chi2+shift_prior_const)-log|J|` on the G2 chart; sampled-name `float()` removed on the XLA vis path. `(dx, dy)` frozen at MAP host floats. Tiny-mock 4-chain NUTS mixed (`R_hat<1.01`, ESS>200) → `sampler: nuts`. 066 wall projection 8.3 h > 2 h cap; no 066 `sampler: nuts`; no GPU. numpyro 0.21.0 `--no-deps` keeps jax 0.11.1. Official MAP unchanged. Do not quote S2 16/50/84 or inner `dV/dr`.
+
+## 2026-08-30 — Stage B spectral redshift is vis-weighted vsys, not WCS/Hann
+
+Image-plane +30–50 km/s look is MAP optical vsys (~8323.6) vs catalogue/CLEAN (~8299.6), with asymmetric aperture centroids. Locked: radio↔optical, CO(2–1) `RESTFRQ`, `CRPIX3` centres, centred Hann `[0.25, 0.5, 0.25]`. Model cubes stamp `SPECSYS=LSRK` + `RESTFRQ`. Spectra annotate \(\Delta v_{\rm M-D}\); matched cube stays in the artifact dir. No vis-axis fudge; official MAP unchanged.
 
 ## 2026-08-30 — G3 NumPyro NUTS propose
 

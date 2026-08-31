@@ -1,11 +1,4 @@
 {
-  "data_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
-  "mask_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
-  "model_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/stage_b_model_cube.fits",
-  "matched_fits": "docs/reviews/artifacts/2026-08-30-final-fit/model_on_10kms.fits",
-  "pa_deg": 199.72980072503037,
-  "dx_arcsec": 0.09104737371760792,
-  "dy_arcsec": 0.018566961155444102,
   "vsys_radio_kms": 8098.773150512066,
   "vsys_optical_kms": 8323.63275478255,
   "catalog_vsys_optical_kms": 8299.563,
@@ -44,19 +37,27 @@
       "vel_optical_chanN_kms": 8540.576985376729
     }
   ],
-  "centroid_model_minus_data_kms": {
-    "mask": 15.368440599246242,
-    "centre": 35.02506718450604,
-    "receding": 36.309061550891784,
-    "approaching": 12.709559766701204
+  "centroids": {
+    "mask": {
+      "data_kms": 8300.512144068918,
+      "model_kms": 8315.880584668164,
+      "model_minus_data_kms": 15.368440599246242
+    },
+    "centre": {
+      "data_kms": 8308.121674710788,
+      "model_kms": 8343.146741895294,
+      "model_minus_data_kms": 35.02506718450604
+    },
+    "receding": {
+      "data_kms": 8420.911188653366,
+      "model_kms": 8457.220250204258,
+      "model_minus_data_kms": 36.309061550891784
+    },
+    "approaching": {
+      "data_kms": 8204.813765159728,
+      "model_kms": 8217.52332492643,
+      "model_minus_data_kms": 12.709559766701204
+    }
   },
-  "mom0_sum_data": 27863.685648623163,
-  "mom0_sum_model": 28480.04853046732,
-  "plots": [
-    "docs/reviews/artifacts/2026-08-30-final-fit/moments.png",
-    "docs/reviews/artifacts/2026-08-30-final-fit/spectra.png",
-    "docs/reviews/artifacts/2026-08-30-final-fit/pv_major.png",
-    "docs/reviews/artifacts/2026-08-30-final-fit/pv_minor.png"
-  ],
   "root_cause": "Image-plane centroid redshift is vis-weighted MAP vsys vs CLEAN-cube brightness weighting (frozen Wiener Ico, r_t floor), not radio/optical, RESTFRQ, CRPIX, or Hann phase. Do not fudge the model velocity axis."
 }

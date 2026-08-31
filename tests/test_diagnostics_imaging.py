@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from kinuv.diagnostics.imaging import (
+    flux_weighted_velocity,
     jy_per_pixel_to_k,
     masked_moments,
     offset_world,
+    radio_header_velocity_kms,
     rebin_spectrum,
     restoring_beam_kernel,
+    spectral_axis_kms,
+    spectral_wcs_report,
 )
 from kinuv.io.vis import optical_to_radio_kms, radio_to_optical_kms
 from kinuv.template.wiener import k_to_jy_per_beam
@@ -71,6 +76,69 @@ def test_offset_world_east_decreases_ra():
     ra2, dec2 = offset_world(345.0, 13.0, 0.0, 2.0)
     assert dec2 > 13.0
     assert np.isclose(ra2, 345.0)
+
+
+def test_spectral_axis_kms_divides_si_metres():
+    from astropy.io import fits
+
+    h = fits.Header()
+    h["NAXIS3"] = 3
+    h["CRPIX3"] = 1.0
+    h["CRVAL3"] = 7_820_168.28
+    h["CDELT3"] = 1269.925445
+    h["CUNIT3"] = "m/s"
+    v = spectral_axis_kms(h)
+    np.testing.assert_allclose(v[0], 7820.16828)
+    np.testing.assert_allclose(np.diff(v), 1.269925445)
+
+
+def test_radio_header_to_optical_roundtrip_at_066():
+    from astropy.io import fits
+
+    h = fits.Header()
+    h["NAXIS3"] = 2
+    h["CRPIX3"] = 1.0
+    h["CRVAL3"] = 8098.773150512066
+    h["CDELT3"] = 5.08
+    h["CUNIT3"] = "km/s"
+    h["CTYPE3"] = "VRAD"
+    v_opt = radio_header_velocity_kms(h)
+    np.testing.assert_allclose(optical_to_radio_kms(v_opt[0]), 8098.773150512066)
+
+
+def test_rebin_delta_lands_on_matching_optical_channel():
+    """A native channel whose optical velocity matches cube chan 0 stays in chan 0."""
+    v_model = np.array([8029.62, 8036.32, 8044.35, 8051.05])
+    v_data = np.array([8044.32, 8054.77, 8065.22])
+    cube = np.zeros((4, 2, 2))
+    cube[2] = 1.0
+    out = rebin_spectrum(cube, v_model, v_data, 10.45)
+    spec = out[:, 0, 0]
+    assert int(np.argmax(spec)) == 0
+    assert spec[0] > spec[1]
+
+
+def test_flux_weighted_velocity_centroid():
+    spec = np.array([0.0, 1.0, 1.0, 0.0])
+    vel = np.array([10.0, 20.0, 30.0, 40.0])
+    assert flux_weighted_velocity(spec, vel) == pytest.approx(25.0)
+    assert np.isnan(flux_weighted_velocity(np.zeros(3), np.arange(3.0)))
+
+
+def test_spectral_wcs_report_reads_restfrq_and_specsys():
+    from astropy.io import fits
+
+    h = _toy_header()
+    h["RESTFRQ"] = 230.538e9
+    h["SPECSYS"] = "LSRK"
+    rec = spectral_wcs_report(h, label="toy")
+    assert rec["label"] == "toy"
+    assert rec["ctype3"] == "VOPT"
+    assert rec["specsys"] == "LSRK"
+    assert rec["restfrq_hz"] == pytest.approx(230.538e9)
+    assert rec["vel_chan0_kms"] == pytest.approx(8200.0)
+    assert rec["header_axis"] == "optical"
+    assert rec["vel_optical_chan0_kms"] == pytest.approx(8200.0)
 
 
 def _toy_header():

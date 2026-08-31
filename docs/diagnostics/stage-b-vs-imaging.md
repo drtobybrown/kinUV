@@ -38,7 +38,7 @@ A raw overlay of the two FITS files is not a model–data comparison. The model 
 Order is mandatory:
 
 1. **Undo the primary beam** on the model (divide by the same 12 m Gaussian used in the forward model, floored at 0.05) so both cubes are in “true sky” units. Over this disk the correction is tens of percent at the outer knot, not a few percent.
-2. **Radio → optical velocity** with \(v_{\rm opt} = v_{\rm rad}/(1 - v_{\rm rad}/c)\), the inverse of the vis-loader conversion. The imaging cube is optical; the fitter is radio. Do not mix them on one axis. The model FITS `SPECSYS` card is not used as a barycentric correction; the frequencies are the visibility frequencies already trimmed to this galaxy’s cube window.
+2. **Radio → optical velocity** with \(v_{\rm opt} = v_{\rm rad}/(1 - v_{\rm rad}/c)\), the inverse of the vis-loader conversion. The imaging cube is optical; the fitter is radio. Do not mix them on one axis. Model cubes are written with `CTYPE3=VRAD`, `SPECSYS=LSRK`, and `RESTFRQ` = CO(2–1). Matching does not apply a barycentric correction from `SPECSYS`; the frequencies are the visibility frequencies already trimmed to this galaxy’s cube window.
 3. **Spectral average** onto the 50 imaging channels (overlap-weighted mean of native channels inside each 10.4 km/s window). Average, do not sum: both products are brightness per channel.
 4. **Convolve** with the 10 km/s restoring beam (elliptical Gaussian, BPA east of north).
 5. **Jy/pixel → K** with the Rayleigh–Jeans factor already used for the Ico template (`k_to_jy_per_beam`), converting smoothed Jy/pixel to Jy/beam with \(\Omega_{\rm beam}/\Omega_{\rm pix}\) first.
@@ -60,11 +60,33 @@ Spectra are converted to mJy with the same K→Jy/beam factor so they share an a
 - **Moment 0 residual:** flux scale, beam, or SB-template mismatch. A bulk offset is \((d_x,d_y)\) or PA. Do not interpret a 3-D-mask moment-0 deficit as a flux error.
 - **Moment 1 residual:** rotation-curve or PA/vsys error. A dipole along the major axis is \(V(r)\); a rotation of the zero-velocity line is PA.
 - **Moment 2 residual:** the model is a single \(\sigma = 11.7\) km/s plus unresolved shear in the beam. Extra width in the data is beam smearing the data does not share, or a real dispersion residual.
-- **Spectra:** total flux and the approaching/receding horns. A shift of both horns is vsys; a stretch is \(V_{\rm rot}\). If the ±4″ apertures swap horns relative to the data, the image-plane receding side is 180° from the vis-fitted PA (that was the 2026-08-27 figure set; `NPZ_UV_SIGN` is the fix).
+- **Spectra:** total flux and the approaching/receding horns. A stretch of both horns is \(V_{\rm rot}\). If the ±4″ apertures swap horns relative to the data, the image-plane receding side is 180° from the vis-fitted PA (that was the 2026-08-27 figure set; `NPZ_UV_SIGN` is the fix). An apparent rigid redshift of the model vs the CLEAN cube is **not** a WCS or Hann bug — see below.
 - **Major-axis PV:** the actual \(v_{\rm los}(r)\) the rings are trying to match, after the imaging beam. Positive offset is the fitted receding PA. Data high-velocity on the negative side is the same 180° flag.
 - **Minor-axis PV:** should sit near systemic. A tilt is a PA error.
 
 None of these plots are χ². The fit was to visibilities; a pretty image-plane residual is neither necessary nor sufficient.
+
+## Apparent +30–50 km/s redshift of Stage B vs the CLEAN cube
+
+By-eye the mask-integrated and 1-beam profiles look like the Stage B model is translated by tens of km/s to the red. That is **not** a coordinate-pipeline error. Locked checks:
+
+| Suspect | Result |
+|---|---|
+| Radio vs optical | Matching converts model `VRAD` → optical with \(v_{\rm opt}=v_{\rm rad}/(1-v_{\rm rad}/c)\). Cube is `VOPT-W2W` LSRK. Mixing conventions would be ~230 km/s, not 30–50. |
+| `RESTFRQ` | Cube and vis use CO(2–1) `230.538e9` Hz. \(\Delta v = c\,\Delta f_0/f_0\) is not the offset. |
+| `CRPIX3` / channel centre | `spectral_axis_kms` uses FITS 1-indexed `CRPIX3`. Native vis frequencies vs 10 km/s optical→freq disagree by ≲0.15 km/s. |
+| `hann_then_bin` phase | Kernel `[0.25, 0.5, 0.25]` is centred. An impulse stays in the same \(N=4\) bin; Hann leak moves the centroid by 0.25 native channels, not a 10 km/s imaging channel. |
+| Visibility \(\chi^2\) | Integer channel-roll of `predict_binned` is **minimum at roll 0**. ±1 native bin (~5 km/s after \(N=4\)) raises \(\chi^2\) by thousands. MAP \(V_{\rm sys}\) is correct **in the vis plane**. |
+
+What remains is a **different estimator of the same galaxy**:
+
+- Catalogue / YAML seed is optical \(V_{\rm sys}=8299.563\) km/s (`VSYS_SEED_KM_S`). Converted to radio it seeds Stage A.
+- Official Stage A MAP is radio \(V_{\rm sys}\approx 8098.77\) km/s → optical \(\approx 8323.6\) km/s (**+24 km/s** vs catalogue).
+- Image-plane flux-weighted centroids (model − data, this run): mask-integrated **+15.4 km/s**, centre **+35.0 km/s**, receding **+36.3 km/s**, approaching **+12.7 km/s**. Not one rigid WCS translation.
+
+That offset is the vis-weighted MAP vs the CLEAN-cube brightness-weighted line (frozen Wiener Ico, leftover-vs-velocity, \(r_t\) at the 0.5″ floor, 1-beam vs mask weighting). **Do not apply a silent velocity fudge** to the model cube or to `hann_then_bin` — that would raise vis \(\chi^2\). A catalogue-frozen \(V_{\rm sys}\) refit would be a **new MAP tree**, not an in-place overwrite of `kinuv-KGAS066-uvsign-map`.
+
+The 4-panel spectra annotate \(\Delta v_{\rm M-D}\) per aperture and draw MAP \(v_{\rm sys}\) (dashed) plus catalogue \(v_{\rm sys}\) (dotted). Exact overlay of centroids is not expected and is not a pass/fail on the operator.
 
 ## How to run
 
@@ -77,11 +99,12 @@ export PYTHONPATH=$PWD/src MPLBACKEND=Agg
 python scripts/plot_stage_b_vs_imaging.py
 ```
 
-Writes:
+Writes under `docs/reviews/artifacts/2026-08-30-final-fit/` (not the official MAP tree):
 
-- matched cube `.../kinuv-KGAS066-uvsign-map/stage_b_model_on_10kms.fits` (K, imaging WCS; not in git)
-- `docs/reviews/artifacts/2026-08-28-stage-b-imaging/{moments,spectra,pv_major,pv_minor}.png`
+- `model_on_10kms.fits` (K, imaging WCS; gitignored)
+- `{moments,spectra,pv_major,pv_minor}.png`
+- `vsys_shift.json` (WCS dump + aperture centroids)
 
-The 2026-08-27 artifact folder is the pre-sign inverted-PA comparison against `f47bc9-map`. Do not treat it as the current model.
+The 2026-08-27 artifact folder is the pre-sign inverted-PA comparison against `f47bc9-map`. Do not treat it as the current model. `2026-08-28-stage-b-imaging` is the first post-sign set.
 
-Tests that do not need `/arc` FITS: `pytest tests/test_diagnostics_imaging.py tests/test_plot_style.py`.
+Tests that do not need `/arc` FITS: `pytest tests/test_diagnostics_imaging.py tests/test_plot_style.py tests/test_spectral.py`.

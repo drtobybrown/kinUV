@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
+from kinuv.constants import F_REST_CO21_HZ
 from kinuv.geometry import inclination_deg, inclination_rad
 from kinuv.profiles.rotation import BMAJ_ICO_ARCSEC
 from kinuv.response.spectral import hann_then_bin
@@ -241,9 +242,10 @@ def model_cube_header(grid, vel_kms, ico_hdr):
     ]
     w.wcs.ctype = ["RA---SIN", "DEC--SIN", "VRAD"]
     w.wcs.cunit = ["deg", "deg", "km/s"]
-    w.wcs.specsys = "BARYCENT"
+    w.wcs.specsys = "LSRK"
     hdr = w.to_header()
     hdr["BUNIT"] = "Jy/pixel"
+    hdr["RESTFRQ"] = (float(F_REST_CO21_HZ), "CO(2-1) rest frequency [Hz]")
     hdr["NAXIS"] = 3
     hdr["NAXIS1"] = int(grid.nx)
     hdr["NAXIS2"] = int(grid.ny)

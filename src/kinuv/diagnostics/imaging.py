@@ -11,7 +11,7 @@ import numpy as np
 from scipy.ndimage import map_coordinates
 from scipy.signal import fftconvolve
 
-from kinuv.constants import FWHM_TO_SIGMA, F_REST_CO21_HZ
+from kinuv.constants import C_LIGHT_KM_S, FWHM_TO_SIGMA, F_REST_CO21_HZ
 from kinuv.io.vis import radio_to_optical_kms
 from kinuv.response.primary_beam import primary_beam
 from kinuv.template.wiener import k_to_jy_per_beam
@@ -34,6 +34,45 @@ def spectral_axis_kms(header) -> np.ndarray:
 def radio_header_velocity_kms(header) -> np.ndarray:
     """Optical km/s for a ``VRAD`` header (radio km/s or m/s in the card)."""
     return radio_to_optical_kms(spectral_axis_kms(header))
+
+
+def flux_weighted_velocity(spec, vel_kms) -> float:
+    """Centroid of ``max(spec, 0)`` on ``vel_kms``. NaN if no positive flux."""
+    s = np.clip(np.asarray(spec, dtype=np.float64), 0.0, None)
+    v = np.asarray(vel_kms, dtype=np.float64)
+    w = float(np.sum(s))
+    if w <= 0.0:
+        return float("nan")
+    return float(np.sum(s * v) / w)
+
+
+def spectral_wcs_report(header, *, label: str = "") -> dict:
+    """RESTFRQ / CRPIX3 / CRVAL3 / CTYPE3 / SPECSYS for a 3-D header."""
+    n = int(header.get("NAXIS3", 0) or 0)
+    crval = float(header["CRVAL3"]) if n else None
+    crpix = float(header["CRPIX3"]) if n else None
+    cdelt = float(header["CDELT3"]) if n else None
+    v = spectral_axis_kms(header) if n else np.array([])
+    ctype = str(header.get("CTYPE3", ""))
+    radio = ctype.upper().startswith("VRAD")
+    v_opt = radio_to_optical_kms(v) if (radio and v.size) else v
+    rec = {
+        "label": label,
+        "ctype3": ctype,
+        "cunit3": str(header.get("CUNIT3", "")),
+        "crval3": crval,
+        "crpix3": crpix,
+        "cdelt3": cdelt,
+        "restfrq_hz": float(header["RESTFRQ"]) if "RESTFRQ" in header else None,
+        "specsys": str(header.get("SPECSYS", "")),
+        "naxis3": n,
+        "header_axis": "radio" if radio else "optical",
+        "vel_chan0_kms": float(v[0]) if v.size else None,
+        "vel_chanN_kms": float(v[-1]) if v.size else None,
+        "vel_optical_chan0_kms": float(v_opt[0]) if v_opt.size else None,
+        "vel_optical_chanN_kms": float(v_opt[-1]) if v_opt.size else None,
+    }
+    return rec
 
 
 def rebin_spectrum(cube, v_in_kms, v_out_kms, dv_out_kms):
@@ -170,7 +209,7 @@ def match_model_to_imaging(
     cub = _convolve_channels(cub, ker)
     rest = float(data_header.get("RESTFRQ", F_REST_CO21_HZ))
     v_mid = float(np.median(v_data))
-    nu_use = float(nu_hz) if nu_hz is not None else rest / (1.0 + v_mid / 2.99792458e5)
+    nu_use = float(nu_hz) if nu_hz is not None else rest / (1.0 + v_mid / C_LIGHT_KM_S)
     cub = jy_per_pixel_to_k(cub, cell, nu_use, bmaj, bmin)
     return regrid_to_header(cub, model_header, data_header), v_data, dv_data
 

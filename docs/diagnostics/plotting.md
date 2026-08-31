@@ -82,7 +82,7 @@ Do not use `inferno`, `viridis`, `magma`, or `seismic`. Sequential maps must be 
 
 1. Shared x (optical km/s, LSRK). Y label once per column. Panel letters `(a)`–`(d)`.
 2. Data = `COLOUR["data"]` solid; model = `COLOUR["model"]` solid. One legend for the figure.
-3. `vsys_line(ax, vsys, orientation="v")`. Thin zero-flux line in `COLOUR["zero"]`.
+3. `vsys_line(ax, vsys, orientation="v")`. Thin zero-flux line in `COLOUR["zero"]`. Annotate each panel with the flux-weighted \(\Delta v_{\rm M-D}\) (model − data). A common offset of tens of km/s vs the CLEAN cube is vis-weighted MAP vsys, not a plotting WCS error — do not slide the model spectrum to fake overlay.
 4. Approaching / receding titles **must** say they are along the *fitted* PA (include the PA value). A horn swap is a 180° PA flag, not a plotting bug.
 
 ## PV recipe

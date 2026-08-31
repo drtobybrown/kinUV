@@ -15,3 +15,5 @@ Official MAP (read-only): `kinuv-KGAS066-uvsign-map`. Stage A leftover `chi2` pl
 `model_on_10kms.fits` is a rematch written **here**, not under the official MAP tree.
 
 What "works" means: PA/vsys match the cube (not the old 21.9 deg winner); M1 residual is not of order `V_rot`; leftover vs uv is not a short-baseline bowl. Spiral M0 residual is expected (frozen Wiener Ico).
+
+Spectra are **not** expected to overlay at the CLEAN-cube centroid. MAP optical \(v_{\rm sys}\approx 8323.6\) km/s vs catalogue 8299.6 km/s. Panel \(\Delta v_{\rm M-D}\) is the flux-weighted (model − data) centroid after the radio→optical match. That offset is vis-weighted vsys vs image-plane weighting, not a Hann/`CRPIX3`/`RESTFRQ` bug. Do not fudge the model axis. Numbers: `vsys_shift.json`.

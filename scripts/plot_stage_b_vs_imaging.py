@@ -11,11 +11,14 @@ from astropy.io import fits
 from astropy.wcs import WCS
 from matplotlib.gridspec import GridSpec
 
+from kinuv.constants import C_LIGHT_KM_S
 from kinuv.diagnostics.imaging import (
+    flux_weighted_velocity,
     match_model_to_imaging,
     masked_moments,
     offset_world,
     pv_diagram,
+    spectral_wcs_report,
 )
 from kinuv.diagnostics.style import (
     COLOUR,
@@ -36,6 +39,8 @@ from kinuv.diagnostics.style import (
     velocity_cmap,
     vsys_line,
 )
+from kinuv.forward.model import VSYS_SEED_KM_S
+from kinuv.io.vis import radio_to_optical_kms
 
 ROOT_10KMS = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms"
@@ -44,7 +49,7 @@ MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
     "kinuv-KGAS066-uvsign-map"
 )
-ARTIFACT = Path("docs/reviews/artifacts/2026-08-28-stage-b-imaging")
+ARTIFACT = Path("docs/reviews/artifacts/2026-08-30-final-fit")
 LENGTH_ARCSEC = 16.0
 
 
@@ -101,14 +106,14 @@ def _moment_figure(data, model, residual, extent, vsys, beam, centre, out):
     save_fig(fig, out)
 
 
-def _spectra_figure(v, aper, vsys, pa, out):
+def _spectra_figure(v, aper, vsys, pa, dv_model_minus_data, out, *, catalog_vsys=None):
     apply_style()
     import matplotlib.pyplot as plt
 
-    fig = plt.figure(figsize=(9.4, 6.2))
+    fig = plt.figure(figsize=(9.4, 6.4))
     gs = GridSpec(
         2, 2, figure=fig,
-        left=0.10, right=0.97, top=0.88, bottom=0.10, wspace=0.16, hspace=0.28,
+        left=0.10, right=0.97, top=0.86, bottom=0.12, wspace=0.16, hspace=0.28,
     )
     axes = np.array([[fig.add_subplot(gs[i, j]) for j in range(2)] for i in range(2)])
     titles = (
@@ -124,6 +129,16 @@ def _spectra_figure(v, aper, vsys, pa, out):
         ax.plot(v, ym, color=COLOUR["model"], lw=1.35, label="Stage B", zorder=3)
         ax.axhline(0.0, color=COLOUR["zero"], lw=0.6, zorder=1)
         vsys_line(ax, vsys, orientation="v")
+        if catalog_vsys is not None:
+            ax.axvline(
+                float(catalog_vsys), color=COLOUR["vsys"], ls=":", lw=0.8, zorder=4,
+            )
+        dv = dv_model_minus_data[key]
+        ax.text(
+            0.97, 0.92, rf"$\Delta v_{{\rm M-D}}={dv:+.1f}$ km/s",
+            transform=ax.transAxes, ha="right", va="top", fontsize=8,
+            color=COLOUR["muted"],
+        )
         ax.set_title(title, fontsize=10)
         panel_letter(ax, letter)
     for ax in axes[:, 0]:
@@ -132,10 +147,18 @@ def _spectra_figure(v, aper, vsys, pa, out):
         ax.set_xlabel("Optical velocity (km/s, LSRK)")
     for ax in axes[0, :]:
         ax.tick_params(labelbottom=False)
-    # Do not hide y ticks on the right column: rows do not share ylim.
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper right", ncol=2, bbox_to_anchor=(0.97, 0.995), fontsize=8)
-    fig.suptitle("Spectra  ·  1-beam apertures along the fitted receding PA", fontsize=11, y=0.995, x=0.42)
+    fig.suptitle(
+        "Spectra  ·  1-beam apertures along the fitted receding PA",
+        fontsize=11, y=0.995, x=0.42,
+    )
+    fig.text(
+        0.50, 0.015,
+        "dashed = MAP $v_{\\rm sys}$ (optical)  ·  dotted = catalogue optical $v_{\\rm sys}$  ·  "
+        r"$\Delta v_{\rm M-D}$ is the flux-weighted centroid, not a WCS/Hann shift",
+        ha="center", fontsize=7.5, color=COLOUR["muted"],
+    )
     save_fig(fig, out)
 
 
@@ -180,7 +203,7 @@ def _spectrum_mjy(cube_k, mask2d, header, vel_kms):
     bmin = float(header["BMIN"]) * 3600.0
     rest = float(header.get("RESTFRQ", 230.538e9))
     v_mid = float(np.median(vel_kms))
-    nu = rest / (1.0 + v_mid / 2.99792458e5)
+    nu = rest / (1.0 + v_mid / C_LIGHT_KM_S)
     cell = abs(float(header["CDELT1"])) * 3600.0
     omega_beam = np.pi * bmaj * bmin / (4.0 * np.log(2.0))
     omega_pix = cell * cell
@@ -209,7 +232,12 @@ def main(argv=None) -> int:
     p.add_argument("--model-cube", type=Path, default=MAP_DIR / "stage_b_model_cube.fits")
     p.add_argument("--stage-a", type=Path, default=MAP_DIR / "stage_a_map.json")
     p.add_argument("--out-dir", type=Path, default=None)
-    p.add_argument("--matched-fits", type=Path, default=MAP_DIR / "stage_b_model_on_10kms.fits")
+    p.add_argument(
+        "--matched-fits",
+        type=Path,
+        default=None,
+        help="Matched K cube path. Default: <out-dir>/model_on_10kms.fits (never the official MAP tree).",
+    )
     args = p.parse_args(argv)
     for label, path in (("data-cube", args.data_cube), ("mask-cube", args.mask_cube)):
         if "30kms" in str(path):
@@ -220,6 +248,13 @@ def main(argv=None) -> int:
         repo = Path(__file__).resolve().parents[1]
         out_dir = repo / ARTIFACT
     out_dir.mkdir(parents=True, exist_ok=True)
+    matched_fits = args.matched_fits if args.matched_fits is not None else out_dir / "model_on_10kms.fits"
+    map_root = MAP_DIR.resolve()
+    dest = matched_fits.resolve()
+    if dest.parent == map_root or map_root in dest.parents:
+        raise SystemExit(
+            f"--matched-fits must not write under the official MAP tree: {matched_fits}"
+        )
 
     data_hdu = fits.open(args.data_cube)[0]
     mask_hdu = fits.open(args.mask_cube)[0]
@@ -230,16 +265,24 @@ def main(argv=None) -> int:
     geom = json.loads(args.stage_a.read_text())
     pa = float(geom["pa_deg"]) % 360.0
     dx, dy = float(geom["dx_arcsec"]), float(geom["dy_arcsec"])
-    vsys_opt = float(geom["vsys_kms"]) / (1.0 - float(geom["vsys_kms"]) / 2.99792458e5)
+    vsys_radio = float(geom["vsys_kms"])
+    vsys_opt = float(radio_to_optical_kms(vsys_radio))
+    catalog_vsys = float(VSYS_SEED_KM_S)
+
+    wcs_rows = [
+        spectral_wcs_report(data_hdu.header, label="data_10kms"),
+        spectral_wcs_report(model_hdu.header, label="stage_b_model"),
+    ]
+    print("spectral WCS:", json.dumps(wcs_rows, indent=2), flush=True)
 
     matched, vel, dv = match_model_to_imaging(
         model_jy, model_hdu.header, data_hdu.header
     )
     hdr = data_hdu.header
     fits.PrimaryHDU(matched.astype(np.float32), header=hdr).writeto(
-        args.matched_fits, overwrite=True
+        matched_fits, overwrite=True
     )
-    print(f"wrote {args.matched_fits} {matched.shape}", flush=True)
+    print(f"wrote {matched_fits} {matched.shape}", flush=True)
 
     # Data cube is already blanked outside the 3-D mask. Applying that 3-D
     # mask to the model would clip flux in velocity (kinematic mismatch)
@@ -282,7 +325,17 @@ def main(argv=None) -> int:
             _spectrum_mjy(data, ap, hdr, vel),
             _spectrum_mjy(np.nan_to_num(matched, nan=0.0), ap, hdr, vel),
         )
-    _spectra_figure(vel, aper, vsys_opt, pa, out_dir / "spectra.png")
+    dv_md = {}
+    centroids = {}
+    for key, (yd, ym) in aper.items():
+        vd = flux_weighted_velocity(yd, vel)
+        vm = flux_weighted_velocity(ym, vel)
+        centroids[key] = {"data_kms": vd, "model_kms": vm, "model_minus_data_kms": vm - vd}
+        dv_md[key] = vm - vd
+    _spectra_figure(
+        vel, aper, vsys_opt, pa, dv_md, out_dir / "spectra.png",
+        catalog_vsys=catalog_vsys,
+    )
 
     width = bmaj
     matched0 = np.nan_to_num(matched, nan=0.0)
@@ -313,16 +366,36 @@ def main(argv=None) -> int:
         "data_cube": str(args.data_cube),
         "mask_cube": str(args.mask_cube),
         "model_cube": str(args.model_cube),
-        "matched_fits": str(args.matched_fits),
+        "matched_fits": str(matched_fits),
         "pa_deg": pa,
         "dx_arcsec": dx,
         "dy_arcsec": dy,
+        "vsys_radio_kms": vsys_radio,
         "vsys_optical_kms": vsys_opt,
+        "catalog_vsys_optical_kms": catalog_vsys,
+        "vsys_map_minus_catalog_kms": vsys_opt - catalog_vsys,
+        "spectral_wcs": wcs_rows,
+        "centroid_model_minus_data_kms": {k: centroids[k]["model_minus_data_kms"] for k in centroids},
         "mom0_sum_data": float(np.nansum(data_m["mom0"])),
         "mom0_sum_model": float(np.nansum(model_m["mom0"])),
         "plots": [str(out_dir / n) for n in ("moments.png", "spectra.png", "pv_major.png", "pv_minor.png")],
+        "root_cause": (
+            "Image-plane centroid redshift is vis-weighted MAP vsys vs CLEAN-cube "
+            "brightness weighting (frozen Wiener Ico, r_t floor), not radio/optical, "
+            "RESTFRQ, CRPIX, or Hann phase. Do not fudge the model velocity axis."
+        ),
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    shift = {
+        "vsys_radio_kms": vsys_radio,
+        "vsys_optical_kms": vsys_opt,
+        "catalog_vsys_optical_kms": catalog_vsys,
+        "vsys_map_minus_catalog_kms": vsys_opt - catalog_vsys,
+        "spectral_wcs": wcs_rows,
+        "centroids": centroids,
+        "root_cause": summary["root_cause"],
+    }
+    (out_dir / "vsys_shift.json").write_text(json.dumps(shift, indent=2) + "\n")
     print(json.dumps(summary, indent=2), flush=True)
     return 0
 

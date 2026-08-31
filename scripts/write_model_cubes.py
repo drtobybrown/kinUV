@@ -9,7 +9,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 
-from kinuv.constants import freq_to_velocity_kms
+from kinuv.constants import F_REST_CO21_HZ, freq_to_velocity_kms
 from kinuv.forward.model import sky_cube
 from kinuv.forward.sb import load_sb_template
 from kinuv.infer.map import image_grid_for_vis
@@ -43,7 +43,7 @@ def _wcs(grid, vel_kms, ico_hdr) -> WCS:
     ]
     w.wcs.ctype = ["RA---SIN", "DEC--SIN", "VRAD"]
     w.wcs.cunit = ["deg", "deg", "km/s"]
-    w.wcs.specsys = "BARYCENT"
+    w.wcs.specsys = "LSRK"
     return w
 
 
@@ -54,6 +54,7 @@ def _hdu(cube_yxv, grid, vel_kms, ico_hdr, extra: dict) -> fits.PrimaryHDU:
     data = np.flip(data, axis=2)
     hdr = _wcs(grid, vel_kms, ico_hdr).to_header()
     hdr["BUNIT"] = "Jy/pixel"
+    hdr["RESTFRQ"] = (float(F_REST_CO21_HZ), "CO(2-1) rest frequency [Hz]")
     hdr["OBJECT"] = "KGAS066"
     hdr["ORIGIN"] = "kinUV Stage B sky_cube"
     hdr["COMMENT"] = "Array NAXIS1 increases west (CDELT1<0); sky +x east was flipped on write."
