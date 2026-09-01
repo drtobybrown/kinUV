@@ -41,6 +41,7 @@ from kinuv.runner.log import (
     setup_worker_logging,
 )
 from kinuv.runner.status_md import ping_status_ntfy, write_job_status_md
+from kinuv.runner.plots import write_nuts_product_plots
 from kinuv.scratch import kinuv_scratch_root
 from kinuv.transforms.nufft import BACKEND
 
@@ -254,7 +255,7 @@ def main() -> int:
         eval_s=float("nan"),
         note=(
             "066 headless NUTS PA 199.73; 4 chains x 600 draws; "
-            "16/50/84 not calibrated; leftover from MAP not refit; "
+            "16/50/84 not calibrated; leftover plotted at NUTS mean; "
             "not S2 Laplace; do not quote inner dV/dr"
         ),
     )
@@ -265,6 +266,13 @@ def main() -> int:
     write_json(dest / "posteriors" / "kgas066_nuts.json", rec)
     summary = {k: rec[k] for k in rec if k != "draws"}
     write_json(dest / "posteriors" / "summary.json", summary)
+    try:
+        plotted = write_nuts_product_plots(
+            rec, dest, data=data, tmpl=tmpl, grid=grid
+        )
+        log.info("product plots pngs=%s", plotted.get("artifact_pngs"))
+    except Exception:
+        log.exception("product plots failed")
     write_status(
         run_id,
         {

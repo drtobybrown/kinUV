@@ -1,0 +1,72 @@
+{
+  "sampler": "nuts",
+  "param_names": [
+    "flux",
+    "pa_deg",
+    "vsys_kms",
+    "gas_sigma_kms",
+    "dx_arcsec",
+    "dy_arcsec",
+    "v0_kms",
+    "r_t_arcsec"
+  ],
+  "sampled_names": [
+    "flux",
+    "pa_deg",
+    "vsys_kms",
+    "gas_sigma_kms",
+    "v0_kms",
+    "r_t_arcsec"
+  ],
+  "frozen_names": [
+    "dx_arcsec",
+    "dy_arcsec"
+  ],
+  "pa_init_deg": 199.72980072503037,
+  "dx_arcsec": 0.09104737371760792,
+  "dy_arcsec": 0.018566961155444102,
+  "mixing": {
+    "flux": {
+      "rhat": 1.0000550269225763,
+      "ess": 1425.6377512433912,
+      "ess_tail": 1753.1153446926978
+    },
+    "pa_deg": {
+      "rhat": 0.9998726781452574,
+      "ess": 2400.0,
+      "ess_tail": 1845.1099269866168
+    },
+    "vsys_kms": {
+      "rhat": 0.9988851413540479,
+      "ess": 2400.0,
+      "ess_tail": 1607.6992902503962
+    },
+    "gas_sigma_kms": {
+      "rhat": 1.0006497932146867,
+      "ess": 1149.5223343382293,
+      "ess_tail": 1285.4633628181089
+    },
+    "v0_kms": {
+      "rhat": 1.0036885758264287,
+      "ess": 898.9158751104304,
+      "ess_tail": 1018.4289298300463
+    },
+    "r_t_arcsec": {
+      "rhat": 1.0036097150620105,
+      "ess": 889.002595665011,
+      "ess_tail": 985.3317104334034
+    }
+  },
+  "intervals_calibrated": false,
+  "leftover_chi2_structured": true,
+  "r_t_at_floor": false,
+  "mean_num_steps": 9.99,
+  "eval_s": NaN,
+  "note": "066 headless NUTS PA 199.73; 4 chains x 600 draws; 16/50/84 not calibrated; leftover structured; r_t floor; not S2 Laplace; do not quote inner dV/dr",
+  "mixing_pass": true,
+  "elapsed_s": 17440.772422676906,
+  "backend": "jax-finufft",
+  "s": 0.5136098555284736,
+  "r_t_at_floor_note": "measured from draws (median r_t=0.224); MAP G0 floor does not apply to this posterior",
+  "chi2_nuts_mean": 167486.7639374534
+}

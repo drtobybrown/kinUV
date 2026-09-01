@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from kinuv.runner.canfar import parse_info_status, parse_session_id
 
 
@@ -33,6 +35,7 @@ def test_dec_067_on_disk():
     assert "YYYYMMDDTHHMMSSZ" in text
     assert "symlink to the newest run" in text
     assert "Agent Run Status" in text
+    assert "corner" in text or "PNG" in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
@@ -55,6 +58,7 @@ def test_entrypoint_uses_scratch_and_venv():
     assert "SCRATCH_LOG" in text
     assert "ARC_LOG" in text
     assert "scratchcopy" not in text
+    assert "MPLBACKEND" in text
 
 
 def test_watch_script_exists():
@@ -200,4 +204,27 @@ def test_patch_agent_run_status_does_not_touch_mailbox(tmp_path, monkeypatch):
     assert "SUCCEEDED" in out
     assert "pending: []" in out
     assert "Parent physics line" in out
+
+
+def test_write_nuts_product_plots_corner_only(tmp_path):
+    from pathlib import Path
+
+    import numpy as np
+
+    from kinuv.runner.plots import write_nuts_product_plots
+
+    rng = np.random.default_rng(0)
+    draws = rng.normal(size=(2, 30, 8))
+    draws[..., 4] = 0.091
+    draws[..., 5] = 0.019
+    rec = {"sampler": "nuts", "draws": draws}
+    dest = tmp_path / "run"
+    (dest / "posteriors").mkdir(parents=True)
+    art = tmp_path / "art"
+    written = write_nuts_product_plots(
+        rec, dest, artifact_dir=art, leftover=False, imaging=False
+    )
+    assert Path(written["corner"]).is_file()
+    assert (art / "corner.png").is_file()
+    assert not (dest / "plots" / "moments.png").is_file()
 

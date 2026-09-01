@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-01 — 066 NUTS corner and imaging plots
+
+Headless worker writes corner, leftover chi2, and Data|Model|Residual PNGs at the NUTS mean (FITS stay in the run dir). 066 product in `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Official MAP unchanged.
+
 ## 2026-09-01 — Job writes Agent Run Status
 
 Headless worker and watcher patch `docs/architecture/STATUS.md` Agent Run Status and YAML `pending` on finish. They do not rewrite Architecture mailbox history. Official MAP unchanged.

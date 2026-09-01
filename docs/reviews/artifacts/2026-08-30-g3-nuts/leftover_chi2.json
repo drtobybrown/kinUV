@@ -1,0 +1,19 @@
+{
+  "chi2_sum": 167486.7639374534,
+  "leftover_chi2_structured": true,
+  "n_row": 881,
+  "n_chan": 95,
+  "s": 0.5136098555284736,
+  "params": {
+    "flux": 71.08976407347308,
+    "pa_deg": 200.0544848198661,
+    "vsys_kms": 8098.700511951254,
+    "gas_sigma_kms": 11.438417661466035,
+    "dx_arcsec": 0.09104737371760678,
+    "dy_arcsec": 0.01856696115544358,
+    "v0_kms": 254.9834109292598,
+    "r_t_arcsec": 0.22392216472996415
+  },
+  "note": "NUTS-mean leftover; not MAP. Intervals not calibrated. Do not quote inner dV/dr.",
+  "updated_at": "2026-09-01T06:43:39Z"
+}

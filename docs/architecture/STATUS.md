@@ -10,7 +10,7 @@ last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
 last_review_b: docs/reviews/2026-08-30-review-b-g3-nuts.md
-user_review: docs/reviews/artifacts/2026-08-30-final-fit/
+user_review: docs/reviews/artifacts/2026-08-30-g3-nuts/
 open_questions: []
 deadlocks: []
 canon_generation: 4
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G3 066 NUTS SUCCEEDED (`KGAS066-20260831T194009Z-nuts`)
-* **Last Action:** Session `sd3ckpf2` SUCCEEDED mixing=pass sampler=nuts elapsed_s=17441 utc=2026-09-01T00:35:23Z
-* **Decisions Made:** Worker now patches Agent Run Status + YAML `pending`. This job only wrote run-dir `status.json`. Official MAP unchanged
-* **Blockers / Gates:** Mixing passed. NUTS mean chi2=167487 vs MAP 168676 (Delta=-1189). `r_t` mean 0.224 arcsec is below the MAP 0.5 arcsec box. Leftover not refit. Intervals not calibrated
-* **Next Step:** Copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner. Official MAP unchanged. Do not start G4
+* **Phase:** G3 066 NUTS plots landed (`KGAS066-20260831T194009Z-nuts`)
+* **Last Action:** Wrote 6D corner, leftover chi2, moments/spectra/PV at NUTS mean into `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Headless worker will write these next time
+* **Decisions Made:** FITS stay in the run dir. Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** Mixing passed. leftover_chi2_structured still True at NUTS mean. Intervals not calibrated
+* **Next Step:** Human look at `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-01 (066 NUTS plots).** Corner + leftover + moments/spectra/PV at NUTS mean: `docs/reviews/artifacts/2026-08-30-g3-nuts/`. leftover still structured. Headless job will write PNGs on future runs. Official MAP unchanged. Do not start G4.
 
 **2026-09-01 (066 NUTS product).** `sd3ckpf2` SUCCEEDED. Mixing pass (R_hat<=1.004, ESS>=889). Receding PA stayed ~200.05 deg. NUTS left the MAP `r_t=0.5` arcsec wall (`r_t` mean 0.224 arcsec, `V_0` mean 255 vs MAP 268; corr 0.87). chi2 at NUTS mean 167487 vs MAP 168676 (Delta=-1189): L-BFGS box `r_t>=0.5` arcsec was costing vis chi2. Product JSON had hardcoded `r_t_at_floor: true` (MAP G0); draws are not on that floor. Leftover not refit. 16/50/84 not calibrated. Approaching PA 25.2 deg not run. Official MAP unchanged. Do not quote inner dV/dr. Do not start G4.
 
