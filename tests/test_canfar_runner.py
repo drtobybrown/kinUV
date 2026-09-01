@@ -32,6 +32,7 @@ def test_dec_067_on_disk():
     assert "/arc/home/thbrown/kinuv_runs" not in text
     assert "YYYYMMDDTHHMMSSZ" in text
     assert "symlink to the newest run" in text
+    assert "Agent Run Status" in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
@@ -150,3 +151,53 @@ def test_save_npz_atomic_does_not_append_extra_npz(tmp_path):
     copied = flush_scratch_to_arc(scratch, arc)
     assert any(p.name == "chain_3.npz" for p in copied)
     assert (arc / "chain_3.npz").is_file()
+
+
+def test_patch_agent_run_status_does_not_touch_mailbox(tmp_path, monkeypatch):
+    from kinuv.runner.status_md import patch_agent_run_status, write_job_status_md
+
+    dest = tmp_path / "docs" / "architecture"
+    dest.mkdir(parents=True)
+    path = dest / "STATUS.md"
+    path.write_text(
+        "---\npending: [\"old-job\"]\n---\n\n"
+        "## Agent Run Status\n\n"
+        "* **Phase:** waiting\n"
+        "* **Last Action:** launched\n"
+        "* **Decisions Made:** none yet\n"
+        "* **Blockers / Gates:** sentinel\n"
+        "* **Next Step:** wait\n\n"
+        "# Architecture mailbox\n\n"
+        "**2026-08-31 (keep).** Parent physics line.\n"
+    )
+    patch_agent_run_status(
+        path,
+        {
+            "Phase": "done",
+            "Last Action": "SUCCEEDED",
+            "Decisions Made": "worker wrote STATUS",
+            "Blockers / Gates": "none",
+            "Next Step": "corner",
+        },
+        pending=[],
+    )
+    text = path.read_text()
+    assert "pending: []" in text
+    assert "* **Phase:** done" in text
+    assert "* **Last Action:** SUCCEEDED" in text
+    assert "**2026-08-31 (keep).** Parent physics line." in text
+    monkeypatch.setenv("KINUV_REPO", str(tmp_path))
+    got = write_job_status_md(
+        run_id="KGAS066-test",
+        session_id="abc",
+        state="SUCCEEDED",
+        mixing_pass=True,
+        sampler="nuts",
+        elapsed_s=12.0,
+    )
+    assert got == path
+    out = path.read_text()
+    assert "SUCCEEDED" in out
+    assert "pending: []" in out
+    assert "Parent physics line" in out
+

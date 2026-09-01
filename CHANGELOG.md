@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-01 — Job writes Agent Run Status
+
+Headless worker and watcher patch `docs/architecture/STATUS.md` Agent Run Status and YAML `pending` on finish. They do not rewrite Architecture mailbox history. Official MAP unchanged.
+
 ## 2026-08-31 — Do not balloon /arc
 
 Verbose NUTS stdout stays on scratch and is overwrite-copied to `worker.log` every 60 s. Watcher snapshots platform logs without appending full dumps. Chain checkpoints remain kB parameter `npz` only — no JAX cache, vis, or cubes on `/arc`. Official MAP unchanged.

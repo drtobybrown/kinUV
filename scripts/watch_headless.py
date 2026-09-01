@@ -23,6 +23,30 @@ from kinuv.runner.canfar import (  # noqa: E402
     write_json,
 )
 from kinuv.runner.log import append_log, logs_dir  # noqa: E402
+from kinuv.runner.status_md import ping_status_ntfy, write_job_status_md  # noqa: E402
+
+def _sync_status_md(run_id: str, session_id: str, dest: Path) -> None:
+    rec = {}
+    status_path = dest / "status.json"
+    if status_path.is_file():
+        try:
+            rec = json.loads(status_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            rec = {}
+    try:
+        write_job_status_md(
+            run_id=run_id,
+            session_id=session_id,
+            state=str(rec.get("state") or "SUCCEEDED"),
+            mixing_pass=bool(rec.get("mixing_pass")),
+            sampler=str(rec.get("sampler") or "unknown"),
+            elapsed_s=float(rec.get("elapsed_s") or 0.0),
+            note="Agent Run Status written by the watcher. Official MAP unchanged. Do not start G4",
+        )
+        ping_status_ntfy()
+    except Exception:
+        append_log(dest / "logs" / "platform.log", f"{utc_now()} STATUS.md patch failed")
+
 
 DONE_STATES = frozenset(
     {"SUCCEEDED", "COMPLETED_UNMIXED", "CRASHED", "FAILED", "SIGNAL", "FAILED_SUBMIT"}
@@ -91,6 +115,7 @@ def main() -> int:
             rec["state"] = "TRIGGER"
             write_json(watcher_json, rec)
             _snapshot(logd / "canfar-logs.txt", stream_logs(args.session_id))
+            _sync_status_md(args.run_id, args.session_id, dest)
             append_log(platform, f"{utc_now()} stop: .trigger_complete")
             return 0
         status_path = dest / "status.json"
@@ -103,6 +128,7 @@ def main() -> int:
                 rec["state"] = f"WORKER_{worker_state}"
                 write_json(watcher_json, rec)
                 _snapshot(logd / "canfar-logs.txt", stream_logs(args.session_id))
+                _sync_status_md(args.run_id, args.session_id, dest)
                 append_log(platform, f"{utc_now()} stop: worker state {worker_state}")
                 return 0
 

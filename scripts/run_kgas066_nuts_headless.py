@@ -40,6 +40,7 @@ from kinuv.runner.log import (
     rss_mb,
     setup_worker_logging,
 )
+from kinuv.runner.status_md import ping_status_ntfy, write_job_status_md
 from kinuv.scratch import kinuv_scratch_root
 from kinuv.transforms.nufft import BACKEND
 
@@ -237,6 +238,8 @@ def main() -> int:
     phys8 = physical_sampled_from_z6(z_draws, dx, dy)
     mix = mixing_sampled(phys8)
     mix_pass = mixing_ok(mix, rhat_max=1.01, ess_min=400.0, ess_tail_min=400.0)
+    rt = np.asarray(phys8, dtype=np.float64)[..., PARAM_NAMES.index("r_t_arcsec")]
+    r_t_at_floor = bool(np.median(rt) <= 0.5 + 1e-6)
     rec = product_record(
         draws8=phys8,
         mix=mix,
@@ -246,12 +249,12 @@ def main() -> int:
         autodiff_ok=True,
         mixing_pass=mix_pass,
         leftover_chi2_structured=True,
-        r_t_at_floor=True,
+        r_t_at_floor=r_t_at_floor,
         mean_num_steps=float(np.mean(step_parts)),
         eval_s=float("nan"),
         note=(
             "066 headless NUTS PA 199.73; 4 chains x 600 draws; "
-            "16/50/84 not calibrated; leftover structured; r_t floor; "
+            "16/50/84 not calibrated; leftover from MAP not refit; "
             "not S2 Laplace; do not quote inner dV/dr"
         ),
     )
@@ -274,12 +277,29 @@ def main() -> int:
         },
     )
     (dest / ".trigger_complete").write_text(utc_now() + "\n")
+    try:
+        write_job_status_md(
+            run_id=run_id,
+            session_id=snap.get("session_id") or os.environ.get("SKAHA_SESSION_ID"),
+            state="SUCCEEDED" if mix_pass else "COMPLETED_UNMIXED",
+            mixing_pass=mix_pass,
+            sampler=str(rec["sampler"]),
+            elapsed_s=float(rec["elapsed_s"]),
+            note=(
+                "Agent Run Status written by the worker. "
+                "Official MAP unchanged. Do not start G4"
+            ),
+        )
+        ping_status_ntfy()
+    except Exception:
+        log.exception("STATUS.md patch failed")
     log.info(
-        "done mixing_pass=%s sampler=%s elapsed_s=%.1f rss_mb=%s",
+        "done mixing_pass=%s sampler=%s elapsed_s=%.1f rss_mb=%s r_t_at_floor=%s",
         mix_pass,
         rec["sampler"],
         rec["elapsed_s"],
         rss_mb(),
+        r_t_at_floor,
     )
     return 0 if mix_pass else 2
 

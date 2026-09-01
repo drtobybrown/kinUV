@@ -5,7 +5,7 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["KGAS066-20260831T194009Z-nuts headless sd3ckpf2"]
+pending: []
 last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
@@ -18,13 +18,17 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G3 066 NUTS relaunched on CANFAR headless (DEC-067-RUNNER)
-* **Last Action:** Session `sd3ckpf2` left Running. Stopped teeing tqdm onto `/arc`; watcher no longer appends full CANFAR dumps
-* **Decisions Made:** Chain `npz` (kB draws) still scratch-then-/arc after each chain. JAX cache, vis, cubes, and per-sample stdout stay off `/arc`
-* **Blockers / Gates:** Waiting on `.../kinuv_runs/KGAS066-latest/.trigger_complete`; mixing still `R_hat<1.01` and ESS>400 before `sampler: nuts` on 066 JSON
-* **Next Step:** On sentinel, copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner, STATUS. Do not block this chat on the chain. Official MAP unchanged
+* **Phase:** G3 066 NUTS SUCCEEDED (`KGAS066-20260831T194009Z-nuts`)
+* **Last Action:** Session `sd3ckpf2` SUCCEEDED mixing=pass sampler=nuts elapsed_s=17441 utc=2026-09-01T00:35:23Z
+* **Decisions Made:** Worker now patches Agent Run Status + YAML `pending`. This job only wrote run-dir `status.json`. Official MAP unchanged
+* **Blockers / Gates:** Mixing passed. NUTS mean χ²=167487 vs MAP 168676 (Δ=-1189). `r_t` mean 0.224″ is below the MAP 0.5″ box. Leftover not refit. Intervals not calibrated
+* **Next Step:** Copy posteriors into `docs/reviews/artifacts/2026-08-30-g3-nuts/`, 6D corner. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-01 (066 NUTS product).** `sd3ckpf2` SUCCEEDED. Mixing pass (R̂≤1.004, ESS≥889). Receding PA stayed ~200.05°. NUTS left the MAP `r_t=0.5″` wall (`r_t` mean 0.224″, `V_0` mean 255 vs MAP 268; corr 0.87). χ² at NUTS mean 167487 vs MAP 168676 (Δ=-1189): L-BFGS box `r_t≥0.5″` was costing vis χ². Product JSON had hardcoded `r_t_at_floor: true` (MAP G0); draws are not on that floor. Leftover not refit. 16/50/84 not calibrated. Approaching PA 25.2° not run. Official MAP unchanged. Do not quote inner `dV/dr`. Do not start G4.
+
+**2026-09-01 (STATUS from the job).** User: mailbox should update when the job finishes. Cause: worker wrote `kinuv_runs/.../status.json` + `.trigger_complete` only; git `STATUS.md` was an agent follow-up, and the previous STATUS said not to block on the chain. Watcher died before the sentinel. Fix: worker + watcher patch Agent Run Status and clear YAML `pending`. Official MAP unchanged. Do not start G4.
 
 **2026-08-31 (do not balloon /arc).** User: do not copy scratch onto `/arc` wholesale. Durable on `/arc` is status, `run.log`, overwrite-copied `worker.log`, and kB chain-draw `npz`. No JAX cache, vis, cubes, or per-sample tqdm tee. Watcher overwrites `canfar-*.txt`; does not append dumps into `platform.log`. Live `sd3ckpf2` kept Running (entrypoint already in flight). Official MAP unchanged. Do not start G4.
 
