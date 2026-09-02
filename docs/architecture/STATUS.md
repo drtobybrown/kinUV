@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** leftover identity landed; approaching NUTS Running (`xgepg7qy`)
-* **Last Action:** Track B vis leftover identity MAP 168675.6 / NUTS-mean 167486.8 / Stage B 167302.2. Headless `xgepg7qy` Running flexible CPU, PA 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`
+* **Last Action:** CANFAR GPU ops doc landed (`docs/diagnostics/canfar-gpu.md`): fixed `--gpu 1 --cpu 2 --memory 8` schedules on H100 MIG; recovery venv still CPU jax; production NUTS GPU not licensed. `xgepg7qy` still Running chain 1 sample
 * **Decisions Made:** Post-leftover gate SB-dominated. No s_1/c_3. No MAP rewrite. Official MAP unchanged. Do not start G4. KGAS066-latest still receding
 * **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet
 * **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (CANFAR GPU ops).** Doc `docs/diagnostics/canfar-gpu.md`: integer `--gpu` only; pin `--cpu` and `--memory` (no flexible on GPU). Probes `okzj0cod` / `lyddomx5` / `dnm4sey1` scheduled on H100 MIG 1g.12gb. Recovery venv CPU jax 0.11.1; image astroml-cuda cuBLAS/MIG fail. Production NUTS still CPU until GPU chi2 identity propose. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (uv-vs-image methodology landed).** Dual accept (major). Notes `docs/architecture/notes/2026-09-02-kinematic-methodology-review.md` (not an ADR). Not KinMS first sentence. No cube fitter. No 007. No G4. `xgepg7qy` still Running. Official MAP unchanged.
 
