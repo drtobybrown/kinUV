@@ -21,33 +21,42 @@ export JAX_ENABLE_X64=1
 export PYTHONUNBUFFERED=1
 export PIP_DISABLE_PIP_VERSION_CHECK=1
 
-echo "=== kinuv cuda venv start host=$(hostname) venv=${VENV} ==="
+echo "=== kinuv cuda venv start host=$(hostname) venv=${VENV} reprobe=${KINUV_REPROBE:-0} ==="
 command -v nvidia-smi && nvidia-smi -L || true
 command -v nvcc && nvcc --version | head -5 || true
 python3 --version
 
-python3 -m venv --clear "${VENV}"
-# shellcheck disable=SC1091
-source "${VENV}/bin/activate"
-python -m pip install -U pip wheel setuptools
-python -m pip install "numpy>=2.1" "scipy>=1.15" pytest tqdm astropy matplotlib
-python -m pip install "scikit-build-core" cmake ninja
-python -m pip install "jax[cuda12]==0.11.1"
-python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
+if [[ "${KINUV_REPROBE:-0}" == "1" ]]; then
+  # Venv already built; install missing runtime deps and re-run probe/identity.
+  # shellcheck disable=SC1091
+  source "${VENV}/bin/activate"
+  python -m pip install "pydantic>=2"
+  python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
+else
+  python3 -m venv --clear "${VENV}"
+  # shellcheck disable=SC1091
+  source "${VENV}/bin/activate"
+  python -m pip install -U pip wheel setuptools
+  python -m pip install "numpy>=2.1" "scipy>=1.15" pytest tqdm astropy matplotlib
+  python -m pip install "scikit-build-core" cmake ninja
+  python -m pip install "jax[cuda12]==0.11.1"
+  python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
 
-# CPU wheels on PyPI; force CUDA source build. Do not upgrade jax.
-export CMAKE_ARGS="${CMAKE_ARGS:-} -DJAX_FINUFFT_USE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=native"
-python -m pip install \
-  "jax-finufft==1.3.1" \
-  --no-binary jax-finufft \
-  --no-deps \
-  -Ccmake.define.JAX_FINUFFT_USE_CUDA=ON \
-  -Ccmake.define.CMAKE_CUDA_ARCHITECTURES=native
-python -m pip install --no-deps "numpyro==0.21.0"
-python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
+  # CPU wheels on PyPI; force CUDA source build. Do not upgrade jax.
+  export CMAKE_ARGS="${CMAKE_ARGS:-} -DJAX_FINUFFT_USE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=native"
+  python -m pip install \
+    "jax-finufft==1.3.1" \
+    --no-binary jax-finufft \
+    --no-deps \
+    -Ccmake.define.JAX_FINUFFT_USE_CUDA=ON \
+    -Ccmake.define.CMAKE_CUDA_ARCHITECTURES=native
+  python -m pip install "pydantic>=2"
+  python -m pip install --no-deps "numpyro==0.21.0"
+  python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
 
-python -m pip freeze > "${OUT}/pip-freeze.txt"
-python -c "import jax; print('jax', jax.__version__, 'devices', jax.devices())"
+  python -m pip freeze > "${OUT}/pip-freeze.txt"
+  python -c "import jax; print('jax', jax.__version__, 'devices', jax.devices())"
+fi
 
 export KINUV_RUNS="${RUNS}"
 export KINUV_RUN_ID="${RUN_ID}"

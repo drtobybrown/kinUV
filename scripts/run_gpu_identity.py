@@ -57,14 +57,14 @@ def main() -> int:
     params = {n: rec_map[n] for n in PARAM_NAMES}
     devices = [str(d) for d in jax.devices()]
     has_cuda = any("cuda" in d.lower() for d in devices)
-    vis = predict_binned(params, data, tmpl, grid, xla=True)
+    vis = predict_binned(data, params, tmpl, grid, xla=True)
     vis_np = np.asarray(vis)
     c = float(chi2(data.vis, vis_np, data.weights, data.s))
     identity_ok = abs(c - CHI2_REF) < 1.0
     # warmup
     _ = vis
     t0 = time.perf_counter()
-    vis2 = predict_binned(params, data, tmpl, grid, xla=True)
+    vis2 = predict_binned(data, params, tmpl, grid, xla=True)
     jnp.asarray(vis2).block_until_ready()
     eval_s = 1.0 / max(time.perf_counter() - t0, 1e-9)
     dx, dy = params["dx_arcsec"], params["dy_arcsec"]

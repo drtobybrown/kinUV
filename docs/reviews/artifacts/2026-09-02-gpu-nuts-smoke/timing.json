@@ -1,0 +1,20 @@
+{
+  "backend": "jax-finufft",
+  "JAX_PLATFORMS": "cuda",
+  "jax_version": "0.11.1",
+  "devices": [
+    "cuda:0"
+  ],
+  "has_cuda_device": true,
+  "chi2": 168675.59555286478,
+  "identity_ok": true,
+  "s": 0.5136098555284736,
+  "eval_per_s": 0.5457830303924295,
+  "cpu_eval_per_s": 3.0119342791188477,
+  "t_grad_s": 2.801252480596304,
+  "cpu_t_grad_s": 0.4340723119676113,
+  "grad_finite_six": true,
+  "n_row": 881,
+  "n_chan": 95,
+  "ok": true
+}
