@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — CANFAR GPU headless ops doc
+
+Document fixed-resource GPU submit, probe scripts, and 2026-09-02 scheduling results. Production NUTS still CPU. Official MAP unchanged.
+
 ## 2026-09-02 — uv-vs-image methodology notes landed
 
 Dual accept (major). Notes are not an ADR. Not KinMS first sentence. No cube fitter, no 007, no G4. `xgepg7qy` still Running. Official MAP unchanged.

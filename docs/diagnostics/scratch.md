@@ -22,3 +22,5 @@ Root: `/scratch/kinuv-$USER/$SKAHA_SESSION_ID` (mode 0700), else `/tmp/kinuv-$US
 - Rely on `canfar logs` (expire ~1 hour; vanish on 404).
 
 Composer 2.5 (`composer-2.5-fast`) may edit only `## Agent Run Status` in `docs/architecture/STATUS.md` (up to `# Architecture mailbox`). It must not touch YAML `board` / `next_role` / reviews, skip hooks, amend, or force-push. Parent writes physics mailbox lines.
+
+GPU headless submit (fixed resources, probes, blockers): [`canfar-gpu.md`](canfar-gpu.md).
