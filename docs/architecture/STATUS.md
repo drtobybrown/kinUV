@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md
+last_propose: docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-02-review-a-uv-vs-image-methodology.md
 last_review_b: docs/reviews/2026-09-02-review-b-uv-vs-image-methodology.md
@@ -25,6 +25,8 @@ canon_generation: 4
 * **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (GPU NUTS smoke propose).** Board open. CUDA venv + G1 identity + 4 parallel GPU chains; 10× wall vs 17440 s serial CPU. Do not mutate recovery. Do not interrupt `xgepg7qy`. Propose: `docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md`. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (CANFAR GPU ops).** Doc `docs/diagnostics/canfar-gpu.md`: integer `--gpu` only; pin `--cpu` and `--memory` (no flexible on GPU). Probes `okzj0cod` / `lyddomx5` / `dnm4sey1` scheduled on H100 MIG 1g.12gb. Recovery venv CPU jax 0.11.1; image astroml-cuda cuBLAS/MIG fail. Production NUTS still CPU until GPU chi2 identity propose. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — GPU NUTS smoke propose
+
+Board open. CUDA venv + 4 parallel GPU chains; 10× wall vs serial CPU 17440 s. Do not mutate recovery. Propose: `docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md`. Official MAP unchanged.
+
 ## 2026-09-02 — CANFAR GPU headless ops doc
 
 Document fixed-resource GPU submit, probe scripts, and 2026-09-02 scheduling results. Production NUTS still CPU. Official MAP unchanged.
