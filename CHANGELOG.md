@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — uv-vs-image methodology notes landed
+
+Dual accept (major). Notes are not an ADR. Not KinMS first sentence. No cube fitter, no 007, no G4. `xgepg7qy` still Running. Official MAP unchanged.
+
 ## 2026-09-02 — uv-vs-image methodology propose
 
 Board open. Docs-only S1/leftover restating. No KinMS fitter, no KGAS007, no G4. Propose: `docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md`. Official MAP unchanged.

@@ -60,6 +60,7 @@ The parent proposes a scope, two independent reviewers accept or reject on the b
 | Official MAP | `/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/` |
 | S1 artifacts | `docs/reviews/artifacts/2026-08-29-s1-mock/` |
 | S2 artifacts | `docs/reviews/artifacts/2026-08-29-s2/` |
-| **Your review folder** | [`docs/reviews/artifacts/2026-08-30-final-fit/`](reviews/artifacts/2026-08-30-final-fit/) |
-| Moment maps | [`docs/reviews/artifacts/2026-08-30-final-fit/moments.png`](reviews/artifacts/2026-08-30-final-fit/moments.png) |
+| **Your review folder** | [`docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`](reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/) |
+| Moment maps | [`docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings/moments.png`](reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings/moments.png) |
+| S1 restating (not ADR) | [`docs/architecture/notes/2026-09-02-kinematic-methodology-review.md`](architecture/notes/2026-09-02-kinematic-methodology-review.md) |
 | Decisions | `docs/decisions/DEC-066-INDEX.md` |

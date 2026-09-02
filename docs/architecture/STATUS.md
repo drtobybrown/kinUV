@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-02-review-a-leftover-and-approaching.md
-last_review_b: docs/reviews/2026-09-02-review-b-leftover-and-approaching.md
+last_review_a: docs/reviews/2026-09-02-review-a-uv-vs-image-methodology.md
+last_review_b: docs/reviews/2026-09-02-review-b-uv-vs-image-methodology.md
 user_review: docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/
 open_questions: []
 deadlocks: []
@@ -25,6 +25,8 @@ canon_generation: 4
 * **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (uv-vs-image methodology landed).** Dual accept (major). Notes `docs/architecture/notes/2026-09-02-kinematic-methodology-review.md` (not an ADR). Not KinMS first sentence. No cube fitter. No 007. No G4. `xgepg7qy` still Running. Official MAP unchanged.
 
 **2026-09-02 (uv-vs-image methodology propose).** Board open. Docs-only: S1 restating + leftover SB-dominated gate. No KinMS fitter, no type-1 claim, no 007, no G4. Do not poll `xgepg7qy`. Propose: `docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md`. Official MAP unchanged.
 
