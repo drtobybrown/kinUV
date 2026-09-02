@@ -1,0 +1,63 @@
+{
+  "vsys_radio_kms": 8098.700511951254,
+  "vsys_optical_kms": 8323.556026677059,
+  "catalog_vsys_optical_kms": 8299.563,
+  "vsys_map_minus_catalog_kms": 23.99302667705888,
+  "spectral_wcs": [
+    {
+      "label": "data_10kms",
+      "ctype3": "VOPT-W2W",
+      "cunit3": "km s-1",
+      "crval3": 8044.32010831556,
+      "crpix3": 1.0,
+      "cdelt3": 10.44852263184,
+      "restfrq_hz": 230538000000.0,
+      "specsys": "LSRK",
+      "naxis3": 50,
+      "header_axis": "optical",
+      "vel_chan0_kms": 8044.32010831556,
+      "vel_chanN_kms": 8556.29771727572,
+      "vel_optical_chan0_kms": 8044.32010831556,
+      "vel_optical_chanN_kms": 8556.29771727572
+    },
+    {
+      "label": "NUTS-mean_Stage_A",
+      "ctype3": "VRAD",
+      "cunit3": "m/s",
+      "crval3": 7820168.2800129,
+      "crpix3": 1.0,
+      "cdelt3": 1269.9254451136,
+      "restfrq_hz": 230538000000.0,
+      "specsys": "LSRK",
+      "naxis3": 382,
+      "header_axis": "radio",
+      "vel_chan0_kms": 7820.1682800129,
+      "vel_chanN_kms": 8304.00987460118,
+      "vel_optical_chan0_kms": 8029.623197759958,
+      "vel_optical_chanN_kms": 8540.576985376729
+    }
+  ],
+  "centroids": {
+    "mask": {
+      "data_kms": 8300.512144068918,
+      "model_kms": 8315.775965265497,
+      "model_minus_data_kms": 15.263821196578647
+    },
+    "centre": {
+      "data_kms": 8308.121674710788,
+      "model_kms": 8343.187121382874,
+      "model_minus_data_kms": 35.06544667208618
+    },
+    "receding": {
+      "data_kms": 8420.653463586008,
+      "model_kms": 8457.503126926984,
+      "model_minus_data_kms": 36.849663340975894
+    },
+    "approaching": {
+      "data_kms": 8204.813765159728,
+      "model_kms": 8216.855325290227,
+      "model_minus_data_kms": 12.04156013049942
+    }
+  },
+  "root_cause": "Image-plane centroid redshift is vis-weighted MAP vsys vs CLEAN-cube brightness weighting (frozen Wiener Ico, r_t floor), not radio/optical, RESTFRQ, CRPIX, or Hann phase. Do not fudge the model velocity axis."
+}

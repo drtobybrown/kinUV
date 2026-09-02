@@ -1,0 +1,17 @@
+{
+  "label": "Stage B rings",
+  "chi2_sum": 167302.18673431588,
+  "chi2_identity": 167302.18673431588,
+  "leftover_chi2_structured": true,
+  "leftover_uv_span": 0.09284303239510518,
+  "leftover_vel_span": 0.3351345659538643,
+  "quote_inner_slope": false,
+  "rings_are_not_a_warp": true,
+  "n_row": 881,
+  "n_chan": 95,
+  "s": 0.5136098555284736,
+  "n_rings": 7,
+  "lam_reg": 0.0,
+  "v0_recovered": 270.1880769131378,
+  "r_t_recovered": 0.5000000000000019
+}

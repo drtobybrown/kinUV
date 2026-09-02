@@ -14,9 +14,10 @@ APPROACH_PA = 25.2
 KIND_PA25 = "nuts-pa25"
 ARTIFACT_G3_REL = "docs/reviews/artifacts/2026-08-30-g3-nuts"
 ARTIFACT_LEFTOVER_REL = "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes"
+ARTIFACT_PA25_REL = ARTIFACT_LEFTOVER_REL + "/pa25"
 ARTIFACT_G3 = REPO / ARTIFACT_G3_REL
 ARTIFACT_LEFTOVER = REPO / ARTIFACT_LEFTOVER_REL
-ARTIFACT_PA25 = ARTIFACT_LEFTOVER / "pa25"
+ARTIFACT_PA25 = REPO / ARTIFACT_PA25_REL
 
 
 def is_approaching_kind(kind: str) -> bool:
@@ -37,7 +38,7 @@ def steal_latest(kind: str) -> bool:
 def artifact_dir_for_kind(kind: str, repo: Path | None = None) -> Path:
     root = Path(repo) if repo is not None else REPO
     if is_approaching_kind(kind):
-        return root / ARTIFACT_LEFTOVER_REL / "pa25"
+        return root / ARTIFACT_PA25_REL
     return root / ARTIFACT_G3_REL
 
 

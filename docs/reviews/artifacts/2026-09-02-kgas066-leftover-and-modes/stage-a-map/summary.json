@@ -1,0 +1,62 @@
+{
+  "data_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+  "mask_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+  "model_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/stage_a_model_cube.fits",
+  "matched_fits": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-a-map/model_on_10kms.fits",
+  "pa_deg": 199.72980072503037,
+  "dx_arcsec": 0.09104737371760792,
+  "dy_arcsec": 0.018566961155444102,
+  "vsys_radio_kms": 8098.773150512066,
+  "vsys_optical_kms": 8323.63275478255,
+  "catalog_vsys_optical_kms": 8299.563,
+  "vsys_map_minus_catalog_kms": 24.069754782549353,
+  "spectral_wcs": [
+    {
+      "label": "data_10kms",
+      "ctype3": "VOPT-W2W",
+      "cunit3": "km s-1",
+      "crval3": 8044.32010831556,
+      "crpix3": 1.0,
+      "cdelt3": 10.44852263184,
+      "restfrq_hz": 230538000000.0,
+      "specsys": "LSRK",
+      "naxis3": 50,
+      "header_axis": "optical",
+      "vel_chan0_kms": 8044.32010831556,
+      "vel_chanN_kms": 8556.29771727572,
+      "vel_optical_chan0_kms": 8044.32010831556,
+      "vel_optical_chanN_kms": 8556.29771727572
+    },
+    {
+      "label": "Stage_A_MAP",
+      "ctype3": "VRAD",
+      "cunit3": "m/s",
+      "crval3": 7820168.2800129,
+      "crpix3": 1.0,
+      "cdelt3": 1269.9254451136,
+      "restfrq_hz": null,
+      "specsys": "BARYCENT",
+      "naxis3": 382,
+      "header_axis": "radio",
+      "vel_chan0_kms": 7820.1682800129,
+      "vel_chanN_kms": 8304.00987460118,
+      "vel_optical_chan0_kms": 8029.623197759958,
+      "vel_optical_chanN_kms": 8540.576985376729
+    }
+  ],
+  "centroid_model_minus_data_kms": {
+    "mask": 15.358987588819218,
+    "centre": 32.38767157441907,
+    "receding": 38.310868931394,
+    "approaching": 10.4832866632878
+  },
+  "mom0_sum_data": 27863.685648623163,
+  "mom0_sum_model": 28494.614615842052,
+  "plots": [
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-a-map/moments.png",
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-a-map/spectra.png",
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-a-map/pv_major.png",
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-a-map/pv_minor.png"
+  ],
+  "root_cause": "Image-plane centroid redshift is vis-weighted MAP vsys vs CLEAN-cube brightness weighting (frozen Wiener Ico, r_t floor), not radio/optical, RESTFRQ, CRPIX, or Hann phase. Do not fudge the model velocity axis."
+}

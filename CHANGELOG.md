@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-02 — leftover three-way identity (SB-dominated)
+
+Recomputed vis leftover on 881x95: MAP 168675.6, receding NUTS-mean 167486.8, Stage B 167302.2 (gap +184.6). leftover-vs-velocity True at Stage B. Plots: `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Official MAP unchanged. Do not start G4.
+
+## 2026-09-02 — leftover + approaching-PA runner
+
+KINUV_PA_INIT rides `--env`. `nuts-pa25` skips KGAS066-latest and writes leftover-and-modes/pa25, not G3. Leftover flag is measured. quote_inner_slope stays false while leftover-vs-velocity. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-02 — leftover + approaching-PA dual accept (major)
 
 KINUV_PA_INIT must ride `--env`; Stage B leftover is `stage_b.predict_binned` identity vs 167302.19; approaching must not write `2026-08-30-g3-nuts/` or steal `KGAS066-latest`. `quote_inner_slope` false while leftover-vs-velocity. No KinMS import or folder. Official MAP unchanged. Do not start G4.

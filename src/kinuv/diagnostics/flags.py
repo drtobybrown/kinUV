@@ -92,6 +92,7 @@ def map_quality_flags(stage_a, leftover_npz=None) -> dict:
     rt = float(rec["r_t_arcsec"])
     pa = float(rec["pa_deg"]) % 360.0
     dchi = float(rec["delta_chi2"])
+    # On the L-BFGS 0.5 arcsec wall, not merely below it (NUTS r_t=0.224 is off-floor).
     rt_floor = bool(abs(rt - RT_FLOOR_ARCSEC) <= RT_FLOOR_TOL_ARCSEC)
     leftover_flag = False
     leftover_uv_span = None

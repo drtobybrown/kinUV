@@ -17,7 +17,7 @@ from kinuv.decisions import requires
 from kinuv.runner.kind import (
     APPROACH_PA as APPROACH_PA_DEG,
     ARTIFACT_G3_REL,
-    ARTIFACT_LEFTOVER_REL as ARTIFACT_PA25_REL,
+    ARTIFACT_PA25_REL,
     KIND_PA25,
     OFFICIAL_PA as OFFICIAL_PA_DEG,
     artifact_dir_for_kind,
