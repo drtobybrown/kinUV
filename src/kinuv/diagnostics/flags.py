@@ -92,7 +92,7 @@ def map_quality_flags(stage_a, leftover_npz=None) -> dict:
     rt = float(rec["r_t_arcsec"])
     pa = float(rec["pa_deg"]) % 360.0
     dchi = float(rec["delta_chi2"])
-    rt_floor = bool(rt <= RT_FLOOR_ARCSEC + RT_FLOOR_TOL_ARCSEC)
+    rt_floor = bool(abs(rt - RT_FLOOR_ARCSEC) <= RT_FLOOR_TOL_ARCSEC)
     leftover_flag = False
     leftover_uv_span = None
     leftover_vel_span = None
@@ -119,5 +119,9 @@ def map_quality_flags(stage_a, leftover_npz=None) -> dict:
         "leftover_vel_span": leftover_vel_span,
         "rings_are_not_a_warp": True,
         "nuts_absent": True,
-        "quote_inner_slope": bool(not rt_floor),
+        # Off-floor r_t is not a license to quote dV/dr while leftover
+        # vs velocity is structured (or unmeasured).
+        "quote_inner_slope": bool(
+            (not rt_floor) and (arrays is not None) and (not leftover_flag)
+        ),
     }

@@ -41,6 +41,7 @@ def _sync_status_md(run_id: str, session_id: str, dest: Path) -> None:
             mixing_pass=bool(rec.get("mixing_pass")),
             sampler=str(rec.get("sampler") or "unknown"),
             elapsed_s=float(rec.get("elapsed_s") or 0.0),
+            kind=str(rec.get("kind") or run_id),
             note="Agent Run Status written by the watcher. Official MAP unchanged. Do not start G4",
         )
         ping_status_ntfy()

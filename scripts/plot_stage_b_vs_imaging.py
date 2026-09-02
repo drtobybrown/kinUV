@@ -53,7 +53,7 @@ ARTIFACT = Path("docs/reviews/artifacts/2026-08-30-final-fit")
 LENGTH_ARCSEC = 16.0
 
 
-def _moment_figure(data, model, residual, extent, vsys, beam, centre, out):
+def _moment_figure(data, model, residual, extent, vsys, beam, centre, out, *, model_label="Stage B"):
     apply_style()
     import matplotlib.pyplot as plt
 
@@ -97,7 +97,7 @@ def _moment_figure(data, model, residual, extent, vsys, beam, centre, out):
         cbar(fig, ims[0], unit, cax=cax_pair[i])
         cbar(fig, ims[2], res_unit, cax=cax_res[i])
     beam_ellipse(axes[0][0], bmaj, bmin, bpa, (cx + crop - 2.1, cy - crop + 2.1))
-    fig.suptitle("KGAS066  ·  Stage B vs 10 km/s cube", fontsize=11, y=0.97)
+    fig.suptitle(f"KGAS066  ·  {model_label} vs 10 km/s cube", fontsize=11, y=0.97)
     fig.text(
         0.50, 0.015,
         "east left, north up  ·  same 2-D spatial mask  ·  M1 shown as v − vsys (optical, LSRK)",
@@ -106,7 +106,9 @@ def _moment_figure(data, model, residual, extent, vsys, beam, centre, out):
     save_fig(fig, out)
 
 
-def _spectra_figure(v, aper, vsys, pa, dv_model_minus_data, out, *, catalog_vsys=None):
+def _spectra_figure(
+    v, aper, vsys, pa, dv_model_minus_data, out, *, catalog_vsys=None, model_label="Stage B"
+):
     apply_style()
     import matplotlib.pyplot as plt
 
@@ -126,7 +128,7 @@ def _spectra_figure(v, aper, vsys, pa, dv_model_minus_data, out, *, catalog_vsys
     for ax, title, key, letter in zip(axes.ravel(), titles, keys, "abcd"):
         yd, ym = aper[key]
         ax.plot(v, yd, color=COLOUR["data"], lw=1.5, label="data", zorder=2)
-        ax.plot(v, ym, color=COLOUR["model"], lw=1.35, label="Stage B", zorder=3)
+        ax.plot(v, ym, color=COLOUR["model"], lw=1.35, label=model_label, zorder=3)
         ax.axhline(0.0, color=COLOUR["zero"], lw=0.6, zorder=1)
         vsys_line(ax, vsys, orientation="v")
         if catalog_vsys is not None:
@@ -238,6 +240,11 @@ def main(argv=None) -> int:
         default=None,
         help="Matched K cube path. Default: <out-dir>/model_on_10kms.fits (never the official MAP tree).",
     )
+    p.add_argument(
+        "--model-label",
+        default="Stage B",
+        help="Legend/suptitle for the model (Stage A MAP / NUTS-mean Stage A / Stage B rings).",
+    )
     args = p.parse_args(argv)
     for label, path in (("data-cube", args.data_cube), ("mask-cube", args.mask_cube)):
         if "30kms" in str(path):
@@ -271,7 +278,7 @@ def main(argv=None) -> int:
 
     wcs_rows = [
         spectral_wcs_report(data_hdu.header, label="data_10kms"),
-        spectral_wcs_report(model_hdu.header, label="stage_b_model"),
+        spectral_wcs_report(model_hdu.header, label=str(args.model_label).replace(" ", "_")),
     ]
     print("spectral WCS:", json.dumps(wcs_rows, indent=2), flush=True)
 
@@ -308,6 +315,7 @@ def main(argv=None) -> int:
         (bmaj, bmin, bpa),
         (dx, dy),
         out_dir / "moments.png",
+        model_label=args.model_label,
     )
 
     spec_d = _spectrum_mjy(data, mask2d, hdr, vel)
@@ -335,6 +343,7 @@ def main(argv=None) -> int:
     _spectra_figure(
         vel, aper, vsys_opt, pa, dv_md, out_dir / "spectra.png",
         catalog_vsys=catalog_vsys,
+        model_label=args.model_label,
     )
 
     width = bmaj

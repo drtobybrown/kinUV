@@ -82,4 +82,8 @@ flush_logs() {
   sync -f "${ARC_LOG}" 2>/dev/null || sync || true
 }
 trap flush_logs EXIT
-python "${REPO}/scripts/run_kgas066_nuts_headless.py" --run-id "${RUN_ID}"
+PA_ARGS=()
+if [[ -n "${KINUV_PA_INIT:-}" ]]; then
+  PA_ARGS+=(--pa-init "${KINUV_PA_INIT}")
+fi
+python "${REPO}/scripts/run_kgas066_nuts_headless.py" --run-id "${RUN_ID}" "${PA_ARGS[@]}"

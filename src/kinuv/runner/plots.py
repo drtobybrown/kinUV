@@ -18,10 +18,10 @@ from kinuv.diagnostics.figures import plot_leftover_chi2, plot_posterior_corner
 from kinuv.diagnostics.flags import leftover_velocity_structured
 from kinuv.infer.posterior import PARAM_NAMES
 from kinuv.runner.canfar import PROJECT_ROOT, REPO, utc_now, write_json
+from kinuv.runner.kind import ARTIFACT_G3, ARTIFACT_PA25, corner_title
 
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-ARTIFACT_G3 = REPO / "docs" / "reviews" / "artifacts" / "2026-08-30-g3-nuts"
 MAP_DIR = PROJECT_ROOT / "results" / "KILOGAS066" / "kinuv-KGAS066-uvsign-map"
 ICO = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
@@ -32,10 +32,7 @@ CUBE_30 = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
     "KGAS66_clipped_cube.fits"
 )
-CORNER_TITLE = (
-    "066 NUTS PA 199.73; 6 sampled; not calibrated; not S2 Laplace; "
-    "do not quote inner dV/dr"
-)
+CORNER_TITLE = corner_title(199.73)
 PNG_NAMES = (
     "corner.png",
     "leftover_chi2.png",
@@ -81,9 +78,26 @@ def write_leftover_at_params(params: dict, dest: Path, *, data, tmpl, grid) -> d
     b_m, per_row, vel, per_chan = leftover_chi2(data, model)
     total = float(np.sum(per_row))
     structured = leftover_velocity_structured(b_m, per_row, per_chan)
+    from kinuv.diagnostics.flags import map_quality_flags
+
+    qflags = map_quality_flags(
+        {
+            "r_t_arcsec": float(params["r_t_arcsec"]),
+            "pa_deg": float(params["pa_deg"]),
+            "delta_chi2": 1.0,
+        },
+        leftover_npz={
+            "baseline_m": b_m,
+            "chi2_row": per_row,
+            "chi2_chan": per_chan,
+        },
+    )
     summary = {
         "chi2_sum": total,
         "leftover_chi2_structured": structured,
+        "leftover_uv_span": qflags["leftover_uv_span"],
+        "leftover_vel_span": qflags["leftover_vel_span"],
+        "quote_inner_slope": qflags["quote_inner_slope"],
         "n_row": int(np.asarray(data.vis).shape[0]),
         "n_chan": int(np.asarray(data.vis).shape[1]),
         "s": float(data.s),
@@ -159,7 +173,9 @@ def write_stage_a_cube(params: dict, dest: Path, *, data, tmpl, grid) -> Path:
     return dest
 
 
-def write_imaging_plots(geom_json: Path, model_cube: Path, out_dir: Path) -> None:
+def write_imaging_plots(
+    geom_json: Path, model_cube: Path, out_dir: Path, *, model_label: str = "Stage B"
+) -> None:
     scripts = REPO / "scripts"
     sys.path.insert(0, str(scripts))
     from plot_stage_b_vs_imaging import main as imaging_main
@@ -174,6 +190,8 @@ def write_imaging_plots(geom_json: Path, model_cube: Path, out_dir: Path) -> Non
             str(out_dir),
             "--matched-fits",
             str(out_dir / "model_on_10kms.fits"),
+            "--model-label",
+            str(model_label),
         ]
     )
 
@@ -193,7 +211,12 @@ def write_nuts_product_plots(
     run_dir = Path(run_dir)
     plots = run_dir / "plots"
     plots.mkdir(parents=True, exist_ok=True)
-    written = {"corner": str(write_corner(rec, plots / "corner.png"))}
+    pa_init = float(rec.get("pa_init_deg", 199.73))
+    written = {
+        "corner": str(
+            write_corner(rec, plots / "corner.png", title=corner_title(pa_init))
+        )
+    }
     params = mean_params(rec)
     geom_path = plots / "nuts_mean_params.json"
     geom_path.write_text(json.dumps(params, indent=2) + "\n")
@@ -226,7 +249,12 @@ def write_nuts_product_plots(
         cube = write_stage_a_cube(
             params, plots / "stage_a_nuts_mean.fits", data=data, tmpl=tmpl, grid=grid
         )
-        write_imaging_plots(geom_path, cube, plots)
+        write_imaging_plots(
+            geom_path,
+            cube,
+            plots,
+            model_label=f"NUTS-mean Stage A (PA {pa_init:.1f})",
+        )
         written["cube"] = str(cube)
 
     post = run_dir / "posteriors"

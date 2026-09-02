@@ -14,6 +14,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from kinuv.decisions import requires
+from kinuv.runner.kind import (
+    APPROACH_PA as APPROACH_PA_DEG,
+    ARTIFACT_G3_REL,
+    ARTIFACT_LEFTOVER_REL as ARTIFACT_PA25_REL,
+    KIND_PA25,
+    OFFICIAL_PA as OFFICIAL_PA_DEG,
+    artifact_dir_for_kind,
+    pa_init_deg as pa_init_deg_for_kind,
+    steal_latest,
+)
 
 CANFAR_BIN = os.environ.get("CANFAR_BIN", "canfar")
 PROJECT_ROOT = Path(
@@ -36,6 +46,37 @@ _NAME_RE = re.compile(r"Name\s+(\S+)")
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def headless_job_env(
+    *,
+    run_id: str,
+    galaxy: str,
+    kind: str = "nuts",
+    gpu: int | None = None,
+    skip_pull: bool = False,
+    repo: Path | None = None,
+    runs_root: Path | None = None,
+    pa_init: float | None = None,
+) -> dict[str, str]:
+    """Env dict for ``canfar create --env``. Manifest JSON is not a delivery path."""
+    root = Path(repo or REPO)
+    pa = float(pa_init) if pa_init is not None else pa_init_deg_for_kind(kind)
+    env = {
+        "KINUV_RUN_ID": str(run_id),
+        "KINUV_GALAXY": str(galaxy),
+        "KINUV_KIND": str(kind),
+        "KINUV_PROJECT": str(root.parent),
+        "KINUV_RUNS": str(runs_root or RUNS_ROOT),
+        "KINUV_PA_INIT": f"{pa:.10g}",
+        "KINUV_ARTIFACT_DIR": str(artifact_dir_for_kind(kind, repo=root)),
+        "JAX_PLATFORMS": "cpu" if gpu is None else "cuda",
+        "JAX_ENABLE_X64": "1",
+        "PYTHONUNBUFFERED": "1",
+    }
+    if skip_pull:
+        env["KINUV_SKIP_PULL"] = "1"
+    return env
 
 
 def galaxy_tag(galaxy: str) -> str:

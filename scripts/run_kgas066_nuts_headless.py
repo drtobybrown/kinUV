@@ -31,7 +31,16 @@ from kinuv.infer.nuts import (
     sampled_z_from_physical,
 )
 from kinuv.infer.posterior import params_to_vec
-from kinuv.runner.canfar import RUNS_ROOT, utc_now, write_json, write_status
+from kinuv.runner.canfar import (
+    ARTIFACT_G3_REL,
+    KIND_PA25,
+    OFFICIAL_PA_DEG,
+    RUNS_ROOT,
+    artifact_dir_for_kind,
+    utc_now,
+    write_json,
+    write_status,
+)
 from kinuv.runner.checkpoint import dual_checkpoint, flush_scratch_to_arc
 from kinuv.runner.log import (
     host_snapshot,
@@ -41,7 +50,7 @@ from kinuv.runner.log import (
     setup_worker_logging,
 )
 from kinuv.runner.status_md import ping_status_ntfy, write_job_status_md
-from kinuv.runner.plots import write_nuts_product_plots
+from kinuv.runner.plots import mean_params, write_leftover_at_params, write_nuts_product_plots
 from kinuv.scratch import kinuv_scratch_root
 from kinuv.transforms.nufft import BACKEND
 
@@ -58,7 +67,7 @@ CUBE = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
     "KGAS66_clipped_cube.fits"
 )
-OFFICIAL_PA = 199.72980072503037
+OFFICIAL_PA = OFFICIAL_PA_DEG
 N_WARMUP = 200
 N_SAMPLES = 600
 N_CHAINS = 4
@@ -94,8 +103,24 @@ def _heartbeat(run_id: str, stop: threading.Event, state: dict, log) -> None:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--run-id", default=os.environ.get("KINUV_RUN_ID", "kgas066-nuts"))
+    p.add_argument(
+        "--pa-init",
+        type=float,
+        default=None,
+        help="Physical PA start (deg). Default: KINUV_PA_INIT env, else official MAP.",
+    )
     args = p.parse_args()
     run_id = args.run_id
+    kind = os.environ.get("KINUV_KIND", "nuts")
+    if args.pa_init is not None:
+        pa_init = float(args.pa_init)
+    else:
+        pa_init = float(os.environ.get("KINUV_PA_INIT", str(OFFICIAL_PA)))
+    art_env = os.environ.get("KINUV_ARTIFACT_DIR")
+    if art_env:
+        artifact_dir = Path(art_env)
+    else:
+        artifact_dir = artifact_dir_for_kind(kind)
     dest = RUNS_ROOT / run_id
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "posteriors").mkdir(exist_ok=True)
@@ -136,7 +161,7 @@ def main() -> int:
     )
     dx, dy = params["dx_arcsec"], params["dy_arcsec"]
     start = dict(params)
-    start["pa_deg"] = float(OFFICIAL_PA)
+    start["pa_deg"] = float(pa_init)
     z6 = sampled_z_from_physical(params_to_vec(start))
 
     import jax
@@ -240,21 +265,34 @@ def main() -> int:
     mix = mixing_sampled(phys8)
     mix_pass = mixing_ok(mix, rhat_max=1.01, ess_min=400.0, ess_tail_min=400.0)
     rt = np.asarray(phys8, dtype=np.float64)[..., PARAM_NAMES.index("r_t_arcsec")]
-    r_t_at_floor = bool(np.median(rt) <= 0.5 + 1e-6)
+    r_t_at_floor = bool(abs(float(np.median(rt)) - 0.5) <= 0.01)
+    if kind == KIND_PA25 and ARTIFACT_G3_REL in str(artifact_dir):
+        raise SystemExit(
+            "approaching NUTS must not write docs/reviews/artifacts/2026-08-30-g3-nuts/"
+        )
+    leftover_structured = False
+    try:
+        mean_p = mean_params({"sampler": "nuts", "draws": phys8})
+        leftover_rec = write_leftover_at_params(
+            mean_p, dest / "plots", data=data, tmpl=tmpl, grid=grid
+        )
+        leftover_structured = bool(leftover_rec["leftover_chi2_structured"])
+    except Exception:
+        log.exception("leftover at NUTS mean failed; not copying G0 leftover bit")
     rec = product_record(
         draws8=phys8,
         mix=mix,
-        pa_init_deg=OFFICIAL_PA,
+        pa_init_deg=pa_init,
         dx_map=dx,
         dy_map=dy,
         autodiff_ok=True,
         mixing_pass=mix_pass,
-        leftover_chi2_structured=True,
+        leftover_chi2_structured=leftover_structured,
         r_t_at_floor=r_t_at_floor,
         mean_num_steps=float(np.mean(step_parts)),
         eval_s=float("nan"),
         note=(
-            "066 headless NUTS PA 199.73; 4 chains x 600 draws; "
+            f"066 headless NUTS PA {pa_init:.2f}; 4 chains x 600 draws; "
             "16/50/84 not calibrated; leftover plotted at NUTS mean; "
             "not S2 Laplace; do not quote inner dV/dr"
         ),
@@ -263,12 +301,18 @@ def main() -> int:
     rec["elapsed_s"] = time.perf_counter() - t0
     rec["backend"] = BACKEND
     rec["s"] = float(map_rec.get("s", data.s))
+    rec["kind"] = kind
     write_json(dest / "posteriors" / "kgas066_nuts.json", rec)
     summary = {k: rec[k] for k in rec if k != "draws"}
     write_json(dest / "posteriors" / "summary.json", summary)
     try:
         plotted = write_nuts_product_plots(
-            rec, dest, data=data, tmpl=tmpl, grid=grid
+            rec,
+            dest,
+            artifact_dir=artifact_dir,
+            data=data,
+            tmpl=tmpl,
+            grid=grid,
         )
         log.info("product plots pngs=%s", plotted.get("artifact_pngs"))
     except Exception:
@@ -293,6 +337,7 @@ def main() -> int:
             mixing_pass=mix_pass,
             sampler=str(rec["sampler"]),
             elapsed_s=float(rec["elapsed_s"]),
+            kind=kind,
             note=(
                 "Agent Run Status written by the worker. "
                 "Official MAP unchanged. Do not start G4"

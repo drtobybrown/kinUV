@@ -57,11 +57,13 @@ def _ico_path():
 
 
 def test_no_uvkin_or_kinms_import():
-    for path in SRC.glob("*.py"):
-        text = path.read_text(encoding="utf-8")
-        assert "uvkin" not in text
-        assert "KinMS" not in text
-        assert "from kinms" not in text.lower()
+    repo = Path(__file__).resolve().parents[1]
+    banned = ("from kinms", "import kinms", "from uvkin", "import uvkin")
+    for root in (repo / "src" / "kinuv", repo / "scripts"):
+        for path in root.rglob("*.py"):
+            text = path.read_text(encoding="utf-8").lower()
+            for needle in banned:
+                assert needle not in text, f"{path} contains {needle}"
 
 
 def test_receding_major_axis_is_redshifted():

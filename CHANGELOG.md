@@ -2,11 +2,7 @@
 
 ## 2026-09-02 — leftover + approaching-PA dual accept (major)
 
-KINUV_PA_INIT must ride `--env`; Stage B leftover is `stage_b.predict_binned` identity vs 167302.19; approaching must not write `2026-08-30-g3-nuts/` or steal `KGAS066-latest`. Official MAP unchanged. Do not start G4.
-
-## 2026-09-02 — leftover + approaching-PA tally
-
-Dual accept (major). Execute: `KINUV_PA_INIT` via `canfar --env`; Stage B vis leftover identity `|chi2-167302.186|<1`; approaching must not write `2026-08-30-g3-nuts/`; `quote_inner_slope` false while leftover-vs-velocity; no KinMS import or folder. Official MAP unchanged. Do not start G4.
+KINUV_PA_INIT must ride `--env`; Stage B leftover is `stage_b.predict_binned` identity vs 167302.19; approaching must not write `2026-08-30-g3-nuts/` or steal `KGAS066-latest`. `quote_inner_slope` false while leftover-vs-velocity. No KinMS import or folder. Official MAP unchanged. Do not start G4.
 
 ## 2026-09-02 — leftover + approaching-PA propose
 

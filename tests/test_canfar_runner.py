@@ -228,3 +228,118 @@ def test_write_nuts_product_plots_corner_only(tmp_path):
     assert (art / "corner.png").is_file()
     assert not (dest / "plots" / "moments.png").is_file()
 
+
+def test_pa25_env_does_not_gpu_or_clobber_g3(tmp_path):
+    from kinuv.runner.canfar import (
+        ARTIFACT_G3_REL,
+        ARTIFACT_PA25_REL,
+        headless_job_env,
+        steal_latest,
+    )
+
+    env = headless_job_env(
+        run_id="KGAS066-test-nuts-pa25",
+        galaxy="KGAS066",
+        kind="nuts-pa25",
+        gpu=None,
+        repo=tmp_path,
+        runs_root=tmp_path / "runs",
+    )
+    assert env["KINUV_PA_INIT"] == "25.2"
+    assert env["JAX_PLATFORMS"] == "cpu"
+    assert "KINUV_PA_INIT" in env
+    assert ARTIFACT_G3_REL not in env["KINUV_ARTIFACT_DIR"]
+    assert ARTIFACT_PA25_REL in env["KINUV_ARTIFACT_DIR"]
+    assert env["KINUV_KIND"] == "nuts-pa25"
+    assert steal_latest("nuts-pa25") is False
+    assert steal_latest("nuts") is True
+
+
+def test_write_nuts_product_plots_pa25_does_not_touch_g3(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    import numpy as np
+
+    import kinuv.runner.plots as plots
+
+    g3 = tmp_path / "g3-sentinel"
+    g3.mkdir()
+    marker = g3 / "keep.txt"
+    marker.write_text("untouched\n")
+    monkeypatch.setattr(plots, "ARTIFACT_G3", g3)
+    rng = np.random.default_rng(1)
+    draws = rng.normal(size=(2, 20, 8))
+    rec = {"sampler": "nuts", "draws": draws, "pa_init_deg": 25.2}
+    dest = tmp_path / "run"
+    (dest / "posteriors").mkdir(parents=True)
+    art = tmp_path / "leftover" / "pa25"
+    plots.write_nuts_product_plots(
+        rec, dest, artifact_dir=art, leftover=False, imaging=False
+    )
+    assert marker.read_text() == "untouched\n"
+    assert list(g3.iterdir()) == [marker]
+    assert (art / "corner.png").is_file()
+
+
+def test_job_status_pa25_does_not_name_g3(tmp_path, monkeypatch):
+    from kinuv.runner.status_md import write_job_status_md
+
+    path = tmp_path / "docs" / "architecture" / "STATUS.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "---\npending: [x]\n---\n\n## Agent Run Status\n\n"
+        "* **Phase:** old\n* **Last Action:** old\n"
+        "* **Decisions Made:** old\n* **Blockers / Gates:** old\n"
+        "* **Next Step:** old\n\n# Architecture mailbox\n\nkeep.\n"
+    )
+    monkeypatch.setenv("KINUV_REPO", str(tmp_path))
+    write_job_status_md(
+        run_id="KGAS066-20260902T000000Z-nuts-pa25",
+        session_id="abc",
+        state="SUCCEEDED",
+        mixing_pass=True,
+        sampler="nuts",
+        elapsed_s=1.0,
+        kind="nuts-pa25",
+    )
+    out = path.read_text()
+    assert "2026-08-30-g3-nuts" not in out
+    assert "leftover-and-modes" in out
+    assert "keep." in out
+
+
+def test_product_record_does_not_force_leftover_true():
+    import numpy as np
+
+    from kinuv.infer.nuts import product_record
+
+    draws = np.zeros((2, 4, 8))
+    rec = product_record(
+        draws8=draws,
+        mix={"flux": {"rhat": 1.0, "ess": 500, "ess_tail": 500}},
+        pa_init_deg=25.2,
+        dx_map=0.09,
+        dy_map=0.02,
+        autodiff_ok=True,
+        mixing_pass=True,
+        leftover_chi2_structured=False,
+        r_t_at_floor=False,
+        mean_num_steps=10.0,
+        eval_s=1.0,
+        note="test",
+    )
+    assert rec["leftover_chi2_structured"] is False
+    assert rec["pa_init_deg"] == 25.2
+
+
+def test_headless_worker_does_not_hardcode_leftover_true():
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    worker = (repo / "scripts" / "run_kgas066_nuts_headless.py").read_text()
+    assert "leftover_chi2_structured=True" not in worker
+    assert "KINUV_PA_INIT" in worker
+    entry = (repo / "scripts" / "canfar_entrypoint.sh").read_text()
+    assert "--pa-init" in entry
+    assert "KINUV_PA_INIT" in entry
+

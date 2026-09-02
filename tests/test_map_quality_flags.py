@@ -50,6 +50,22 @@ def test_official_066_flags():
     assert flags["quote_inner_slope"] is False
 
 
+def test_off_floor_rt_does_not_quote_inner_slope_while_leftover_structured():
+    rec = dict(OFFICIAL)
+    rec["r_t_arcsec"] = 0.224
+    flags = map_quality_flags(rec, leftover_npz=LEFTOVER)
+    assert flags["r_t_at_floor"] is False
+    assert flags["leftover_chi2_structured"] is True
+    assert flags["quote_inner_slope"] is False
+
+
+def test_unmeasured_leftover_does_not_quote_inner_slope():
+    rec = dict(OFFICIAL)
+    rec["r_t_arcsec"] = 0.224
+    flags = map_quality_flags(rec)
+    assert flags["quote_inner_slope"] is False
+
+
 def test_leftover_json_resolves_sibling_npz():
     flags = map_quality_flags(
         OFFICIAL,

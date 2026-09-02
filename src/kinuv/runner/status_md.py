@@ -94,6 +94,7 @@ def write_job_status_md(
     sampler: str,
     elapsed_s: float,
     note: str = "",
+    kind: str | None = None,
 ) -> Path | None:
     """Best-effort patch of the repo mailbox from a headless worker."""
     path = status_md_path()
@@ -101,26 +102,41 @@ def write_job_status_md(
         return None
     sid = session_id or "unknown"
     mix = "pass" if mixing_pass else "FAIL"
+    approaching = "pa25" in str(run_id).lower() or "pa25" in str(kind or "").lower()
+    if approaching:
+        phase = f"066 NUTS PA 25.2 {state} (`{run_id}`)"
+        next_step = (
+            "Copy posteriors into docs/reviews/artifacts/"
+            "2026-09-02-kgas066-leftover-and-modes/pa25/. "
+            "Official MAP unchanged. Do not start G4"
+        )
+        default_note = (
+            "Approaching-PA job wrote run-dir status.json + Agent Run Status. "
+            "Official MAP unchanged. Do not start G4"
+        )
+    else:
+        phase = f"G3 066 NUTS {state} (`{run_id}`)"
+        next_step = (
+            "Copy posteriors into docs/reviews/artifacts/2026-08-30-g3-nuts/, "
+            "6D corner. Official MAP unchanged. Do not start G4"
+        )
+        default_note = (
+            "Job wrote run-dir status.json + Agent Run Status. "
+            "Official MAP unchanged. Do not start G4"
+        )
     bullets = {
-        "Phase": f"G3 066 NUTS {state} (`{run_id}`)",
+        "Phase": phase,
         "Last Action": (
             f"Session `{sid}` {state} mixing={mix} sampler={sampler} "
             f"elapsed_s={elapsed_s:.0f} utc={utc_now()}"
         ),
-        "Decisions Made": note
-        or (
-            "Job wrote run-dir status.json + Agent Run Status. "
-            "Official MAP unchanged. Do not start G4"
-        ),
+        "Decisions Made": note or default_note,
         "Blockers / Gates": (
             "none"
             if mixing_pass
             else "mixing failed; do not treat 066 JSON as calibrated NUTS"
         ),
-        "Next Step": (
-            "Copy posteriors into docs/reviews/artifacts/2026-08-30-g3-nuts/, "
-            "6D corner. Official MAP unchanged. Do not start G4"
-        ),
+        "Next Step": next_step,
     }
     pending: list[str] | None = [] if state in {"SUCCEEDED", "COMPLETED_UNMIXED"} else None
     patch_agent_run_status(path, bullets, pending=pending)
