@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** leftover identity landed; approaching NUTS dispatch
-* **Last Action:** Track B vis leftover identity MAP 168675.6 / NUTS-mean 167486.8 / Stage B 167302.2. leftover-vs-velocity True at Stage B
-* **Decisions Made:** Post-leftover gate SB-dominated. No s_1/c_3. No MAP rewrite. Official MAP unchanged. Do not start G4
-* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching PA 25.2 not mixed yet
-* **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Dispatch nuts-pa25. Official MAP unchanged. Do not start G4
+* **Phase:** leftover identity landed; approaching NUTS Running (`xgepg7qy`)
+* **Last Action:** Track B vis leftover identity MAP 168675.6 / NUTS-mean 167486.8 / Stage B 167302.2. Headless `xgepg7qy` Running flexible CPU, PA 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`
+* **Decisions Made:** Post-leftover gate SB-dominated. No s_1/c_3. No MAP rewrite. Official MAP unchanged. Do not start G4. KGAS066-latest still receding
+* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet
+* **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (PA 25.2 submit).** Session `xgepg7qy` Running, image skaha/astroml:latest, flexible (isFixedResources false), no GPU, PA init 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`. KGAS066-latest still receding. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (leftover identity).** Recomputed vis leftover on 881x95: MAP 168675.596, receding NUTS-mean 167486.764, Stage B rings 167302.187 (gap +184.6). leftover-vs-velocity True at Stage B (uv span 0.093, vel span 0.335). Gate: SB-dominated. Quoted V_c stays Stage A arctan. Artifacts: `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Official MAP unchanged. Do not start G4.
 
