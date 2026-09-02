@@ -30,8 +30,9 @@ if [[ "${KINUV_REPROBE:-0}" == "1" ]]; then
   # Venv already built; install missing runtime deps and re-run probe/identity.
   # shellcheck disable=SC1091
   source "${VENV}/bin/activate"
-  python -m pip install "pydantic>=2"
+  python -m pip install "pydantic>=2" "multipledispatch"
   python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
+  python -c "from numpyro.infer import MCMC, NUTS"
 else
   python3 -m venv --clear "${VENV}"
   # shellcheck disable=SC1091
@@ -52,6 +53,7 @@ else
     -Ccmake.define.CMAKE_CUDA_ARCHITECTURES=native
   python -m pip install "pydantic>=2"
   python -m pip install --no-deps "numpyro==0.21.0"
+  python -m pip install "multipledispatch"
   python -c "import jax; assert jax.__version__=='0.11.1', jax.__version__"
 
   python -m pip freeze > "${OUT}/pip-freeze.txt"
