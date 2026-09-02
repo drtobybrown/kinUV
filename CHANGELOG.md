@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — leftover + approaching-PA propose
+
+Board open. Receding NUTS chi2=167487 vs MAP 168676 vs Stage B 167302. Approaching PA 25.2 not run. No GPU, no G4, no KGAS007, official MAP unchanged. Propose: `docs/reviews/2026-09-02-propose-leftover-and-approaching.md`.
+
 ## 2026-09-01 — 066 NUTS corner and imaging plots
 
 Headless worker writes corner, leftover chi2, and Data|Model|Residual PNGs at the NUTS mean (FITS stay in the run dir). 066 product in `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Official MAP unchanged.

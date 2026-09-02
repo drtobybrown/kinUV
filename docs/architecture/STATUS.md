@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-08-30-propose-g3-nuts.md
+last_propose: docs/reviews/2026-09-02-propose-leftover-and-approaching.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
 last_review_b: docs/reviews/2026-08-30-review-b-g3-nuts.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** G3 066 NUTS plots landed (`KGAS066-20260831T194009Z-nuts`)
-* **Last Action:** Wrote 6D corner, leftover chi2, moments/spectra/PV at NUTS mean into `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Headless worker will write these next time
-* **Decisions Made:** FITS stay in the run dir. Official MAP unchanged. Do not start G4
-* **Blockers / Gates:** Mixing passed. leftover_chi2_structured still True at NUTS mean. Intervals not calibrated
-* **Next Step:** Human look at `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Official MAP unchanged. Do not start G4
+* **Phase:** leftover-and-approaching propose open
+* **Last Action:** Wrote `docs/reviews/2026-09-02-propose-leftover-and-approaching.md`. Board open. Dual review next
+* **Decisions Made:** Official MAP unchanged. Do not start G4. Canon chi2 is G3 JSON (167487), not 157178
+* **Blockers / Gates:** Receding NUTS mixed. leftover_chi2_structured still True. Approaching PA 25.2 not run
+* **Next Step:** Dual review of leftover-and-approaching. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (leftover + PA 25.2 propose).** Board open. Receding NUTS chi2=167487 vs MAP 168676 vs Stage B 167302. Approaching 25.2 not run. No GPU, no G4, no 007, official MAP unchanged. Propose: `docs/reviews/2026-09-02-propose-leftover-and-approaching.md`.
 
 **2026-09-01 (066 NUTS plots).** Corner + leftover + moments/spectra/PV at NUTS mean: `docs/reviews/artifacts/2026-08-30-g3-nuts/`. leftover still structured. Headless job will write PNGs on future runs. Official MAP unchanged. Do not start G4.
 
