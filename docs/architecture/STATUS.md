@@ -2,15 +2,15 @@
 generation: 4
 phase: 066-12
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-09-02-propose-leftover-and-approaching.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-08-30-review-a-g3-nuts.md
-last_review_b: docs/reviews/2026-08-30-review-b-g3-nuts.md
-user_review: docs/reviews/artifacts/2026-08-30-g3-nuts/
+last_review_a: docs/reviews/2026-09-02-review-a-leftover-and-approaching.md
+last_review_b: docs/reviews/2026-09-02-review-b-leftover-and-approaching.md
+user_review: docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/
 open_questions: []
 deadlocks: []
 canon_generation: 4
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** leftover-and-approaching propose open
-* **Last Action:** Wrote `docs/reviews/2026-09-02-propose-leftover-and-approaching.md`. Board open. Dual review next
-* **Decisions Made:** Official MAP unchanged. Do not start G4. Canon chi2 is G3 JSON (167487), not 157178
-* **Blockers / Gates:** Receding NUTS mixed. leftover_chi2_structured still True. Approaching PA 25.2 not run
-* **Next Step:** Dual review of leftover-and-approaching. Official MAP unchanged. Do not start G4
+* **Phase:** leftover-and-approaching dual accept (major)
+* **Last Action:** Tallied review-a and review-b accept. Execute KINUV_PA_INIT, Stage B vis leftover identity, no G3 clobber
+* **Decisions Made:** Official MAP unchanged. Do not start G4. Canon chi2 168675.6 / 167486.8 / 167302.2
+* **Blockers / Gates:** Receding NUTS mixed. leftover still structured. Approaching PA 25.2 not run
+* **Next Step:** Runner PA-init + Track B leftover. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (leftover + PA 25.2 tally).** Dual accept (major): `review-a-leftover-and-approaching` and `review-b-leftover-and-approaching`. Execute: KINUV_PA_INIT on --env; Stage B leftover via stage_b.predict_binned |chi2-167302.19|<1; no F^{-1} claim unless type-1; skip point_latest; artifact dir not G3; quote_inner_slope False while leftover structured. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (leftover + PA 25.2 propose).** Board open. Receding NUTS chi2=167487 vs MAP 168676 vs Stage B 167302. Approaching 25.2 not run. No GPU, no G4, no 007, official MAP unchanged. Propose: `docs/reviews/2026-09-02-propose-leftover-and-approaching.md`.
 
