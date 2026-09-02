@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — uv-vs-image methodology propose
+
+Board open. Docs-only S1/leftover restating. No KinMS fitter, no KGAS007, no G4. Propose: `docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md`. Official MAP unchanged.
+
 ## 2026-09-02 — approaching-PA NUTS dispatched (`xgepg7qy`)
 
 Flexible headless session Running, PA init 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`. KGAS066-latest still receding. Official MAP unchanged. Do not start G4.

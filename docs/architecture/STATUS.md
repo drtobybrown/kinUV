@@ -1,12 +1,12 @@
 ---
 generation: 4
-phase: 066-12
+phase: 066-13
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-09-02-propose-leftover-and-approaching.md
+last_propose: docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-02-review-a-leftover-and-approaching.md
 last_review_b: docs/reviews/2026-09-02-review-b-leftover-and-approaching.md
@@ -25,6 +25,8 @@ canon_generation: 4
 * **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (uv-vs-image methodology propose).** Board open. Docs-only: S1 restating + leftover SB-dominated gate. No KinMS fitter, no type-1 claim, no 007, no G4. Do not poll `xgepg7qy`. Propose: `docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md`. Official MAP unchanged.
 
 **2026-09-02 (PA 25.2 submit).** Session `xgepg7qy` Running, image skaha/astroml:latest, flexible (isFixedResources false), no GPU, PA init 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`. KGAS066-latest still receding. Official MAP unchanged. Do not start G4.
 
