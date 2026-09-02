@@ -86,4 +86,7 @@ PA_ARGS=()
 if [[ -n "${KINUV_PA_INIT:-}" ]]; then
   PA_ARGS+=(--pa-init "${KINUV_PA_INIT}")
 fi
+if [[ -n "${KINUV_CHAIN_ID:-}" ]]; then
+  PA_ARGS+=(--chain-id "${KINUV_CHAIN_ID}")
+fi
 python "${REPO}/scripts/run_kgas066_nuts_headless.py" --run-id "${RUN_ID}" "${PA_ARGS[@]}"

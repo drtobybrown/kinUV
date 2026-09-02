@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-02 — GPU NUTS smoke runner
+
+Kind `nuts-gpu` skips `KGAS066-latest` and G3. `--gpu` requires pinned CPU+RAM and `KINUV_CHAIN_ID`. CUDA venv builder source-builds jax-finufft. Official MAP unchanged.
+
+## 2026-09-02 — GPU NUTS smoke dual accept (major)
+
+nuts-gpu skips KGAS066-latest and G3. GPU requires pinned CPU+RAM and KINUV_CHAIN_ID. jax stays 0.11.1. 10× wall is max(chain)+merge vs 17440 s. Official MAP unchanged.
+
 ## 2026-09-02 — GPU NUTS smoke propose
 
 Board open. CUDA venv + 4 parallel GPU chains; 10× wall vs serial CPU 17440 s. Do not mutate recovery. Propose: `docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md`. Official MAP unchanged.

@@ -33,6 +33,7 @@ from kinuv.infer.nuts import (
 from kinuv.infer.posterior import params_to_vec
 from kinuv.runner.canfar import (
     ARTIFACT_G3_REL,
+    KIND_GPU,
     KIND_PA25,
     OFFICIAL_PA_DEG,
     RUNS_ROOT,
@@ -109,9 +110,22 @@ def main() -> int:
         default=None,
         help="Physical PA start (deg). Default: KINUV_PA_INIT env, else official MAP.",
     )
+    p.add_argument(
+        "--chain-id",
+        type=int,
+        default=None,
+        help="1-4: run one chain and stop. Default KINUV_CHAIN_ID.",
+    )
     args = p.parse_args()
     run_id = args.run_id
     kind = os.environ.get("KINUV_KIND", "nuts")
+    gpu_job = os.environ.get("JAX_PLATFORMS", "cpu").lower() == "cuda" or "gpu" in kind.lower()
+    chain_raw = args.chain_id if args.chain_id is not None else os.environ.get("KINUV_CHAIN_ID")
+    chain_id = int(chain_raw) if chain_raw not in (None, "", "0") else None
+    if gpu_job and chain_id is None:
+        raise SystemExit("GPU / nuts-gpu requires KINUV_CHAIN_ID or --chain-id 1..4")
+    if chain_id is not None and chain_id not in (1, 2, 3, 4):
+        raise SystemExit("--chain-id must be 1..4")
     if args.pa_init is not None:
         pa_init = float(args.pa_init)
     else:
@@ -121,6 +135,8 @@ def main() -> int:
         artifact_dir = Path(art_env)
     else:
         artifact_dir = artifact_dir_for_kind(kind)
+    if ("gpu" in kind.lower() or kind == KIND_GPU) and ARTIFACT_G3_REL in str(artifact_dir):
+        raise SystemExit("GPU NUTS must not write docs/reviews/artifacts/2026-08-30-g3-nuts/")
     dest = RUNS_ROOT / run_id
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "posteriors").mkdir(exist_ok=True)
@@ -138,11 +154,12 @@ def main() -> int:
     snap = host_snapshot()
     log.info("worker start snapshot=%s", json.dumps(snap, default=str))
 
+    n_loop = 1 if chain_id is not None else N_CHAINS
     state = {
         "state": "RUNNING",
         "step": "load",
         "chain": 0,
-        "n_chain": N_CHAINS,
+        "n_chain": n_loop,
         "n_warmup": N_WARMUP,
         "n_samples": N_SAMPLES,
         "backend": BACKEND,
@@ -150,6 +167,7 @@ def main() -> int:
         "hostname": snap.get("hostname"),
         "session_id": snap.get("session_id"),
         "pid": snap.get("pid"),
+        "chain_id": chain_id,
     }
     write_status(run_id, state)
     data, tmpl, grid, params, map_rec = _load_066()
@@ -167,6 +185,15 @@ def main() -> int:
     import jax
     import jax.numpy as jnp
 
+    if gpu_job:
+        devices = jax.devices()
+        has_cuda = any("cuda" in str(d).lower() for d in devices)
+        if jax.__version__ != "0.11.1" or not has_cuda or BACKEND != "jax-finufft":
+            raise SystemExit(
+                f"GPU worker gate failed jax={jax.__version__} devices={devices} "
+                f"backend={BACKEND}"
+            )
+
     U = make_potential(data, tmpl, grid, dx, dy)
     u_jit = jax.jit(U)
     state["step"] = "compile"
@@ -183,15 +210,16 @@ def main() -> int:
     step_parts = []
     t0 = time.perf_counter()
     try:
-        for c in range(N_CHAINS):
-            state["step"] = f"{c}/{N_CHAINS}"
-            state["chain"] = c + 1
+        chain_ids = [chain_id] if chain_id is not None else list(range(1, N_CHAINS + 1))
+        for c in chain_ids:
+            state["step"] = f"{c}/{n_loop}"
+            state["chain"] = c
             state["rss_mb"] = rss_mb()
             write_status(run_id, state)
             log.info(
                 "chain %d/%d start warmup=%d samples=%d rss_mb=%s",
-                c + 1,
-                N_CHAINS,
+                c,
+                n_loop,
                 N_WARMUP,
                 N_SAMPLES,
                 rss_mb(),
@@ -200,7 +228,7 @@ def main() -> int:
             z_c, mean_steps, _ = run_nuts_z6(
                 u_jit,
                 z6,
-                rng_seed=11 + c,
+                rng_seed=11 + (c - 1),
                 num_warmup=N_WARMUP,
                 num_samples=N_SAMPLES,
                 num_chains=1,
@@ -214,40 +242,41 @@ def main() -> int:
             z_parts.append(z_arr)
             step_parts.append(mean_steps)
             chain_rec = {
-                "chain": c + 1,
+                "chain": c,
                 "elapsed_s": elapsed_c,
                 "mean_num_steps": float(mean_steps),
                 "rss_mb": rss_mb(),
                 "updated_at": utc_now(),
                 "z6_shape": list(z_arr.shape),
+                "rng_seed": 11 + (c - 1),
             }
-            write_json(logs_dir(run_id) / f"chain_{c + 1}.json", chain_rec)
+            write_json(logs_dir(run_id) / f"chain_{c}.json", chain_rec)
             try:
                 scratch_path, arc_path = dual_checkpoint(
                     scratch_ckpt,
                     arc_ckpt,
-                    f"chain_{c + 1}.npz",
+                    f"chain_{c}.npz",
                     z6=z_arr,
                     mean_steps=np.asarray(mean_steps),
                 )
                 log.info(
                     "checkpoint chain %d scratch=%s arc=%s",
-                    c + 1,
+                    c,
                     scratch_path,
                     arc_path,
                 )
             except OSError:
                 log.exception(
                     "checkpoint chain %d failed; draws kept in memory",
-                    c + 1,
+                    c,
                 )
-            state["step"] = f"{c + 1}/{N_CHAINS}"
+            state["step"] = f"{c}/{n_loop}"
             state["rss_mb"] = rss_mb()
             write_status(run_id, state)
             log.info(
                 "chain %d/%d done elapsed_s=%.1f mean_steps=%.1f rss_mb=%s",
-                c + 1,
-                N_CHAINS,
+                c,
+                n_loop,
                 elapsed_c,
                 float(mean_steps),
                 rss_mb(),
@@ -259,6 +288,23 @@ def main() -> int:
             log.info("flushed %d scratch checkpoints to /arc", n)
         except OSError:
             log.exception("final scratch→arc flush failed")
+
+    if chain_id is not None:
+        write_status(
+            run_id,
+            {
+                "state": "SUCCEEDED",
+                "step": f"{chain_id}/1",
+                "chain": chain_id,
+                "mixing_pass": False,
+                "sampler": "pending_merge",
+                "elapsed_s": time.perf_counter() - t0,
+                "rss_mb": rss_mb(),
+            },
+        )
+        (dest / ".trigger_complete").write_text(utc_now() + "\n")
+        log.info("single-chain GPU/CPU shard done chain_id=%s; merge is host-side", chain_id)
+        return 0
 
     z_draws = np.stack(z_parts, axis=0)
     phys8 = physical_sampled_from_z6(z_draws, dx, dy)

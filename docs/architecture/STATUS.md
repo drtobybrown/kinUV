@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-02-review-a-uv-vs-image-methodology.md
-last_review_b: docs/reviews/2026-09-02-review-b-uv-vs-image-methodology.md
+last_review_a: docs/reviews/2026-09-02-review-a-gpu-nuts-smoke.md
+last_review_b: docs/reviews/2026-09-02-review-b-gpu-nuts-smoke.md
 user_review: docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/
 open_questions: []
 deadlocks: []
@@ -18,13 +18,17 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** leftover identity landed; approaching NUTS Running (`xgepg7qy`)
-* **Last Action:** CANFAR GPU ops doc landed (`docs/diagnostics/canfar-gpu.md`): fixed `--gpu 1 --cpu 2 --memory 8` schedules on H100 MIG; recovery venv still CPU jax; production NUTS GPU not licensed. `xgepg7qy` still Running chain 1 sample
+* **Phase:** leftover identity landed; approaching NUTS Running (`xgepg7qy`); GPU smoke execute
+* **Last Action:** Dual-accept GPU NUTS smoke runner on disk (`nuts-gpu`, pinned GPU, CUDA venv path, 1-chain, no latest/G3). CUDA venv-build next. `xgepg7qy` still Running
 * **Decisions Made:** Post-leftover gate SB-dominated. No s_1/c_3. No MAP rewrite. Official MAP unchanged. Do not start G4. KGAS066-latest still receding
-* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet
-* **Next Step:** Human plots `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet. CUDA venv/identity not yet
+* **Next Step:** Build `venvs/kinuv-cuda` on pinned GPU; G1 identity before any GPU NUTS. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (GPU NUTS smoke runner).** Kind `nuts-gpu` skips latest and G3. `--gpu` requires cpu+memory and `KINUV_CHAIN_ID`. CUDA venv builder source-builds jax-finufft 1.3.1. CPU NUTS still default. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
+
+**2026-09-02 (GPU NUTS smoke tally).** Dual accept (major): `review-a-gpu-nuts-smoke` and `review-b-gpu-nuts-smoke`. Execute: nuts-gpu skips latest and G3; `--gpu` requires cpu+memory; KINUV_VENV on --env; GPU without chain-id exits 2 (one chain, no STATUS patch); jax==0.11.1 after install; 10× is max(chain)+merge vs 17440.032 s; PA 199.73; do not hide xgepg7qy. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (GPU NUTS smoke propose).** Board open. CUDA venv + G1 identity + 4 parallel GPU chains; 10× wall vs 17440 s serial CPU. Do not mutate recovery. Do not interrupt `xgepg7qy`. Propose: `docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md`. Official MAP unchanged. Do not start G4.
 
