@@ -33,7 +33,6 @@ from kinuv.infer.nuts import (
 from kinuv.infer.posterior import params_to_vec
 from kinuv.runner.canfar import (
     ARTIFACT_G3_REL,
-    KIND_GPU,
     KIND_PA25,
     OFFICIAL_PA_DEG,
     RUNS_ROOT,
@@ -119,11 +118,8 @@ def main() -> int:
     args = p.parse_args()
     run_id = args.run_id
     kind = os.environ.get("KINUV_KIND", "nuts")
-    gpu_job = os.environ.get("JAX_PLATFORMS", "cpu").lower() == "cuda" or "gpu" in kind.lower()
     chain_raw = args.chain_id if args.chain_id is not None else os.environ.get("KINUV_CHAIN_ID")
     chain_id = int(chain_raw) if chain_raw not in (None, "", "0") else None
-    if gpu_job and chain_id is None:
-        raise SystemExit("GPU / nuts-gpu requires KINUV_CHAIN_ID or --chain-id 1..4")
     if chain_id is not None and chain_id not in (1, 2, 3, 4):
         raise SystemExit("--chain-id must be 1..4")
     if args.pa_init is not None:
@@ -135,8 +131,6 @@ def main() -> int:
         artifact_dir = Path(art_env)
     else:
         artifact_dir = artifact_dir_for_kind(kind)
-    if ("gpu" in kind.lower() or kind == KIND_GPU) and ARTIFACT_G3_REL in str(artifact_dir):
-        raise SystemExit("GPU NUTS must not write docs/reviews/artifacts/2026-08-30-g3-nuts/")
     dest = RUNS_ROOT / run_id
     dest.mkdir(parents=True, exist_ok=True)
     (dest / "posteriors").mkdir(exist_ok=True)
@@ -184,15 +178,6 @@ def main() -> int:
 
     import jax
     import jax.numpy as jnp
-
-    if gpu_job:
-        devices = jax.devices()
-        has_cuda = any("cuda" in str(d).lower() for d in devices)
-        if jax.__version__ != "0.11.1" or not has_cuda or BACKEND != "jax-finufft":
-            raise SystemExit(
-                f"GPU worker gate failed jax={jax.__version__} devices={devices} "
-                f"backend={BACKEND}"
-            )
 
     U = make_potential(data, tmpl, grid, dx, dy)
     u_jit = jax.jit(U)
@@ -303,7 +288,7 @@ def main() -> int:
             },
         )
         (dest / ".trigger_complete").write_text(utc_now() + "\n")
-        log.info("single-chain GPU/CPU shard done chain_id=%s; merge is host-side", chain_id)
+        log.info("single-chain shard done chain_id=%s; merge is host-side", chain_id)
         return 0
 
     z_draws = np.stack(z_parts, axis=0)

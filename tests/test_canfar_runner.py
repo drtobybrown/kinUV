@@ -241,7 +241,6 @@ def test_pa25_env_does_not_gpu_or_clobber_g3(tmp_path):
         run_id="KGAS066-test-nuts-pa25",
         galaxy="KGAS066",
         kind="nuts-pa25",
-        gpu=None,
         repo=tmp_path,
         runs_root=tmp_path / "runs",
     )
@@ -346,110 +345,33 @@ def test_headless_worker_does_not_hardcode_leftover_true():
     assert "--chain-id" in entry
 
 
-def test_gpu_kind_does_not_steal_or_clobber_g3():
-    from kinuv.runner.canfar import (
-        ARTIFACT_G3_REL,
-        ARTIFACT_GPU_REL,
-        headless_job_env,
-        require_pinned_gpu,
-        steal_latest,
-    )
-    import pytest
-
-    assert steal_latest("nuts-gpu") is False
-    assert steal_latest("nuts-gpu-c1") is False
-    assert steal_latest("nuts") is True
-    env = headless_job_env(
-        run_id="KGAS066-test-nuts-gpu-c1",
-        galaxy="KGAS066",
-        kind="nuts-gpu",
-        gpu=1,
-        chain_id=1,
-        repo=Path("/tmp"),
-        runs_root=Path("/tmp/runs"),
-    )
-    assert env["JAX_PLATFORMS"] == "cuda"
-    assert "kinuv-cuda" in env["KINUV_VENV"]
-    assert "kinuv-venv-recovery" not in env["KINUV_VENV"]
-    assert ARTIFACT_G3_REL not in env["KINUV_ARTIFACT_DIR"]
-    assert ARTIFACT_GPU_REL in env["KINUV_ARTIFACT_DIR"]
-    assert env["KINUV_CHAIN_ID"] == "1"
-    cpu_env = headless_job_env(
-        run_id="KGAS066-test-nuts",
-        galaxy="KGAS066",
-        kind="nuts",
-        gpu=None,
-        repo=Path("/tmp"),
-        runs_root=Path("/tmp/runs"),
-    )
-    assert cpu_env["JAX_PLATFORMS"] == "cpu"
-    assert "kinuv-venv-recovery" in cpu_env["KINUV_VENV"]
-    with pytest.raises(ValueError):
-        require_pinned_gpu(1, None, None)
-    with pytest.raises(ValueError):
-        require_pinned_gpu(1, 4, None)
-    with pytest.raises(ValueError):
-        require_pinned_gpu(1, None, 16)
-    require_pinned_gpu(1, 4, 16)
-    require_pinned_gpu(None, None, None)
-    with pytest.raises(ValueError):
-        headless_job_env(
-            run_id="x",
-            galaxy="KGAS066",
-            kind="nuts-gpu",
-            gpu=1,
-            venv="/arc/home/thbrown/kinuv-venv-recovery",
-        )
-
-
-def test_gpu_worker_requires_chain_id_and_skips_status():
+def test_headless_worker_chain_id_and_merge():
     from pathlib import Path
 
     repo = Path(__file__).resolve().parents[1]
     worker = (repo / "scripts" / "run_kgas066_nuts_headless.py").read_text()
     assert "KINUV_CHAIN_ID" in worker
-    assert "GPU / nuts-gpu requires KINUV_CHAIN_ID" in worker
     assert "pending_merge" in worker
     merge = (repo / "scripts" / "merge_nuts_chains.py").read_text()
     assert "ess_min=400.0" in merge
-    assert "ARTIFACT_G3_REL" in merge
+    assert "ARTIFACT_G3" in merge
     launcher = (repo / "scripts" / "launch_headless.py").read_text()
-    assert "DEFAULT_GPU_IMAGE" in launcher
-    assert "require_pinned_gpu" in launcher
+    assert "--chain-id" in launcher
+    assert "--gpu" not in launcher
 
 
-def test_job_status_gpu_does_not_patch(tmp_path, monkeypatch):
-    from kinuv.runner.status_md import write_job_status_md
+def test_cpu_chain_id_env():
+    from kinuv.runner.canfar import headless_job_env
 
-    path = tmp_path / "docs" / "architecture" / "STATUS.md"
-    path.parent.mkdir(parents=True)
-    path.write_text(
-        "---\npending: []\n---\n\n## Agent Run Status\n\n"
-        "* **Phase:** leftover identity landed; approaching NUTS Running (`xgepg7qy`)\n"
-        "* **Last Action:** old\n* **Decisions Made:** old\n"
-        "* **Blockers / Gates:** old\n* **Next Step:** Wait for `xgepg7qy`\n\n"
-        "# Architecture mailbox\n\nkeep.\n"
+    env = headless_job_env(
+        run_id="KGAS066-test-nuts-c2",
+        galaxy="KGAS066",
+        kind="nuts",
+        chain_id=2,
+        repo=Path("/tmp"),
+        runs_root=Path("/tmp/runs"),
     )
-    monkeypatch.setenv("KINUV_REPO", str(tmp_path))
-    got = write_job_status_md(
-        run_id="KGAS066-t-nuts-gpu-c1",
-        session_id="abc",
-        state="SUCCEEDED",
-        mixing_pass=True,
-        sampler="nuts",
-        elapsed_s=1.0,
-        kind="nuts-gpu",
-    )
-    assert got is None
-    out = path.read_text()
-    assert "xgepg7qy" in out
-    assert "2026-08-30-g3-nuts" not in out
-    assert "keep." in out
-
-
-def test_merge_tenx_constant():
-    from kinuv.runner.kind import SERIAL_CPU_WALL_S, TENX_WALL_S
-
-    assert abs(SERIAL_CPU_WALL_S - 17440.032) < 1e-3
-    assert abs(TENX_WALL_S - 1744.0032) < 1e-3
+    assert env["JAX_PLATFORMS"] == "cpu"
+    assert env["KINUV_CHAIN_ID"] == "2"
+    assert "kinuv-venv-recovery" in env["KINUV_VENV"]
 

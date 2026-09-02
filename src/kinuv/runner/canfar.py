@@ -17,17 +17,11 @@ from kinuv.decisions import requires
 from kinuv.runner.kind import (
     APPROACH_PA as APPROACH_PA_DEG,
     ARTIFACT_G3_REL,
-    ARTIFACT_GPU_REL,
     ARTIFACT_PA25_REL,
-    CUDA_VENV,
-    DEFAULT_GPU_IMAGE,
-    FALLBACK_GPU_IMAGE,
-    KIND_GPU,
     KIND_PA25,
     OFFICIAL_PA as OFFICIAL_PA_DEG,
     RECOVERY_VENV,
     artifact_dir_for_kind,
-    is_gpu_kind,
     pa_init_deg as pa_init_deg_for_kind,
     steal_latest,
 )
@@ -55,39 +49,20 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def require_pinned_gpu(gpu: int | None, cpu: int | None, memory: int | None) -> None:
-    """GPU jobs must pin CPU and RAM. Flexible + GPU is illegal (DEC-067)."""
-    if gpu is None:
-        return
-    if not cpu or int(cpu) <= 0 or not memory or int(memory) <= 0:
-        raise ValueError(
-            "--gpu requires --cpu > 0 and --memory > 0 (no flexible GPU)"
-        )
-
-
 def headless_job_env(
     *,
     run_id: str,
     galaxy: str,
     kind: str = "nuts",
-    gpu: int | None = None,
     skip_pull: bool = False,
     repo: Path | None = None,
     runs_root: Path | None = None,
     pa_init: float | None = None,
     chain_id: int | None = None,
-    venv: str | None = None,
 ) -> dict[str, str]:
     """Env dict for ``canfar create --env``. Manifest JSON is not a delivery path."""
     root = Path(repo or REPO)
     pa = float(pa_init) if pa_init is not None else pa_init_deg_for_kind(kind)
-    use_gpu = gpu is not None
-    if use_gpu:
-        venv_path = str(venv or CUDA_VENV)
-        if "kinuv-venv-recovery" in venv_path:
-            raise ValueError("GPU KINUV_VENV must not be kinuv-venv-recovery")
-    else:
-        venv_path = str(venv or RECOVERY_VENV)
     env = {
         "KINUV_RUN_ID": str(run_id),
         "KINUV_GALAXY": str(galaxy),
@@ -96,8 +71,8 @@ def headless_job_env(
         "KINUV_RUNS": str(runs_root or RUNS_ROOT),
         "KINUV_PA_INIT": f"{pa:.10g}",
         "KINUV_ARTIFACT_DIR": str(artifact_dir_for_kind(kind, repo=root)),
-        "KINUV_VENV": venv_path,
-        "JAX_PLATFORMS": "cuda" if use_gpu else "cpu",
+        "KINUV_VENV": RECOVERY_VENV,
+        "JAX_PLATFORMS": "cpu",
         "JAX_ENABLE_X64": "1",
         "PYTHONUNBUFFERED": "1",
     }
@@ -264,24 +239,16 @@ def submit_headless(
     name: str,
     command: list[str],
     image: str = DEFAULT_IMAGE,
-    gpu: int | None = None,
     cpu: int | None = None,
     memory: int | None = None,
     env: dict[str, str] | None = None,
 ) -> dict:
-    """``canfar create headless``. Flexible CPU/RAM unless ``cpu``/``memory`` set.
-
-    GPU only if ``gpu`` is set. Pin RAM after a session vanishes under flexible.
-    GPU requires both ``cpu`` and ``memory`` (no flexible GPU).
-    """
-    require_pinned_gpu(gpu, cpu, memory)
+    """``canfar create headless``. Flexible CPU/RAM unless ``cpu``/``memory`` set."""
     argv = [CANFAR_BIN, "create", "headless", image, "--name", name]
     if cpu:
         argv.extend(["--cpu", str(int(cpu))])
     if memory:
         argv.extend(["--memory", str(int(memory))])
-    if gpu:
-        argv.extend(["--gpu", str(int(gpu))])
     if env:
         for k, v in env.items():
             argv.extend(["--env", f"{k}={v}"])
@@ -298,7 +265,6 @@ def submit_headless(
         "stderr": proc.stderr or "",
         "image": image,
         "name": name,
-        "gpu": gpu,
         "cpu": cpu,
         "memory": memory,
         "argv": argv,

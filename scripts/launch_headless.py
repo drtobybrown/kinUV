@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Submit a CANFAR headless job. Do not wait for NUTS to finish."""
+"""Submit a CANFAR headless CPU job. Do not wait for NUTS to finish."""
 
 from __future__ import annotations
 
@@ -14,9 +14,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
 from kinuv.runner.canfar import (  # noqa: E402
-    DEFAULT_GPU_IMAGE,
     DEFAULT_IMAGE,
-    FALLBACK_GPU_IMAGE,
     FALLBACK_IMAGE,
     REPO as KINUV_REPO,
     ensure_cert,
@@ -24,7 +22,6 @@ from kinuv.runner.canfar import (  # noqa: E402
     make_run_id,
     pa_init_deg_for_kind,
     point_latest,
-    require_pinned_gpu,
     run_dir,
     steal_latest,
     submit_headless,
@@ -96,40 +93,25 @@ def main() -> int:
         help="Physical PA start (deg). Default 25.2 for kind nuts-pa25, else MAP 199.73. "
         "Delivery is KINUV_PA_INIT on --env, not the manifest.",
     )
-    p.add_argument("--gpu", type=int, default=0, help="GPUs; 0 = omit (CPU jax venv)")
-    p.add_argument("--cpu", type=int, default=0, help="CPU cores; 0 = flexible")
-    p.add_argument("--memory", type=int, default=0, help="RAM GB; 0 = flexible")
+    p.add_argument("--cpu", type=int, default=0, help="CPU cores; 0 = flexible (default)")
+    p.add_argument("--memory", type=int, default=0, help="RAM GB; 0 = flexible (default)")
     p.add_argument(
         "--chain-id",
         type=int,
         default=0,
-        help="1-4: one GPU/CPU chain. 0 = all four sequential (CPU only).",
+        help="1-4: one chain per session (CPU parallel). 0 = four sequential chains.",
     )
-    p.add_argument("--venv", default=None, help="KINUV_VENV override")
     p.add_argument("--image", default=None)
     p.add_argument("--skip-pull", action="store_true")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--no-watch", action="store_true")
     args = p.parse_args()
 
-    gpu = int(args.gpu) if int(args.gpu) > 0 else None
     cpu = int(args.cpu) if int(args.cpu) > 0 else None
     memory = int(args.memory) if int(args.memory) > 0 else None
     chain_id = int(args.chain_id) if int(args.chain_id) > 0 else None
-    try:
-        require_pinned_gpu(gpu, cpu, memory)
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 2
-    if gpu is not None and chain_id is None:
-        print("GPU jobs require --chain-id 1..4 (one chain per session)", file=sys.stderr)
-        return 2
     kind = args.kind
-    if gpu is not None and "gpu" not in str(kind).lower():
-        kind = "nuts-gpu"
-    image = args.image
-    if image is None:
-        image = DEFAULT_GPU_IMAGE if gpu is not None else DEFAULT_IMAGE
+    image = args.image or DEFAULT_IMAGE
     run_id = args.run_id or make_run_id(args.galaxy, kind, chain_id=chain_id)
     name = session_name(kind, chain_id=chain_id)
     entry = str(KINUV_REPO / "scripts/canfar_entrypoint.sh")
@@ -143,13 +125,11 @@ def main() -> int:
         run_id=run_id,
         galaxy=args.galaxy,
         kind=kind,
-        gpu=gpu,
         skip_pull=args.skip_pull,
         repo=KINUV_REPO,
         runs_root=run_dir(run_id).parent,
         pa_init=pa_init,
         chain_id=chain_id,
-        venv=args.venv,
     )
 
     n_chains = 1 if chain_id is not None else 4
@@ -160,7 +140,6 @@ def main() -> int:
         "session_name": name,
         "git_commit": git_sha6(),
         "image": image,
-        "gpu": gpu,
         "cpu": cpu,
         "memory_gb": memory,
         "flexible": cpu is None and memory is None,
@@ -192,29 +171,15 @@ def main() -> int:
         name=name,
         command=["/bin/bash", entry, run_id],
         image=image,
-        gpu=gpu,
         cpu=cpu,
         memory=memory,
         env=env,
     )
-    if (not result["ok"]) and gpu is not None and image == DEFAULT_GPU_IMAGE:
-        result = submit_headless(
-            name=name,
-            command=["/bin/bash", entry, run_id],
-            image=FALLBACK_GPU_IMAGE,
-            gpu=gpu,
-            cpu=cpu,
-            memory=memory,
-            env=env,
-        )
-        manifest["image"] = FALLBACK_GPU_IMAGE
-        manifest["image_fallback"] = True
-    elif (not result["ok"]) and gpu is None and image == DEFAULT_IMAGE:
+    if (not result["ok"]) and image == DEFAULT_IMAGE:
         result = submit_headless(
             name=name,
             command=["/bin/bash", entry, run_id],
             image=FALLBACK_IMAGE,
-            gpu=gpu,
             cpu=cpu,
             memory=memory,
             env=env,
@@ -253,7 +218,6 @@ def main() -> int:
                 "pa_init_deg": pa_init,
                 "name": name,
                 "image": manifest["image"],
-                "gpu": gpu,
                 "cpu": cpu,
                 "memory_gb": memory,
                 "flexible": cpu is None and memory is None,

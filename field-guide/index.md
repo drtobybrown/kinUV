@@ -51,4 +51,4 @@ Root: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/`
 
 ## Git
 
-Branch `dev`. Commit and push `origin/dev` after each propose, board tally, and stage deliverable. Conventional subject; do not skip hooks. High-frequency I/O: [`docs/diagnostics/scratch.md`](../docs/diagnostics/scratch.md) (`/scratch`, not `/arc`). CANFAR GPU submit (fixed `--gpu/--cpu/--memory`, probes): [`docs/diagnostics/canfar-gpu.md`](../docs/diagnostics/canfar-gpu.md).
+Branch `dev`. Commit and push `origin/dev` after each propose, board tally, and stage deliverable. Conventional subject; do not skip hooks. High-frequency I/O: [`docs/diagnostics/scratch.md`](../docs/diagnostics/scratch.md) (`/scratch`, not `/arc`). CPU headless NUTS (flexible default; 4×1-chain parallel): [`docs/diagnostics/canfar-cpu-parallel.md`](../docs/diagnostics/canfar-cpu-parallel.md). GPU rejected: [`docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`](../docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md).

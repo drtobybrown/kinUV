@@ -103,9 +103,6 @@ def write_job_status_md(
     sid = session_id or "unknown"
     mix = "pass" if mixing_pass else "FAIL"
     approaching = "pa25" in str(run_id).lower() or "pa25" in str(kind or "").lower()
-    gpu_kind = "gpu" in str(run_id).lower() or "gpu" in str(kind or "").lower()
-    if gpu_kind:
-        return None
     if approaching:
         phase = f"066 NUTS PA 25.2 {state} (`{run_id}`)"
         next_step = (

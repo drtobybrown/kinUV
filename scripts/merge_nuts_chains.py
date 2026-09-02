@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge four 1-chain NUTS shards. Mixing ESS>400. Does not steal KGAS066-latest."""
+"""Merge four 1-chain CPU NUTS shards. Mixing ESS>400."""
 
 from __future__ import annotations
 
@@ -22,12 +22,7 @@ from kinuv.infer.nuts import (  # noqa: E402
     product_record,
 )
 from kinuv.runner.canfar import RUNS_ROOT, utc_now, write_json  # noqa: E402
-from kinuv.runner.kind import (  # noqa: E402
-    ARTIFACT_G3_REL,
-    ARTIFACT_GPU,
-    SERIAL_CPU_WALL_S,
-    TENX_WALL_S,
-)
+from kinuv.runner.kind import ARTIFACT_G3  # noqa: E402
 from kinuv.runner.plots import write_nuts_product_plots  # noqa: E402
 
 
@@ -49,15 +44,10 @@ def _load_chain(path: Path, chain_id: int) -> tuple[np.ndarray, float]:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("run_dirs", nargs=4, help="four run dirs, chain 1..4 order")
-    p.add_argument(
-        "--artifact-dir",
-        default=str(ARTIFACT_GPU),
-        help="must not be 2026-08-30-g3-nuts",
-    )
+    p.add_argument("--artifact-dir", default=str(ARTIFACT_G3))
+    p.add_argument("--pa-init", type=float, default=None)
     args = p.parse_args()
     artifact_dir = Path(args.artifact_dir)
-    if ARTIFACT_G3_REL in str(artifact_dir):
-        raise SystemExit("merge must not write 2026-08-30-g3-nuts")
     t0 = time.perf_counter()
     z_parts = []
     elapsed = []
@@ -74,6 +64,7 @@ def main() -> int:
         "kinuv-KGAS066-uvsign-map/stage_a_map.json"
     )
     rec_map = json.loads(map_path.read_text())
+    pa_init = float(args.pa_init if args.pa_init is not None else rec_map["pa_deg"])
     dx, dy = rec_map["dx_arcsec"], rec_map["dy_arcsec"]
     phys8 = physical_sampled_from_z6(z_draws, dx, dy)
     mix = mixing_sampled(phys8)
@@ -81,13 +72,11 @@ def main() -> int:
     merge_s = time.perf_counter() - t0
     finite = [e for e in elapsed if np.isfinite(e)]
     t_run = (max(finite) if finite else float("nan")) + merge_s
-    ratio = SERIAL_CPU_WALL_S / t_run if t_run and t_run > 0 else float("nan")
-    tenx = bool(np.isfinite(t_run) and t_run <= TENX_WALL_S)
     rt = np.asarray(phys8)[..., PARAM_NAMES.index("r_t_arcsec")]
     rec = product_record(
         draws8=phys8,
         mix=mix,
-        pa_init_deg=float(rec_map["pa_deg"]),
+        pa_init_deg=pa_init,
         dx_map=dx,
         dy_map=dy,
         autodiff_ok=True,
@@ -97,19 +86,15 @@ def main() -> int:
         mean_num_steps=float("nan"),
         eval_s=float("nan"),
         note=(
-            "GPU 4×1-chain merge; 16/50/84 not calibrated; "
-            "speed smoke not a new official MAP; do not quote inner dV/dr"
+            "066 CPU 4×1-chain merge; 16/50/84 not calibrated; "
+            "do not quote inner dV/dr"
         ),
     )
     rec["mixing_pass"] = mix_pass
-    rec["kind"] = "nuts-gpu"
+    rec["kind"] = "nuts"
     rec["chain_elapsed_s"] = elapsed
     rec["merge_s"] = merge_s
     rec["t_run_s"] = t_run
-    rec["serial_cpu_wall_s"] = SERIAL_CPU_WALL_S
-    rec["wall_speedup"] = ratio
-    rec["tenx_wall"] = tenx
-    rec["submit_to_done_s"] = None
     state = "SUCCEEDED" if mix_pass else "COMPLETED_UNMIXED"
     artifact_dir.mkdir(parents=True, exist_ok=True)
     write_json(artifact_dir / "kgas066_nuts.json", rec)
@@ -121,10 +106,6 @@ def main() -> int:
         artifact_dir / "wall.json",
         {
             "t_run_s": t_run,
-            "serial_cpu_wall_s": SERIAL_CPU_WALL_S,
-            "tenx_wall_s": TENX_WALL_S,
-            "wall_speedup": ratio,
-            "tenx_wall": tenx,
             "chain_elapsed_s": elapsed,
             "merge_s": merge_s,
             "mixing_pass": mix_pass,
@@ -152,8 +133,6 @@ def main() -> int:
                 "sampler": rec["sampler"],
                 "mixing_pass": mix_pass,
                 "t_run_s": t_run,
-                "tenx_wall": tenx,
-                "wall_speedup": ratio,
             },
             indent=2,
         )

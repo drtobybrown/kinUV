@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** leftover identity landed; approaching NUTS Running (`xgepg7qy`); GPU smoke execute
-* **Last Action:** Dual-accept GPU NUTS smoke runner on disk (`nuts-gpu`, pinned GPU, CUDA venv path, 1-chain, no latest/G3). CUDA venv-build next. `xgepg7qy` still Running
-* **Decisions Made:** Post-leftover gate SB-dominated. No s_1/c_3. No MAP rewrite. Official MAP unchanged. Do not start G4. KGAS066-latest still receding
-* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet. CUDA venv/identity not yet
-* **Next Step:** Build `venvs/kinuv-cuda` on pinned GPU; G1 identity before any GPU NUTS. Wait for `xgepg7qy`. Official MAP unchanged. Do not start G4
+* **Phase:** approaching NUTS Running (`xgepg7qy`); GPU path rejected; CPU-parallel canonical
+* **Last Action:** GPU smoke stopped: CUDA 0.55 vs CPU 3.01 eval/s on 881×95; four GPU sessions deleted; CUDA venv and GPU run dirs purged; runner stripped to CPU-only flexible headless
+* **Decisions Made:** GPU acceleration rejected for 066 NUTS. Production engine is CPU jax-finufft (`DEC-067-RUNNER`). Parallel path is 4×1-chain flexible CPU + host merge. Official MAP unchanged. Do not start G4. `KGAS066-latest` still receding (`sd3ckpf2`)
+* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet (`xgepg7qy`)
+* **Next Step:** Wait for `xgepg7qy`; copy PA 25.2 product to `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/pa25/`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-02 (GPU rejected; CPU-parallel canonical).** CUDA eval/s 0.55 vs CPU 3.01 on 881×95 (identity ok either way). 10× wall target failed; four GPU chains killed. CUDA venv and GPU run dirs purged; runner CPU-only flexible headless. Note: `docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`. Ops: `docs/diagnostics/canfar-cpu-parallel.md`. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (GPU NUTS smoke runner).** Kind `nuts-gpu` skips latest and G3. `--gpu` requires cpu+memory and `KINUV_CHAIN_ID`. CUDA venv builder source-builds jax-finufft 1.3.1. CPU NUTS still default. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
 

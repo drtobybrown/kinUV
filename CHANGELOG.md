@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — GPU rejected; CPU-parallel canonical
+
+CUDA 0.55 vs CPU 3.01 eval/s on 881×95; GPU sessions killed; CUDA venv and GPU code purged. Production NUTS is flexible CPU headless; parallel path is 4×1-chain + merge. Note: `docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`. `xgepg7qy` still Running. Official MAP unchanged.
+
 ## 2026-09-02 — GPU NUTS smoke runner
 
 Kind `nuts-gpu` skips `KGAS066-latest` and G3. `--gpu` requires pinned CPU+RAM and `KINUV_CHAIN_ID`. CUDA venv builder source-builds jax-finufft. Official MAP unchanged.
