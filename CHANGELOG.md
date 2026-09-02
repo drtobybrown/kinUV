@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-02 — approaching-PA NUTS dispatched (`xgepg7qy`)
+
+Flexible headless session Running, PA init 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`. KGAS066-latest still receding. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-02 — leftover three-way identity (SB-dominated)
 
 Recomputed vis leftover on 881x95: MAP 168675.6, receding NUTS-mean 167486.8, Stage B 167302.2 (gap +184.6). leftover-vs-velocity True at Stage B. Plots: `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Official MAP unchanged. Do not start G4.
