@@ -307,6 +307,50 @@ def test_job_status_pa25_does_not_name_g3(tmp_path, monkeypatch):
     assert "keep." in out
 
 
+def test_product_record_omits_unevaluated_leftover():
+    import numpy as np
+
+    from kinuv.infer.nuts import NUTS_UNMIXED, product_record
+
+    draws = np.zeros((3, 4, 8))
+    rec = product_record(
+        draws8=draws,
+        mix={"flux": {"rhat": 1.0, "ess": 500, "ess_tail": 500}},
+        pa_init_deg=25.2,
+        dx_map=0.09,
+        dy_map=0.02,
+        autodiff_ok=True,
+        mixing_pass=True,
+        leftover_chi2_structured=None,
+        r_t_at_floor=False,
+        mean_num_steps=10.0,
+        eval_s=1.0,
+        note="test",
+    )
+    assert "leftover_chi2_structured" not in rec
+    assert rec["sampler"] == NUTS_UNMIXED
+    assert rec["n_chain"] == 3
+
+
+def test_chain_physically_ok_drops_c4_explosion():
+    import numpy as np
+
+    from kinuv.infer.nuts import chain_physically_ok, sampler_label
+
+    ok = np.tile(
+        np.array([70.0, 15.0, 8100.0, 12.0, 0.09, 0.02, 255.0, 0.22]), (600, 1)
+    )
+    boom = ok.copy()
+    boom[:, 0] = 1.0e262
+    boom[:, 1] = 414.0
+    assert chain_physically_ok(ok) is True
+    assert chain_physically_ok(boom) is False
+    assert sampler_label(autodiff_ok=True, mixing_pass=True, n_chain=4) == "nuts"
+    assert sampler_label(autodiff_ok=True, mixing_pass=True, n_chain=3) == "nuts_unmixed"
+    assert sampler_label(autodiff_ok=True, mixing_pass=False, n_chain=4) == "nuts_unmixed"
+    assert sampler_label(autodiff_ok=False, mixing_pass=False, n_chain=4) == "laplace_mh"
+
+
 def test_product_record_does_not_force_leftover_true():
     import numpy as np
 
@@ -343,6 +387,8 @@ def test_headless_worker_does_not_hardcode_leftover_true():
     assert "KINUV_PA_INIT" in entry
     assert "KINUV_CHAIN_ID" in entry
     assert "--chain-id" in entry
+    assert "map-pa25" in entry
+    assert "run_pa25_recovery.py" in entry
 
 
 def test_headless_worker_chain_id_and_merge():

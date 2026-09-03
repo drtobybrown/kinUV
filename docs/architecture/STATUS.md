@@ -6,10 +6,10 @@ next_role: implementer
 board: accepted
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md
+last_propose: docs/reviews/2026-09-03-propose-approaching-recovery.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-02-review-a-gpu-nuts-smoke.md
-last_review_b: docs/reviews/2026-09-02-review-b-gpu-nuts-smoke.md
+last_review_a: docs/reviews/2026-09-03-review-a-approaching-recovery.md
+last_review_b: docs/reviews/2026-09-03-review-b-approaching-recovery.md
 user_review: docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/
 open_questions: []
 deadlocks: []
@@ -18,13 +18,19 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** approaching NUTS Running (`xgepg7qy`); GPU path rejected; CPU-parallel canonical
-* **Last Action:** GPU smoke stopped: CUDA 0.55 vs CPU 3.01 eval/s on 881×95; four GPU sessions deleted; CUDA venv and GPU run dirs purged; runner stripped to CPU-only flexible headless
-* **Decisions Made:** GPU acceleration rejected for 066 NUTS. Production engine is CPU jax-finufft (`DEC-067-RUNNER`). Parallel path is 4×1-chain flexible CPU + host merge. Official MAP unchanged. Do not start G4. `KGAS066-latest` still receding (`sd3ckpf2`)
-* **Blockers / Gates:** leftover_chi2_structured True at all three vis points. Approaching mixing not in yet (`xgepg7qy`)
-* **Next Step:** Wait for `xgepg7qy`; copy PA 25.2 product to `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/pa25/`. Official MAP unchanged. Do not start G4
+* **Phase:** approaching recovery execute (dual accept major): no NUTS this card
+* **Last Action:** Dual accept `review-a/b-approaching-recovery`. Merge hygiene + diagnostic MAP in flight. Do not launch nuts-pa25
+* **Decisions Made:** Approaching MAP is diagnostic-only. −5000 NUTS gate void. Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** leftover_chi2_structured True at official points. pa25 four-chain merge unmixed (do not quote leftover false / laplace_mh)
+* **Next Step:** Kill serial if Running; c1–c3 diagnostic; approaching L-BFGS; `pa25/failure.md`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-03 (approaching recovery tally).** Dual accept (major): `review-a-approaching-recovery` and `review-b-approaching-recovery`. Execute: no approaching NUTS this card; diagnostic MAP only; c1–c3 merge diagnostic; drop exploded-but-finite shards; `sampler` never `laplace_mh` on unmixed NUTS (`nuts_unmixed`); omit leftover key if unevaluated; quote median χ² at `r_t=0.5` only. Lit notes: `2026-09-03-lit-astro-pa-degeneracy.md`, `2026-09-03-lit-cs-hmc-multimodal.md`. Official MAP unchanged. Do not start G4.
+
+**2026-09-03 (approaching recovery propose).** Parallel `20260902T170918Z` all SUCCEEDED; merge `COMPLETED_UNMIXED` (R_hat PA 22). c1/c3 PA~15°, c2~64°, c4 exploded. Official MAP two-start: PA=25.2 Δχ²=4260 vs 35553. Board was open. Official MAP unchanged. Do not start G4.
+
+**2026-09-02 (PA 25.2 parallel race).** Four flexible 1-chain `nuts-pa25` jobs `KGAS066-20260902T170918Z-nuts-pa25-c{1..4}` (`a2ifbgas`, `ufbdqmfv`, `beukzk6w`, `uor0kmxt`). Serial `xgepg7qy` still Running (chain 2). Watcher merges to `pa25/` and kills serial if parallel finishes first. Manifest: `kinuv_runs/KGAS066-20260902T170918Z-pa25-parallel/manifest.json`. Official MAP unchanged. Do not start G4.
 
 **2026-09-02 (GPU rejected; CPU-parallel canonical).** CUDA eval/s 0.55 vs CPU 3.01 on 881×95 (identity ok either way). 10× wall target failed; four GPU chains killed. CUDA venv and GPU run dirs purged; runner CPU-only flexible headless. Note: `docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`. Ops: `docs/diagnostics/canfar-cpu-parallel.md`. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
 

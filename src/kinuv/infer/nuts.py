@@ -32,6 +32,12 @@ DX_IDX = 4
 DY_IDX = 5
 FROZEN_NAMES = ("dx_arcsec", "dy_arcsec")
 NUTS_SAMPLER = "nuts"
+NUTS_UNMIXED = "nuts_unmixed"
+# Finite-but-exploded draws (approaching c4): drop before mixing.
+FLUX_OK = (0.0, 1.0e4)
+GAS_SIGMA_OK = (0.0, 200.0)
+V0_OK = (0.0, 400.0)
+RT_ABS_OK = (0.0, 15.0)
 # Interactive/subagent cap only. Headless workers (DEC-067-RUNNER) ignore this.
 WALL_CAP_S = 7200.0
 # Identity-chart PA / vsys / V_0 dwarf log-flux in an identity metric.
@@ -169,6 +175,36 @@ def mixing_sampled(chains8):
     }
 
 
+def chain_physically_ok(phys8) -> bool:
+    """True if every draw is finite and inside Stage A boxes (drops c4-like explosions)."""
+    a = np.asarray(phys8, dtype=np.float64)
+    if a.ndim == 1:
+        a = a[None, ...]
+    if a.ndim == 3:
+        a = a.reshape(-1, a.shape[-1])
+    if a.size == 0 or not np.all(np.isfinite(a)):
+        return False
+    flux = a[:, 0]
+    gs = a[:, 3]
+    v0 = a[:, 6]
+    rt = np.abs(a[:, 7])
+    return bool(
+        np.all((flux > FLUX_OK[0]) & (flux <= FLUX_OK[1]))
+        and np.all((gs > GAS_SIGMA_OK[0]) & (gs <= GAS_SIGMA_OK[1]))
+        and np.all((v0 >= V0_OK[0]) & (v0 <= V0_OK[1]))
+        and np.all((rt > RT_ABS_OK[0]) & (rt <= RT_ABS_OK[1]))
+    )
+
+
+def sampler_label(*, autodiff_ok: bool, mixing_pass: bool, n_chain: int) -> str:
+    """``nuts`` only after autodiff + four finite chains + mix. Never ``laplace_mh`` on NUTS-kind."""
+    if autodiff_ok and mixing_pass and int(n_chain) == 4:
+        return NUTS_SAMPLER
+    if autodiff_ok:
+        return NUTS_UNMIXED
+    return SAMPLER_NAME
+
+
 def mixing_ok(
     mix,
     *,
@@ -258,17 +294,25 @@ def product_record(
     dy_map,
     autodiff_ok: bool,
     mixing_pass: bool,
-    leftover_chi2_structured: bool,
+    leftover_chi2_structured: bool | None,
     r_t_at_floor: bool,
     mean_num_steps: float,
     eval_s: float,
     note: str,
 ):
-    """JSON-able NUTS product. ``sampler`` is nuts only after autodiff (+ mixing for 066)."""
-    label = NUTS_SAMPLER if (autodiff_ok and mixing_pass) else SAMPLER_NAME
-    return {
-        "sampler": label,
-        "draws": np.asarray(draws8, dtype=np.float64).tolist(),
+    """JSON-able NUTS product.
+
+    ``sampler`` is ``nuts`` only after autodiff, four finite chains, and mix.
+    Unmixed autodiff writes ``nuts_unmixed``, never ``laplace_mh``.
+    ``leftover_chi2_structured`` is omitted when leftover was not measured.
+    """
+    draws = np.asarray(draws8, dtype=np.float64)
+    n_chain = int(draws.shape[0]) if draws.ndim >= 2 else 1
+    rec = {
+        "sampler": sampler_label(
+            autodiff_ok=autodiff_ok, mixing_pass=mixing_pass, n_chain=n_chain
+        ),
+        "draws": draws.tolist(),
         "param_names": list(PARAM_NAMES),
         "sampled_names": list(SAMPLED_NAMES),
         "frozen_names": list(FROZEN_NAMES),
@@ -277,12 +321,15 @@ def product_record(
         "dy_arcsec": float(dy_map),
         "mixing": mix,
         "intervals_calibrated": False,
-        "leftover_chi2_structured": bool(leftover_chi2_structured),
         "r_t_at_floor": bool(r_t_at_floor),
         "mean_num_steps": float(mean_num_steps),
         "eval_s": float(eval_s),
         "note": note,
+        "n_chain": n_chain,
     }
+    if leftover_chi2_structured is not None:
+        rec["leftover_chi2_structured"] = bool(leftover_chi2_structured)
+    return rec
 
 
 __all__ = [
@@ -290,6 +337,9 @@ __all__ = [
     "DY_IDX",
     "FROZEN_NAMES",
     "NUTS_SAMPLER",
+    "NUTS_UNMIXED",
+    "chain_physically_ok",
+    "sampler_label",
     "PARAM_NAMES",
     "SAMPLED_IDX",
     "SAMPLED_NAMES",

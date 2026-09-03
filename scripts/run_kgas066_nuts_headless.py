@@ -301,7 +301,7 @@ def main() -> int:
         raise SystemExit(
             "approaching NUTS must not write docs/reviews/artifacts/2026-08-30-g3-nuts/"
         )
-    leftover_structured = False
+    leftover_structured = None
     try:
         mean_p = mean_params({"sampler": "nuts", "draws": phys8})
         leftover_rec = write_leftover_at_params(
@@ -309,7 +309,7 @@ def main() -> int:
         )
         leftover_structured = bool(leftover_rec["leftover_chi2_structured"])
     except Exception:
-        log.exception("leftover at NUTS mean failed; not copying G0 leftover bit")
+        log.exception("leftover at NUTS mean failed; omit leftover key")
     rec = product_record(
         draws8=phys8,
         mix=mix,

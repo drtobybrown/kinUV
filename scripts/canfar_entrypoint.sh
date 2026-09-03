@@ -89,4 +89,8 @@ fi
 if [[ -n "${KINUV_CHAIN_ID:-}" ]]; then
   PA_ARGS+=(--chain-id "${KINUV_CHAIN_ID}")
 fi
+if [[ "${KINUV_KIND:-}" == "map-pa25" ]]; then
+  python "${REPO}/scripts/run_pa25_recovery.py"
+  exit $?
+fi
 python "${REPO}/scripts/run_kgas066_nuts_headless.py" --run-id "${RUN_ID}" "${PA_ARGS[@]}"

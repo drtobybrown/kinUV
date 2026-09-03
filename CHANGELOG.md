@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-03 — approaching PA 25.2 failed mix; recovery (no NUTS)
+
+Parallel 4×1-chain merge is `COMPLETED_UNMIXED` (c4 exploded; c1/c3 PA~15°, c2~64°). Official two-start already discarded PA=25.2 (Δχ² 4260 vs 35553). Dual accept (major): no approaching NUTS this card; diagnostic L-BFGS only; merge drops exploded-but-finite shards; unmixed autodiff is `nuts_unmixed` not `laplace_mh`; leftover key omitted if unevaluated. Lit: `2026-09-03-lit-astro-pa-degeneracy.md`, `2026-09-03-lit-cs-hmc-multimodal.md`. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-02 — GPU rejected; CPU-parallel canonical
 
 CUDA 0.55 vs CPU 3.01 eval/s on 881×95; GPU sessions killed; CUDA venv and GPU code purged. Production NUTS is flexible CPU headless; parallel path is 4×1-chain + merge. Note: `docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`. `xgepg7qy` still Running. Official MAP unchanged.
