@@ -18,11 +18,11 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** approaching recovery execute (dual accept major): no NUTS this card
-* **Last Action:** Dual accept `review-a/b-approaching-recovery`. Merge hygiene + diagnostic MAP in flight. Do not launch nuts-pa25
+* **Phase:** approaching recovery job Running (`j395zq60`, `map-pa25`)
+* **Last Action:** Dual accept major. Launched `KGAS066-20260903T211338Z-map-pa25` (c1–c3 diagnostic + approaching L-BFGS). Deleted serial `xgepg7qy`. No approaching NUTS
 * **Decisions Made:** Approaching MAP is diagnostic-only. −5000 NUTS gate void. Official MAP unchanged. Do not start G4
 * **Blockers / Gates:** leftover_chi2_structured True at official points. pa25 four-chain merge unmixed (do not quote leftover false / laplace_mh)
-* **Next Step:** Kill serial if Running; c1–c3 diagnostic; approaching L-BFGS; `pa25/failure.md`. Official MAP unchanged. Do not start G4
+* **Next Step:** When `j395zq60` succeeds, read `pa25/approaching-map/summary.json` and `pa25/failure.md`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
 
