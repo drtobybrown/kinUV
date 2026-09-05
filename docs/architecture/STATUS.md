@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
-last_propose: docs/reviews/2026-09-05-propose-ico-10-vs-30-and-figure-closeout.md
+last_propose: docs/reviews/2026-09-05-propose-m2-surface-brightness.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-05-review-a-ico-10-vs-30-and-figure-closeout.md
 last_review_b: docs/reviews/2026-09-05-review-b-ico-10-vs-30-and-figure-closeout.md
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** Official 10 vs 30 Ico probe locked 30 km/s; S3 figure honesty closeout
-* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s this card (archive-only gate)
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
-* **Next Step:** After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
+* **Last Action:** Propose visibility-native m=2 SB on axisymmetrised 30 km/s Ico
+* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels. m=2 board open
+* **Next Step:** Dual board on `2026-09-05-propose-m2-surface-brightness.md`. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (m=2 SB propose).** Board open. I0 = azimuthal mean of official 30 km/s Ico. Free A, φ2; R2=2.5″ σ=1.5″ frozen. Opt-in only; no DEC file; no load_sb_template default change. No 066 NUTS. No unfreeze i. No G4. 007 pending four ids untouched.
 
 **2026-09-05 (Ico 10 vs 30 execute).** Identity χ²_30=168675.596 (|Δ|=0.004). Conditional χ²_10=168701.213 (Δ=+25.6). Joint 50–146 kλ Δχ²=−83.3; median R(k)=0.79; R(1/θ_30)=12.3. Optimal-flux diagnostic sign-flips (Δ=−23.4). Conventions would unlock; **lock 30 km/s anyway** (archive-only). Label “10 km/s Ico product (Briggs)”, not Δv A/B. Artifacts: `docs/reviews/artifacts/2026-09-05-kgas066-ico-10-vs-30/`. Official MAP unchanged. No G4.
 
