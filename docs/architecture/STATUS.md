@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-09-03-propose-approaching-recovery.md
+last_propose: docs/reviews/2026-09-05-propose-kgas066-closure-and-kinms-benchmark.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-03-review-a-approaching-recovery.md
 last_review_b: docs/reviews/2026-09-03-review-b-approaching-recovery.md
@@ -18,13 +18,17 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** approaching recovery job Running (`j395zq60`, `map-pa25`)
-* **Last Action:** Dual accept major. Launched `KGAS066-20260903T211338Z-map-pa25` (c1–c3 diagnostic + approaching L-BFGS). Deleted serial `xgepg7qy`. No approaching NUTS
-* **Decisions Made:** Approaching MAP is diagnostic-only. −5000 NUTS gate void. Official MAP unchanged. Do not start G4
-* **Blockers / Gates:** leftover_chi2_structured True at official points. pa25 four-chain merge unmixed (do not quote leftover false / laplace_mh)
-* **Next Step:** When `j395zq60` succeeds, read `pa25/approaching-map/summary.json` and `pa25/failure.md`. Official MAP unchanged. Do not start G4
+* **Phase:** approaching search terminated; 066 closure + S3/007-MAP propose on board
+* **Last Action:** `j395zq60` SUCCEEDED 2026-09-03T21:40Z. Serial `xgepg7qy` deleted. Propose `docs/reviews/2026-09-05-propose-kgas066-closure-and-kinms-benchmark.md`
+* **Decisions Made:** Approaching closed (`pa25/failure.md`). Canonical 066 posterior is receding NUTS `sd3ckpf2` (PA 200.05°, V_0 255 km/s, r_t 0.224″, chi2 167486.8). Official MAP read-only. Do not start G4
+* **Blockers / Gates:** leftover_chi2_structured True (SB-dominated). 16/50/84 not calibrated. quote_inner_slope false. User TARGET stub requested for 007 MAP
+* **Next Step:** Dual review. No approaching NUTS. No 007 NUTS. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (066 closure + KinMS/007 MAP propose).** Approaching terminated. Receding `sd3ckpf2` is the 066 NUTS product. Board open: external 3DBarolo+KinMS S3 on 10 km/s cube; KGAS007 Stage A MAP only. User TARGET stub requested (agents do not write DEC-*). Official MAP unchanged. Do not start G4.
+
+**2026-09-03 (approaching recovery done).** Session `j395zq60` SUCCEEDED. Catalogue 25.2 Δχ²=4260; MAP-θ + PA=25.2 walked to 199.73°. `pa25/failure.md` terminates the approaching search. Serial `xgepg7qy` deleted. Official MAP unchanged. Do not start G4.
 
 **2026-09-03 (approaching recovery tally).** Dual accept (major): `review-a-approaching-recovery` and `review-b-approaching-recovery`. Execute: no approaching NUTS this card; diagnostic MAP only; c1–c3 merge diagnostic; drop exploded-but-finite shards; `sampler` never `laplace_mh` on unmixed NUTS (`nuts_unmixed`); omit leftover key if unevaluated; quote median χ² at `r_t=0.5` only. Lit notes: `2026-09-03-lit-astro-pa-degeneracy.md`, `2026-09-03-lit-cs-hmc-multimodal.md`. Official MAP unchanged. Do not start G4.
 

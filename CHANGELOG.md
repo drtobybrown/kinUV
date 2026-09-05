@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-05 — approaching search terminated; 066 unimodal
+
+Recovery job `j395zq60` SUCCEEDED. L-BFGS from official MAP θ + PA=25.2 walked back to 199.73°. Catalogue 25.2 start Δχ²=4260 vs receding 35553. `pa25/failure.md` closes approaching. Receding NUTS `sd3ckpf2` is the 066 posterior (V_0 255 km/s, r_t 0.224″, chi2 167486.8). Serial `xgepg7qy` deleted. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-03 — approaching PA 25.2 failed mix; recovery (no NUTS)
 
 Parallel 4×1-chain merge is `COMPLETED_UNMIXED` (c4 exploded; c1/c3 PA~15°, c2~64°). Official two-start already discarded PA=25.2 (Δχ² 4260 vs 35553). Dual accept (major): no approaching NUTS this card; diagnostic L-BFGS only; merge drops exploded-but-finite shards; unmixed autodiff is `nuts_unmixed` not `laplace_mh`; leftover key omitted if unevaluated. Lit: `2026-09-03-lit-astro-pa-degeneracy.md`, `2026-09-03-lit-cs-hmc-multimodal.md`. Official MAP unchanged. Do not start G4.

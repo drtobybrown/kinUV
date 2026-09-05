@@ -1,0 +1,22 @@
+{
+  "t_run_s": 9713.131246963516,
+  "chain_elapsed_s": [
+    9710.71001583524
+  ],
+  "merge_s": 2.4212311282753944,
+  "mixing_pass": false,
+  "state": "COMPLETED_UNMIXED",
+  "sampler": "nuts_unmixed",
+  "n_kept": 1,
+  "dropped_shards": [
+    {
+      "run": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/KGAS066-20260902T170918Z-nuts-pa25-c1",
+      "chain_id": 1
+    },
+    {
+      "run": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/KGAS066-20260902T170918Z-nuts-pa25-c3",
+      "chain_id": 3
+    }
+  ],
+  "utc": "2026-09-03T21:32:49Z"
+}
