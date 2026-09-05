@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: idle
-board: idle
+next_role: board
+board: open
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-09-05-propose-kgas066-closure-and-kinms-benchmark.md
+last_propose: docs/reviews/2026-09-05-propose-kgas007-nuts-and-live-s3.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-05-review-a-kgas066-closure-and-kinms-benchmark.md
 last_review_b: docs/reviews/2026-09-05-review-b-kgas066-closure-and-kinms-benchmark.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 066 closure executed (dual accept major)
-* **Last Action:** S3 from S1 (Barolo/KinMS missing on PATH). 007 Stage A MAP diagnostic if catalogue i/PA/vsys exist. No 007 NUTS. No G4
-* **Decisions Made:** Approaching closed. Receding `sd3ckpf2` is the 066 NUTS product (V_0 255 km/s, r_t mean 0.224″). Official MAP read-only. TARGET stays 066
-* **Blockers / Gates:** leftover SB-dominated. quote_inner_slope false. intervals_calibrated false. 3DBarolo/KinMS not on PATH
-* **Next Step:** Human review S3 folder + 007 leftover if the diagnostic MAP wrote. Official MAP unchanged. Do not start G4
+* **Phase:** 007 NUTS + live S3 propose (board open)
+* **Last Action:** Propose `2026-09-05-propose-kgas007-nuts-and-live-s3`. User TARGET stub + INFER 007-mock waiver named. No execute until dual accept
+* **Decisions Made:** Approaching closed. Receding `sd3ckpf2` is the 066 NUTS product. Official MAP read-only. 007 MAP Δχ² +6212 is on disk
+* **Blockers / Gates:** leftover SB-dominated. quote_inner_slope false. Board must accept. No kind=nuts for 007
+* **Next Step:** Dual review A/B. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (007 NUTS + live S3 propose).** Board open. User TARGET stub (amend existing DEC-066-TARGET after accept). User waives 007 S1 for this card. Kind must be `nuts-kgas007` (not `nuts`). Isolated fitters under `toby_sandbox/external_fitters/` only. No `/arc/home/thbrown/` writes. Official MAP unchanged. Do not start G4.
 
 **2026-09-05 (066 closure execute).** S3 `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/`: Barolo `missing_on_path`, KinMS `missing`; table restates S1 vs NUTS **mean** r_t 0.2239″ (`quote_inner_slope: false`). No packages added to recovery. 007 diagnostic MAP wrote `results/KILOGAS007/kinuv-KGAS007-stage-a-map/` (and leftover PNG under `docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/`): i frozen 28.9°, both PA starts → 151.6°, V_0=196 km/s, r_t=0.5″ floor, χ²=122071, Δχ² vs V=0 = +6212, `sampler: map`. TARGET unamended. No 007 NUTS. Official MAP unchanged.
 
