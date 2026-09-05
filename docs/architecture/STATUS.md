@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
-last_propose: docs/reviews/2026-09-05-propose-kgas007-nuts-and-live-s3.md
+last_propose: docs/reviews/2026-09-05-propose-ico-10-vs-30-and-figure-closeout.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-05-review-a-kgas007-nuts-revise.md
 last_review_b: docs/reviews/2026-09-05-review-b-kgas007-nuts-revise.md
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** SKA1 analytic HI yield model + four advanced mock figures under `advanced_diagnostics/`
+* **Last Action:** Propose official 10 vs 30 Ico probe + S3 figure closeout
 * **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
-* **Next Step:** After four `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels. Ico card board open
+* **Next Step:** Dual board on `2026-09-05-propose-ico-10-vs-30-and-figure-closeout.md`. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (Ico 10 vs 30 + figure closeout propose).** Board open. Candidate is official `.../10kms/KGAS66_Ico_K_kms-1.fits` (not cube M0). Conditional χ² at official MAP θ only. Lock 30 km/s unless long-baseline Δχ² < −9 and no high-k P(k) amplification. No SB-v2. No new 066 NUTS. No G4. 007 pending four ids untouched.
 
 **2026-09-05 (SKA1 yield model).** 20,000 deg2 comoving-volume integral in `scripts/analysis/simulate_ska_survey_yield.py`. Figure `advanced_diagnostics/fig_ska_survey_kinuv_impact.png`. Raw threshold counts (no completeness): 3.51e6 detections, 2.63e6 kinUV, 1.50e5 cube at z=0.35. Not a visibility simulation. Not KGAS066. Official MAP unchanged. Do not start G4.
 
