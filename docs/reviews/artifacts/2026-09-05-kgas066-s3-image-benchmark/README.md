@@ -2,7 +2,7 @@
 
 Vis χ² is the fit; quote_inner_slope: false. KinMS is an image-plane comparator, not a kinUV likelihood.
 
-Official MAP `kinuv-KGAS066-uvsign-map` was not written. Two-way benchmark: **kinUV (vis)** vs **KinMS (cube fit)**. Leftover gate is **SB-dominated** on 066. `intervals_calibrated: false`. Do not start G4.
+Official MAP `kinuv-KGAS066-uvsign-map` was not written. Two-way benchmark: **kinUV (vis)** vs **KinMS (cube fit)**. Leftover gate is **SB-dominated** on 066. `intervals_calibrated: false`. Real-066 `quote_inner_slope: false`. Figure D is vis/cube χ² slices, not MCMC/NUTS. Real moment colourbars are K km/s and km/s. SKA panel is an analytic volume integral. Figure A kinUV column is a script-local type-1 DFT adjoint (not Kelvin). Live annotations use official MAP θ, not NUTS mean. Do not start G4.
 
 ## Live fitters
 

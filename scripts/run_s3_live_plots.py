@@ -42,13 +42,12 @@ from kinuv.diagnostics.style import (
 from kinuv.forward.sb import load_sb_template
 from kinuv.infer.map import image_grid_for_vis
 from kinuv.io.vis import load_kgas066, radio_to_optical_kms
-from kinuv.geometry import sky_to_galaxy
+from kinuv.geometry import inclination_deg, sky_to_galaxy
 from kinuv.diagnostics.s1 import inner_slope_arctan, r_eval_arcsec
 from kinuv.template.wiener import k_to_jy_per_beam
 from kinuv.runner.plots import write_stage_a_cube
 
 REPO = Path(__file__).resolve().parents[1]
-CMP_JSON = REPO / "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/comparison.json"
 ROOT_10KMS = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms"
 )
@@ -102,7 +101,7 @@ def _param_box(ax, kinuv_ann, kinms_ann):
         0.5,
         0.5,
         (
-            "kinUV (NUTS mean): "
+            "kinUV (official MAP): "
             f"r_t = {kinuv_ann['r_t_arcsec']:.3f}\"   V_0 = {kinuv_ann['v0_kms']:.0f} km/s   "
             f"PA = {kinuv_ann['pa_deg']:.1f} deg   i = {kinuv_ann['i_deg']:.1f} deg\n"
             "KinMS (sbProf): "
@@ -450,22 +449,12 @@ def main(argv=None) -> int:
     elif (live / "kinms_best" / "kinms_fit_result.json").is_file():
         kinms_fit = json.loads((live / "kinms_best" / "kinms_fit_result.json").read_text()).get("fitted") or {}
 
-    kinuv_ann = {}
-    if CMP_JSON.is_file():
-        nuts = json.loads(CMP_JSON.read_text()).get("nuts_mean", {}).get("params", {})
-        kinuv_ann = {
-            "r_t_arcsec": float(nuts.get("r_t_arcsec", params.get("r_t_arcsec", 0.224))),
-            "v0_kms": float(nuts.get("v0_kms", params.get("v0_kms", 255.0))),
-            "pa_deg": float(nuts.get("pa_deg", params.get("pa_deg", 199.7))),
-            "i_deg": float(params.get("i_deg", 43.9)),
-        }
-    else:
-        kinuv_ann = {
-            "r_t_arcsec": float(params.get("r_t_arcsec", 0.224)),
-            "v0_kms": float(params.get("v0_kms", 255.0)),
-            "pa_deg": float(params.get("pa_deg", 199.7)),
-            "i_deg": float(params.get("i_deg", 43.9)),
-        }
+    kinuv_ann = {
+        "r_t_arcsec": float(params["r_t_arcsec"]),
+        "v0_kms": float(params["v0_kms"]),
+        "pa_deg": float(params["pa_deg"]),
+        "i_deg": float(inclination_deg()),
+    }
 
     pv_out = live / "pv_comparison_real.png"
     mom_out = live / "moments_comparison_real.png"
