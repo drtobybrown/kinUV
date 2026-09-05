@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
 last_propose: docs/reviews/2026-09-05-propose-m2-surface-brightness.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-05-review-a-ico-10-vs-30-and-figure-closeout.md
-last_review_b: docs/reviews/2026-09-05-review-b-ico-10-vs-30-and-figure-closeout.md
+last_review_a: docs/reviews/2026-09-05-review-a-m2-surface-brightness.md
+last_review_b: docs/reviews/2026-09-05-review-b-m2-surface-brightness.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/
 open_questions: []
 deadlocks: []
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** Propose visibility-native m=2 SB on axisymmetrised 30 km/s Ico
-* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels. m=2 board open
-* **Next Step:** Dual board on `2026-09-05-propose-m2-surface-brightness.md`. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
+* **Last Action:** Dual accept (major) m=2 SB; execute opt-in I0 + grid
+* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
+* **Next Step:** Implement axisym I0 + m=2 helpers and 36×20 grid. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (m=2 SB tally).** Dual accept (major): `review-a-m2-surface-brightness` and `review-b-m2-surface-brightness`. Execute: three χ² and three deltas; φ=atan2(yg,xg); positive-finite annuli; inward+outward hold; 36×20 grid mandatory; identity on 2-D Ico only; no ΔlnL; no m2-map tree; no load_sb_template change. No G4. 007 pending four ids untouched.
 
 **2026-09-05 (m=2 SB propose).** Board open. I0 = azimuthal mean of official 30 km/s Ico. Free A, φ2; R2=2.5″ σ=1.5″ frozen. Opt-in only; no DEC file; no load_sb_template default change. No 066 NUTS. No unfreeze i. No G4. 007 pending four ids untouched.
 
