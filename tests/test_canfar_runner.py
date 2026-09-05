@@ -421,3 +421,233 @@ def test_cpu_chain_id_env():
     assert env["KINUV_CHAIN_ID"] == "2"
     assert "kinuv-venv-recovery" in env["KINUV_VENV"]
 
+
+def test_kgas007_kind_does_not_steal_or_write_g3():
+    from kinuv.runner.canfar import ARTIFACT_G3_REL, headless_job_env, steal_latest
+    from kinuv.runner.kind import KIND_KGAS007, artifact_dir_for_kind, pa_init_deg
+
+    assert steal_latest("nuts-kgas007") is False
+    assert steal_latest(KIND_KGAS007) is False
+    assert steal_latest("nuts") is True
+    dest = artifact_dir_for_kind("nuts-kgas007")
+    assert ARTIFACT_G3_REL not in str(dest)
+    assert "2026-09-05-kgas007-nuts" in str(dest)
+    assert "pa25" not in str(dest)
+    assert abs(pa_init_deg("nuts-kgas007") - 151.6) < 0.05
+    env = headless_job_env(
+        run_id="KGAS007-test-nuts-kgas007-c1",
+        galaxy="KGAS007",
+        kind="nuts-kgas007",
+        chain_id=1,
+        repo=Path("/tmp"),
+        runs_root=Path("/tmp/runs"),
+        skip_pull=True,
+    )
+    assert env["JAX_PLATFORMS"] == "cpu"
+    assert abs(float(env["KINUV_PA_INIT"]) - 151.6) < 0.05
+    assert ARTIFACT_G3_REL not in env["KINUV_ARTIFACT_DIR"]
+    assert "2026-09-05-kgas007-nuts" in env["KINUV_ARTIFACT_DIR"]
+    assert env["KINUV_SKIP_PULL"] == "1"
+    assert env["KINUV_KIND"] == "nuts-kgas007"
+
+
+def test_kgas007_session_and_refuse_kind():
+    import importlib.util
+
+    repo = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "launch_headless", repo / "scripts" / "launch_headless.py"
+    )
+    lh = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(lh)
+    name = lh.session_name("nuts-kgas007", chain_id=1, galaxy="KGAS007")
+    assert name.startswith("kinuv-KGAS007-")
+    assert "KGAS066" not in name
+    assert "nuts-kgas007-c1" in name
+    assert len(name) <= 63
+    try:
+        lh.refuse_007_kind("KGAS007", "nuts")
+        raise AssertionError("expected exit 2")
+    except SystemExit as exc:
+        assert exc.code == 2
+    try:
+        lh.refuse_007_kind("KGAS066", "nuts-kgas007")
+        raise AssertionError("expected exit 2")
+    except SystemExit as exc:
+        assert exc.code == 2
+    lh.refuse_007_kind("KGAS007", "nuts-kgas007")
+
+
+def test_kgas007_dry_run_does_not_call_point_latest(tmp_path, monkeypatch):
+    import importlib.util
+    import sys
+
+    repo = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "launch_headless", repo / "scripts" / "launch_headless.py"
+    )
+    lh = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(lh)
+
+    def boom(*_a, **_k):
+        raise AssertionError("point_latest must not be called for nuts-kgas007")
+
+    monkeypatch.setattr(lh, "point_latest", boom)
+    monkeypatch.setattr(lh, "ensure_cert", lambda: {"ok": True})
+    monkeypatch.setattr(lh, "write_manifest", lambda *_a, **_k: None)
+    monkeypatch.setattr(lh, "write_status", lambda *_a, **_k: None)
+    monkeypatch.setattr(lh, "run_dir", lambda rid: tmp_path / rid)
+    monkeypatch.setattr(
+        lh,
+        "headless_job_env",
+        lambda **k: {
+            "KINUV_ARTIFACT_DIR": str(tmp_path / "docs/reviews/artifacts/2026-09-05-kgas007-nuts"),
+            "KINUV_VENV": "/arc/home/thbrown/kinuv-venv-recovery",
+        },
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "launch_headless.py",
+            "--galaxy",
+            "KGAS007",
+            "--kind",
+            "nuts-kgas007",
+            "--chain-id",
+            "1",
+            "--dry-run",
+            "--skip-pull",
+        ],
+    )
+    assert lh.main() == 0
+
+
+def test_kgas007_merge_refuses_g3_and_066_map(tmp_path):
+    import subprocess
+    import sys
+
+    repo = Path(__file__).resolve().parents[1]
+    merge = repo / "scripts" / "merge_nuts_chains.py"
+    g3 = tmp_path / "docs" / "reviews" / "artifacts" / "2026-08-30-g3-nuts"
+    map007 = (
+        Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007")
+        / "kinuv-KGAS007-stage-a-map"
+        / "stage_a_map.json"
+    )
+    map066 = (
+        Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066")
+        / "kinuv-KGAS066-uvsign-map"
+        / "stage_a_map.json"
+    )
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(merge),
+            "a",
+            "b",
+            "c",
+            "--kind",
+            "nuts-kgas007",
+            "--artifact-dir",
+            str(g3),
+            "--map-json",
+            str(map007),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode != 0
+    assert "G3" in (proc.stderr + proc.stdout)
+    assert not g3.exists()
+    dest = tmp_path / "docs" / "reviews" / "artifacts" / "2026-09-05-kgas007-nuts"
+    proc2 = subprocess.run(
+        [
+            sys.executable,
+            str(merge),
+            "a",
+            "b",
+            "c",
+            "--kind",
+            "nuts-kgas007",
+            "--artifact-dir",
+            str(dest),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc2.returncode != 0
+    assert "map-json" in (proc2.stderr + proc2.stdout).lower()
+    proc3 = subprocess.run(
+        [
+            sys.executable,
+            str(merge),
+            "a",
+            "b",
+            "c",
+            "--kind",
+            "nuts-kgas007",
+            "--artifact-dir",
+            str(dest),
+            "--map-json",
+            str(map066),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc3.returncode != 0
+    assert "066" in (proc3.stderr + proc3.stdout)
+    assert not dest.exists()
+
+
+def test_kgas007_entrypoint_and_worker_locks():
+    repo = Path(__file__).resolve().parents[1]
+    entry = (repo / "scripts" / "canfar_entrypoint.sh").read_text()
+    assert "run_kgas007_nuts_headless.py" in entry
+    assert "*kgas007*" in entry
+    assert entry.index("run_kgas007_nuts_headless.py") < entry.index(
+        "run_kgas066_nuts_headless.py"
+    )
+    worker = (repo / "scripts" / "run_kgas007_nuts_headless.py").read_text()
+    assert "load_kgas066(" not in worker
+    assert "i_rad" in worker
+    assert "122070.76" in worker
+    assert "point_latest" not in worker
+    assert "2026-08-30-g3-nuts" in worker
+    assert "quote_inner_slope" in worker
+    nuts = (repo / "src" / "kinuv" / "infer" / "nuts.py").read_text()
+    assert "model = predict_binned(data, params, tmpl, grid, i_rad=i_rad, xla=True)" in nuts
+    leftover = (repo / "src" / "kinuv" / "runner" / "plots.py").read_text()
+    assert '"quote_inner_slope": False' in leftover
+
+
+def test_job_status_kgas007_does_not_name_g3(tmp_path, monkeypatch):
+    from kinuv.runner.status_md import write_job_status_md
+
+    path = tmp_path / "docs" / "architecture" / "STATUS.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "---\npending: [x]\n---\n\n## Agent Run Status\n\n"
+        "* **Phase:** old\n* **Last Action:** old\n"
+        "* **Decisions Made:** old\n* **Blockers / Gates:** old\n"
+        "* **Next Step:** old\n\n# Architecture mailbox\n\nkeep.\n"
+    )
+    monkeypatch.setenv("KINUV_REPO", str(tmp_path))
+    write_job_status_md(
+        run_id="KGAS007-20260905T000000Z-nuts-kgas007-c1",
+        session_id="abc",
+        state="SUCCEEDED",
+        mixing_pass=True,
+        sampler="nuts",
+        elapsed_s=1.0,
+        kind="nuts-kgas007",
+    )
+    out = path.read_text()
+    assert "G3" not in out
+    assert "2026-08-30-g3-nuts" not in out
+    assert "2026-09-05-kgas007-nuts" in out
+    assert "keep." in out
+

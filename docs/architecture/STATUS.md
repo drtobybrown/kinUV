@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
-pending: []
+pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
 last_propose: docs/reviews/2026-09-05-propose-kgas007-nuts-and-live-s3.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-05-review-a-kgas066-closure-and-kinms-benchmark.md
-last_review_b: docs/reviews/2026-09-05-review-b-kgas066-closure-and-kinms-benchmark.md
+last_review_a: docs/reviews/2026-09-05-review-a-kgas007-nuts-revise.md
+last_review_b: docs/reviews/2026-09-05-review-b-kgas007-nuts-revise.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/
 open_questions: []
 deadlocks: []
@@ -18,13 +18,21 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 007 NUTS + live S3 propose (board open)
-* **Last Action:** Propose `2026-09-05-propose-kgas007-nuts-and-live-s3`. User TARGET stub + INFER 007-mock waiver named. No execute until dual accept
-* **Decisions Made:** Approaching closed. Receding `sd3ckpf2` is the 066 NUTS product. Official MAP read-only. 007 MAP Δχ² +6212 is on disk
-* **Blockers / Gates:** leftover SB-dominated. quote_inner_slope false. Board must accept. No kind=nuts for 007
-* **Next Step:** Dual review A/B. Official MAP unchanged. Do not start G4
+* **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
+* **Last Action:** Dispatched 4×1 CPU `nuts-kgas007` after identity χ²=122070.76. KinMS live ran; Barolo still missing_on_path
+* **Decisions Made:** Kind `nuts-kgas007` only. steal_latest False. DEC-067 items 3-4 left as 066-only. Official MAP read-only
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
+* **Next Step:** After four `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (007 NUTS + live S3 execute).** Kind `nuts-kgas007` landed (`steal_latest` False; dest not G3; PA 151.6; `i_rad=0.5044` inside U). MAP-θ identity: 007 χ²=122070.76 on 956×66; official 066 χ²=168675.60. Dispatched `b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy` (`--skip-pull`; `KGAS066-latest` untouched). S3 live: KinMS arctan cube in `live_fitters/`; 3D-Barolo still `missing_on_path` (no conda-forge binary on host yet). Literature note already on disk. TARGET is KGAS066+KGAS007. Official MAP unchanged. Do not start G4.
+
+**2026-09-05 (007 NUTS revise tally).** Dual accept (major): `review-a-kgas007-nuts-revise` and `review-b-kgas007-nuts-revise`. Execute only after kind/worker/merge/i_rad/identity tests are green. Official MAP unchanged. Do not start G4.
+
+**2026-09-05 (007 NUTS revise re-board).** First board was **not** dual accept (`review-a` accept+major; `review-b` **reject**). Revised propose locks steal_latest/G3/`i_rad`/007 worker/merge refuse-G3. Official MAP unchanged.
+
+**2026-09-05 (007 NUTS first board).** A accept+major; B reject. No TARGET amend. No 007 NUTS dispatch.
 
 **2026-09-05 (007 NUTS + live S3 propose).** Board open. User TARGET stub (amend existing DEC-066-TARGET after accept). User waives 007 S1 for this card. Kind must be `nuts-kgas007` (not `nuts`). Isolated fitters under `toby_sandbox/external_fitters/` only. No `/arc/home/thbrown/` writes. Official MAP unchanged. Do not start G4.
 

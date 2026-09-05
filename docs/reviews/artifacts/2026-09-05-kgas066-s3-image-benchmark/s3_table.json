@@ -28,51 +28,65 @@
     "intervals_calibrated": false
   },
   "barolo": {
-    "tool": "3DBarolo",
-    "ran": false,
-    "executable": null,
-    "cube_dir": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms",
-    "cube_fits": [
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1_err.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1_ul.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2_err.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2_ul.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2_err.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2_ul.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1_err.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1_ul.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom0_SN.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom1.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom1_err.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom2.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom2_err.fits",
-      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_peak_temp_k.fits"
-    ],
-    "note": "Comparator only. vis chi2 = s * sum w |d-m|^2 is the kinUV fit. 3DBarolo was not on PATH for S1 (2026-08-29).",
     "quote_inner_slope": false,
     "intervals_calibrated": false,
     "leftover_gate": "SB-dominated",
-    "status": "missing_on_path"
+    "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
+    "tool": "3D-Barolo",
+    "ran": false,
+    "status": "missing_on_path",
+    "executable": null,
+    "isolated_env": "/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters"
   },
   "kinms": {
-    "tool": "KinMS",
-    "ran": false,
-    "cube_dir": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms",
     "quote_inner_slope": false,
     "intervals_calibrated": false,
     "leftover_gate": "SB-dominated",
-    "note": "Comparator only. vis chi2 is the kinUV fit. This file is the only licensed KinMS import site.",
-    "status": "missing",
-    "error": "ModuleNotFoundError"
+    "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
+    "tool": "KinMS",
+    "ran": true,
+    "status": "ran",
+    "kinms_module": "/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters/venv/lib/python3.12/site-packages/kinms/__init__.py",
+    "parameterization": "arctan V=V0*(2/pi)*arctan(r/r_t) matching kinUV",
+    "r_t_arcsec": 0.22392216472996415,
+    "v0_kms": 254.9834109292598,
+    "pa_deg": 200.05,
+    "i_deg": 43.86,
+    "cube_npy": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms/kinms_arctan_cube.npy"
   },
   "geometry_soak": {
     "kinuv_i_frozen_deg": 43.86,
     "note": "kinUV does not unfreeze i. Cube-fitter Delta i if a tool ran; not a harmonic amplitude."
+  },
+  "header_note": "vis chi2 is the fit; quote_inner_slope: false",
+  "live_fitters": {
+    "barolo": {
+      "quote_inner_slope": false,
+      "intervals_calibrated": false,
+      "leftover_gate": "SB-dominated",
+      "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
+      "tool": "3D-Barolo",
+      "ran": false,
+      "status": "missing_on_path",
+      "executable": null,
+      "isolated_env": "/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters"
+    },
+    "kinms": {
+      "quote_inner_slope": false,
+      "intervals_calibrated": false,
+      "leftover_gate": "SB-dominated",
+      "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
+      "tool": "KinMS",
+      "ran": true,
+      "status": "ran",
+      "kinms_module": "/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters/venv/lib/python3.12/site-packages/kinms/__init__.py",
+      "parameterization": "arctan V=V0*(2/pi)*arctan(r/r_t) matching kinUV",
+      "r_t_arcsec": 0.22392216472996415,
+      "v0_kms": 254.9834109292598,
+      "pa_deg": 200.05,
+      "i_deg": 43.86,
+      "cube_npy": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms/kinms_arctan_cube.npy"
+    },
+    "dir": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters"
   }
 }

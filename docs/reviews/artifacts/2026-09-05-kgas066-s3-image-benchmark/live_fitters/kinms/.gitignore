@@ -1,0 +1,2 @@
+# Local KinMS cube (13 MB); receipts and overlays stay in git.
+*.npy

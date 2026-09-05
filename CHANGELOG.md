@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-09-05 — 007 NUTS dispatched; live S3 KinMS; TARGET KGAS066+KGAS007
+
+Kind `nuts-kgas007` (`steal_latest` False, dest `2026-09-05-kgas007-nuts`, PA 151.6, `i_rad=0.5044` in U). MAP-θ identity passed (007 χ²=122070.76; official 066 χ²=168675.60). Four CPU chains: `b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`. Isolated KinMS ran under `toby_sandbox/external_fitters/`; Barolo still missing_on_path. S3 header: vis χ² is the fit; `quote_inner_slope: false`. DEC-067 items 3–4 left as 066-only. Official MAP unchanged. Do not start G4.
+
+## 2026-09-05 — 007 NUTS + live S3 dual accept (major); TARGET amended
+
+User licensed KGAS007 as a second official galaxy (amend existing DEC-066-TARGET; Field Guide TARGET | KGAS066 + KGAS007). INFER 007-mock waiver is this card only (INFER text unamended). Dual accept requires `nuts-kgas007` (steal False, dest not G3) before dispatch. Literature note: `docs/architecture/notes/2026-09-05-literature-synthesis-vis-vs-cubes.md`. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-05 — 066 S3 from S1; KGAS007 diagnostic MAP
 
 Dual accept (major) on closure + KinMS S3 + 007 MAP. 3DBarolo and KinMS missing on PATH; S3 restates S1 (truth r_t 0.25″ / vis 0.254″ / CLEAN M1 94.7 vs 236.7) vs NUTS **mean** r_t 0.2239″. No packages added to the recovery venv. KinMS stays under `external/`. KGAS007 diagnostic Stage A MAP: i=28.9°, PA 151.6°, Δχ² vs V=0 = +6212, `sampler: map`; TARGET stays 066; no 007 NUTS. Official MAP unchanged. Do not start G4.

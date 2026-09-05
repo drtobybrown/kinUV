@@ -1,0 +1,10 @@
+{
+  "quote_inner_slope": false,
+  "intervals_calibrated": false,
+  "leftover_gate": "SB-dominated",
+  "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
+  "status": "wrote_overlays",
+  "pv": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/pv_major_minor.png",
+  "moments": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/moments_slices.png",
+  "kinuv_nuts_r_t_arcsec": 0.22392216472996415
+}

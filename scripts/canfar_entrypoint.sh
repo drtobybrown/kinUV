@@ -93,4 +93,8 @@ if [[ "${KINUV_KIND:-}" == "map-pa25" ]]; then
   python "${REPO}/scripts/run_pa25_recovery.py"
   exit $?
 fi
+if [[ "${KINUV_KIND:-}" == *kgas007* ]]; then
+  python "${REPO}/scripts/run_kgas007_nuts_headless.py" --run-id "${RUN_ID}" "${PA_ARGS[@]}"
+  exit $?
+fi
 python "${REPO}/scripts/run_kgas066_nuts_headless.py" --run-id "${RUN_ID}" "${PA_ARGS[@]}"

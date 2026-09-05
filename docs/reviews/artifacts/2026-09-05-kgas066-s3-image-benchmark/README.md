@@ -1,3 +1,5 @@
+Vis χ² is the fit; quote_inner_slope: false. KinMS/Barolo are image-plane comparators, not a kinUV likelihood.
+
 # 066 S3 image-plane benchmark
 
 Vis χ² `s * sum w |ΔV|^2` is the fit; KinMS/Barolo are image-plane comparators, not a kinUV likelihood.
@@ -33,3 +35,10 @@ Cube-fit PV/moment overlays were not produced (no Barolo/KinMS on PATH). Vis lef
 
 - `s3_table.json` — machine table
 - `barolo.json` / `kinms.json` — tool receipts
+## Live fitters (2026-09-05)
+
+- 3D-Barolo: `missing_on_path`
+- KinMS: `failed`
+- Overlays: `live_fitters/pv_major_minor.png`, `live_fitters/moments_slices.png`
+- Isolated env: `/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters`
+- kinUV NUTS mean r_t = 0.224 arcsec (not a quoted inner scale)

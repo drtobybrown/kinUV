@@ -52,6 +52,12 @@ def main() -> int:
     )
     p.add_argument("--artifact-dir", default=str(ARTIFACT_G3))
     p.add_argument("--pa-init", type=float, default=None)
+    p.add_argument("--kind", default="nuts")
+    p.add_argument(
+        "--map-json",
+        default=None,
+        help="Stage A JSON for (dx,dy)/PA. Required for nuts-kgas007.",
+    )
     p.add_argument(
         "--chain-ids",
         default=None,
@@ -61,6 +67,12 @@ def main() -> int:
     if len(args.run_dirs) < 3:
         raise SystemExit("need at least 3 run dirs")
     artifact_dir = Path(args.artifact_dir)
+    kind = str(args.kind)
+    if "kgas007" in kind.lower():
+        if "2026-08-30-g3-nuts" in str(artifact_dir):
+            raise SystemExit("007 merge refuses G3 dest")
+        if args.map_json is None:
+            raise SystemExit("007 merge requires --map-json (007 Stage A)")
     if args.chain_ids:
         chain_ids = [int(x) for x in str(args.chain_ids).split(",")]
         if len(chain_ids) != len(args.run_dirs):
@@ -69,9 +81,15 @@ def main() -> int:
         chain_ids = list(range(1, len(args.run_dirs) + 1))
     t0 = time.perf_counter()
     map_path = Path(
-        "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
-        "kinuv-KGAS066-uvsign-map/stage_a_map.json"
+        args.map_json
+        if args.map_json
+        else (
+            "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+            "kinuv-KGAS066-uvsign-map/stage_a_map.json"
+        )
     )
+    if "kgas007" in kind.lower() and "KGAS066" in str(map_path):
+        raise SystemExit("007 merge refuses official 066 MAP JSON")
     rec_map = json.loads(map_path.read_text())
     pa_init = float(args.pa_init if args.pa_init is not None else rec_map["pa_deg"])
     dx, dy = rec_map["dx_arcsec"], rec_map["dy_arcsec"]
@@ -116,12 +134,18 @@ def main() -> int:
         mean_num_steps=float("nan"),
         eval_s=float("nan"),
         note=(
-            "066 CPU NUTS merge; leftover unevaluated; 16/50/84 not calibrated; "
+            "CPU NUTS merge; leftover unevaluated; 16/50/84 not calibrated; "
             "do not quote inner dV/dr"
         ),
     )
     rec["mixing_pass"] = mix_pass
-    rec["kind"] = "nuts"
+    rec["kind"] = kind
+    rec["quote_inner_slope"] = False
+    rec["intervals_calibrated"] = False
+    if "kgas007" in kind.lower():
+        rec["galaxy"] = "KGAS007"
+        rec["dec_066_target_amended"] = True
+        rec["infer_mock_recovery"] = "waived-this-card"
     rec["chain_elapsed_s"] = kept_elapsed
     rec["merge_s"] = merge_s
     rec["t_run_s"] = t_run
@@ -129,7 +153,8 @@ def main() -> int:
     rec["n_kept"] = n_kept
     state = "SUCCEEDED" if rec["sampler"] == NUTS_SAMPLER else "COMPLETED_UNMIXED"
     artifact_dir.mkdir(parents=True, exist_ok=True)
-    write_json(artifact_dir / "kgas066_nuts.json", rec)
+    out_name = "kgas007_nuts.json" if "kgas007" in kind.lower() else "kgas066_nuts.json"
+    write_json(artifact_dir / out_name, rec)
     write_json(
         artifact_dir / "summary.json",
         {k: rec[k] for k in rec if k != "draws"},

@@ -1,0 +1,40 @@
+{
+  "kgas007": {
+    "galaxy": "KGAS007",
+    "chi2": 122070.76264784015,
+    "target": 122070.76,
+    "abs_delta": 0.002647840155987069,
+    "pass": true,
+    "shape": [
+      956,
+      66
+    ],
+    "i_rad": 0.5044001538263612,
+    "s": 0.5707350424544269,
+    "load": {
+      "npz_keys": [
+        "u",
+        "v",
+        "vis",
+        "weights",
+        "freqs"
+      ],
+      "uv_stored": "wavelengths",
+      "uv_ref_hz": 220002502017.00342,
+      "time_average": false,
+      "uv_bin_m": 10.0
+    }
+  },
+  "kgas066": {
+    "galaxy": "KGAS066",
+    "chi2": 168675.59555208948,
+    "target": 168675.6,
+    "abs_delta": 0.004447910527233034,
+    "pass": true,
+    "shape": [
+      881,
+      95
+    ],
+    "official_mtime": 1787935221.462632
+  }
+}

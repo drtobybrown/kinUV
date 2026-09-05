@@ -99,7 +99,7 @@ def write_leftover_at_params(
         "leftover_chi2_structured": structured,
         "leftover_uv_span": qflags["leftover_uv_span"],
         "leftover_vel_span": qflags["leftover_vel_span"],
-        "quote_inner_slope": qflags["quote_inner_slope"],
+        "quote_inner_slope": False,
         "n_row": int(np.asarray(data.vis).shape[0]),
         "n_chan": int(np.asarray(data.vis).shape[1]),
         "s": float(data.s),
@@ -208,6 +208,7 @@ def write_nuts_product_plots(
     grid=None,
     imaging: bool = True,
     leftover: bool = True,
+    i_rad=None,
 ):
     """Corner + leftover + imaging at NUTS mean. FITS stay in run_dir/plots."""
     run_dir = Path(run_dir)
@@ -235,13 +236,22 @@ def write_nuts_product_plots(
             tmpl = load_sb_template(grid, ico_path=ICO if ICO.is_file() else None)
 
     if leftover:
-        leftover_rec = write_leftover_at_params(params, plots, data=data, tmpl=tmpl, grid=grid)
+        leftover_rec = write_leftover_at_params(
+            params, plots, data=data, tmpl=tmpl, grid=grid, i_rad=i_rad
+        )
+        leftover_rec["quote_inner_slope"] = False
         written["leftover"] = leftover_rec
         rec["leftover_chi2_structured"] = bool(leftover_rec["leftover_chi2_structured"])
         rec["chi2_nuts_mean"] = float(leftover_rec["chi2_sum"])
+        rec["quote_inner_slope"] = False
         post = run_dir / "posteriors"
+        is_007 = (
+            "kgas007" in str(rec.get("kind", "")).lower()
+            or rec.get("galaxy") == "KGAS007"
+        )
+        json_name = "kgas007_nuts.json" if is_007 else "kgas066_nuts.json"
         if post.is_dir():
-            write_json(post / "kgas066_nuts.json", rec)
+            write_json(post / json_name, rec)
             write_json(
                 post / "summary.json",
                 {k: rec[k] for k in rec if k != "draws"},
@@ -263,7 +273,7 @@ def write_nuts_product_plots(
     if post.is_dir() and artifact_dir is not None:
         artifact_dir = Path(artifact_dir)
         artifact_dir.mkdir(parents=True, exist_ok=True)
-        for name in ("kgas066_nuts.json", "summary.json"):
+        for name in ("kgas066_nuts.json", "kgas007_nuts.json", "summary.json"):
             src = post / name
             if src.is_file():
                 shutil.copy2(src, artifact_dir / name)

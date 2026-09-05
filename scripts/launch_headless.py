@@ -44,11 +44,25 @@ def git_sha6() -> str:
     return sha[:6]
 
 
-def session_name(kind: str = "nuts", chain_id: int | None = None) -> str:
+def session_name(
+    kind: str = "nuts", chain_id: int | None = None, galaxy: str = "KGAS066"
+) -> str:
     tag = str(kind)
     if chain_id is not None and f"c{int(chain_id)}" not in tag:
         tag = f"{tag}-c{int(chain_id)}"
-    return f"kinuv-KGAS066-{git_sha6()}-{tag}"[:63]
+    gal = str(galaxy).replace("KILOGAS", "KGAS")
+    return f"kinuv-{gal}-{git_sha6()}-{tag}"[:63]
+
+
+def refuse_007_kind(galaxy: str, kind: str) -> None:
+    gal = str(galaxy).upper().replace("KILOGAS", "KGAS")
+    k = str(kind).lower()
+    if gal == "KGAS007" and k == "nuts":
+        sys.stderr.write("007 forbids --kind nuts (exit 2); use nuts-kgas007\n")
+        raise SystemExit(2)
+    if "kgas007" in k and gal != "KGAS007":
+        sys.stderr.write("nuts-kgas007 requires --galaxy KGAS007 (exit 2)\n")
+        raise SystemExit(2)
 
 
 def start_watcher(run_id: str, session_id: str) -> int | None:
@@ -111,9 +125,10 @@ def main() -> int:
     memory = int(args.memory) if int(args.memory) > 0 else None
     chain_id = int(args.chain_id) if int(args.chain_id) > 0 else None
     kind = args.kind
+    refuse_007_kind(args.galaxy, kind)
     image = args.image or DEFAULT_IMAGE
     run_id = args.run_id or make_run_id(args.galaxy, kind, chain_id=chain_id)
-    name = session_name(kind, chain_id=chain_id)
+    name = session_name(kind, chain_id=chain_id, galaxy=args.galaxy)
     entry = str(KINUV_REPO / "scripts/canfar_entrypoint.sh")
     cert = ensure_cert()
     pa_init = (

@@ -103,7 +103,18 @@ def write_job_status_md(
     sid = session_id or "unknown"
     mix = "pass" if mixing_pass else "FAIL"
     approaching = "pa25" in str(run_id).lower() or "pa25" in str(kind or "").lower()
-    if approaching:
+    kgas007 = "kgas007" in str(run_id).lower() or "kgas007" in str(kind or "").lower()
+    if kgas007:
+        phase = f"007 NUTS {state} (`{run_id}`)"
+        next_step = (
+            "Copy posteriors into docs/reviews/artifacts/2026-09-05-kgas007-nuts/. "
+            "Official 066 MAP unchanged. Do not start G4"
+        )
+        default_note = (
+            "007 NUTS job. DEC-067 items 3-4 left as 066-only. "
+            "Official MAP unchanged. Do not start G4"
+        )
+    elif approaching:
         phase = f"066 NUTS PA 25.2 {state} (`{run_id}`)"
         next_step = (
             "Copy posteriors into docs/reviews/artifacts/"

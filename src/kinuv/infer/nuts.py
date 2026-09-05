@@ -96,7 +96,7 @@ def potential_unconstrained(z6, data, template, grid, dx_map, dy_map):
     return 0.5 * (c + prior) - logj
 
 
-def make_potential(data, template, grid, dx_map, dy_map):
+def make_potential(data, template, grid, dx_map, dy_map, i_rad=None):
     """Closed-over ``U(z6)`` for ``jax.jit`` / NumPyro ``potential_fn``."""
     import jax.numpy as jnp
 
@@ -113,7 +113,7 @@ def make_potential(data, template, grid, dx_map, dy_map):
         z8 = stitch_z8(z6, dx, dy)
         theta = unconstrained_to_physical(z8)
         params = params_from_theta(theta, dx, dy)
-        model = predict_binned(data, params, tmpl, grid, xla=True)
+        model = predict_binned(data, params, tmpl, grid, i_rad=i_rad, xla=True)
         c = chi2(vis, model, wgt, s)
         logj = log_abs_det_jacobian(z8)
         return 0.5 * (c + prior) - logj

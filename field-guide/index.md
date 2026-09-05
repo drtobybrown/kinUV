@@ -4,7 +4,7 @@ Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-IND
 
 ## Mailbox
 
-Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated (`pa25/failure.md`). Board open: live S3 + 007 NUTS propose. Do not start G4.
+Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated (`pa25/failure.md`). TARGET is KGAS066+KGAS007. 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`). Do not start G4.
 
 ## Gates (implementer decides)
 
@@ -24,7 +24,7 @@ Prefer the DEC. If you leave it, STATUS one-liner and continue. Do not wait for 
 |---|---|
 | INDEX | ADRs > Field Guide > STATUS > PLAN.md > Cursor plans |
 | AGENTS | parent proposes; dual-board accept; user ties; no new DEC ids |
-| TARGET | KGAS066 only |
+| TARGET | KGAS066 + KGAS007 |
 | INC | 43.9° freeze, ±5° |
 | PA | fit; seed 205.2° receding |
 | SB | Wiener; pad ≥2×; clip only if centroid shift <0.01″ |
