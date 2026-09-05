@@ -1,0 +1,26 @@
+{
+  "quote_inner_slope": false,
+  "intervals_calibrated": false,
+  "leftover_gate": "SB-dominated",
+  "note": "sbProf/sbRad; KinMS owns projection; transpose (2,1,0); vOffset=vsys-v_mid",
+  "tool": "KinMS_best",
+  "ran": true,
+  "status": "ran",
+  "sb_mode": "sbProf_from_M0_elliptical",
+  "fitted": {
+    "v0_kms": 266.91519493877354,
+    "r_t_arcsec": 0.4651990033675848,
+    "pa_deg": 198.7008669192614,
+    "i_deg": 48.408539376805884,
+    "vsys_optical_kms": 8300.968001527974,
+    "gas_sigma_kms": 12.832994168547781,
+    "flux_scale": 101.2869448771377
+  },
+  "chi2_cube": 219.58146566752384,
+  "nfev": 475,
+  "n_clouds": 100000,
+  "m0_data_extent_arcsec": 7.84920378127679,
+  "m0_model_extent_arcsec": 7.624303246855243,
+  "extent_ok": true,
+  "model_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms_best/model_cube.fits"
+}

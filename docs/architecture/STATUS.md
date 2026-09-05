@@ -19,12 +19,16 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** Dispatched 4×1 CPU `nuts-kgas007` after identity χ²=122070.76. KinMS live ran; Barolo still missing_on_path
-* **Decisions Made:** Kind `nuts-kgas007` only. steal_latest False. DEC-067 items 3-4 left as 066-only. Official MAP read-only
+* **Last Action:** SKA1 analytic HI yield model + four advanced mock figures under `advanced_diagnostics/`
+* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false
 * **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
 * **Next Step:** After four `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (SKA1 yield model).** 20,000 deg2 comoving-volume integral in `scripts/analysis/simulate_ska_survey_yield.py`. Figure `advanced_diagnostics/fig_ska_survey_kinuv_impact.png`. Raw threshold counts (no completeness): 3.51e6 detections, 2.63e6 kinUV, 1.50e5 cube at z=0.35. Not a visibility simulation. Not KGAS066. Official MAP unchanged. Do not start G4.
+
+**2026-09-05 (advanced mock diagnostics).** Four publication figures in `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/advanced_diagnostics/`. kinUV dirty residual is a script-local type-1 DFT adjoint (not production nufft1). Figure D is vis/cube χ² slices, not MCMC. Mock-only inner-slope quote. Official MAP unchanged. Do not start G4.
 
 **2026-09-05 (007 NUTS + live S3 execute).** Kind `nuts-kgas007` landed (`steal_latest` False; dest not G3; PA 151.6; `i_rad=0.5044` inside U). MAP-θ identity: 007 χ²=122070.76 on 956×66; official 066 χ²=168675.60. Dispatched `b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy` (`--skip-pull`; `KGAS066-latest` untouched). S3 live: KinMS arctan cube in `live_fitters/`; 3D-Barolo still `missing_on_path` (no conda-forge binary on host yet). Literature note already on disk. TARGET is KGAS066+KGAS007. Official MAP unchanged. Do not start G4.
 

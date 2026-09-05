@@ -2,9 +2,9 @@
   "quote_inner_slope": false,
   "intervals_calibrated": false,
   "leftover_gate": "SB-dominated",
-  "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
-  "barolo": "missing_on_path",
-  "kinms": "ran",
-  "overlays": "wrote_overlays",
-  "env_bin": "/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters/venv/bin"
+  "note": "vis chi2 is the fit; quote_inner_slope: false. KinMS is an image-plane comparator fit to the cube. Init from kinUV Stage A catalogue seeds only; no kinUV posterior conditioning.",
+  "kinms_best": "ran",
+  "kinms_legacy": "ran",
+  "mock": "mock_failed",
+  "overlays": "wrote_publication_panels"
 }

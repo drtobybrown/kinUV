@@ -265,8 +265,13 @@ def main() -> int:
         "i_rad": i_rad,
     }
     write_status(run_id, state)
+    status_product = (
+        PRODUCT / f"status_c{int(chain_id)}.json"
+        if chain_id is not None
+        else PRODUCT / "status.json"
+    )
     write_json(
-        PRODUCT / "status.json",
+        status_product,
         {
             "galaxy": "KGAS007",
             "kind": kind,
@@ -311,7 +316,8 @@ def main() -> int:
         "quote_inner_slope": False,
     }
     write_json(dest / "identity_chi2.json", ident)
-    write_json(PRODUCT / "identity_chi2.json", ident)
+    if chain_id in (None, 1):
+        write_json(PRODUCT / "identity_chi2.json", ident)
     log.info("MAP-theta identity %s", json.dumps(ident))
     if not ident["pass"]:
         raise SystemExit(f"MAP-theta identity failed chi2={c_map}")

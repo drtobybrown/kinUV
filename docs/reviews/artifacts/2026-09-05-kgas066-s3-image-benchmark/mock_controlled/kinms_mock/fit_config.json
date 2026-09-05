@@ -1,0 +1,50 @@
+{
+  "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/mock_controlled/mock_cube.fits",
+  "mask": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+  "work": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/mock_controlled/kinms_mock",
+  "init": {
+    "v0_kms": 250.0,
+    "r_t_arcsec": 0.5,
+    "pa_deg": 200.0,
+    "i_deg": 43.8,
+    "vsys_optical_kms": 8299.563000000002,
+    "gas_sigma_kms": 10.0,
+    "dx_arcsec": 0.0,
+    "dy_arcsec": 0.0
+  },
+  "bounds": {
+    "v0_kms": [
+      180.0,
+      320.0
+    ],
+    "r_t_arcsec": [
+      0.05,
+      2.0
+    ],
+    "pa_deg": [
+      185.0,
+      220.0
+    ],
+    "i_deg": [
+      35.0,
+      55.0
+    ],
+    "vsys_optical_kms": [
+      8250.0,
+      8400.0
+    ],
+    "gas_sigma_kms": [
+      5.0,
+      30.0
+    ]
+  },
+  "n_clouds": 100000,
+  "n_clouds_de": 50000,
+  "flux_floor_frac": 0.001,
+  "phase_center": [
+    0.0,
+    0.0
+  ],
+  "deproject_inclouds": true,
+  "sb_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/mock_controlled/mock_cube_truth.fits"
+}

@@ -1,0 +1,9 @@
+{
+  "status": "wrote_mock_figure",
+  "figure": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/mock_controlled/mock_benchmark.png",
+  "moments": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/mock_controlled/mock_moments_comparison.png",
+  "truth_inner_slope": 236.66162541545773,
+  "kinuv_inner_slope": 237.11258937503777,
+  "kinms_parametric_slope": 265.09498792972494,
+  "kinms_m1_slope": NaN
+}

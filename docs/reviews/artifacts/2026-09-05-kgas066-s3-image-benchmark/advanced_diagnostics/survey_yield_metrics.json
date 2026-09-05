@@ -1,0 +1,83 @@
+{
+  "status": "wrote_ska_volume_yield",
+  "note": "Comoving-volume integral of the ALFALFA Schechter function over 20000 deg2. Analytic SNR and size cuts only. Not an SKA visibility simulation. Not a KGAS066 fit. quote_inner_slope false on real data.",
+  "survey": {
+    "sky_deg2": 20000.0,
+    "omega_sky_sr": 6.092348395734171,
+    "z_max": 0.35,
+    "H0": 70.0,
+    "Om0": 0.3,
+    "Ol0": 0.7,
+    "volume_mpc3": 5285059576.605127,
+    "theta_beam_arcsec": 7.0,
+    "dv_kms": 10.0,
+    "sigma_chan_ujy": 70.0,
+    "phi_star_mpc3_dex": 0.0045,
+    "alpha": -1.3,
+    "log_mstar": 9.96,
+    "wang2016": "log10(D_HI/kpc) = 0.506 log10(M_HI) - 3.293",
+    "r_t_over_R_HI": 0.18,
+    "s_peak": "M_HI / (2.356e5 D_L^2 W_50) Jy, as written; no beam dilution",
+    "W_50": "(2 V_rot sin i + 15 km/s) (1+z); V_rot=130 (M/1e10)^0.25 km/s"
+  },
+  "cuts": {
+    "detect": {
+      "snr_int": 5.0,
+      "snr_chan": 4.0
+    },
+    "cube": {
+      "d_beams": 3.5,
+      "rt_beams": 0.6,
+      "snr": 10.0
+    },
+    "kinuv": {
+      "d_beams": 1.2,
+      "snr": 5.0,
+      "astrometric": "r_t/theta_beam >= 1/(2 SNR_chan)"
+    }
+  },
+  "totals_z035": {
+    "z": 0.35,
+    "n_detect": 3514695.324589032,
+    "n_kinuv": 2632230.0622974113,
+    "n_cube": 149841.60795515313,
+    "n_kinuv_exclusive": 2482388.454342258,
+    "multiplier": 17.566749971644892
+  },
+  "cumulative": [
+    {
+      "z": 0.05,
+      "n_detect": 681333.0624673546,
+      "n_kinuv": 595140.2039459674,
+      "n_cube": 88503.62864573435,
+      "n_kinuv_exclusive": 506636.57530023303,
+      "multiplier": 6.724472352746314
+    },
+    {
+      "z": 0.1,
+      "n_detect": 2001228.8897839221,
+      "n_kinuv": 1657971.0934014982,
+      "n_cube": 140836.4817077849,
+      "n_kinuv_exclusive": 1517134.6116937133,
+      "multiplier": 11.772312637300509
+    },
+    {
+      "z": 0.2,
+      "n_detect": 3350125.682459688,
+      "n_kinuv": 2555675.9571304647,
+      "n_cube": 149822.1606281146,
+      "n_kinuv_exclusive": 2405853.79650235,
+      "multiplier": 17.058063683076295
+    },
+    {
+      "z": 0.3,
+      "n_detect": 3508539.48628251,
+      "n_kinuv": 2630546.7051309114,
+      "n_cube": 149841.60014442654,
+      "n_kinuv_exclusive": 2480705.104986485,
+      "multiplier": 17.555516642877738
+    }
+  ],
+  "figure": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/advanced_diagnostics/fig_ska_survey_kinuv_impact.png",
+  "quote_inner_slope_real_data": false
+}

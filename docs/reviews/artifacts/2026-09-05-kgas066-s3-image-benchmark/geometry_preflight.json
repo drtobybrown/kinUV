@@ -1,0 +1,18 @@
+{
+  "major_half_amp_kms": 159.82978609816882,
+  "major_amp_ok": true,
+  "minor_max_dev_kms": 23.226266172274336,
+  "minor_flat_ok": true,
+  "m0_data_extent_arcsec": 7.84920378127679,
+  "m0_model_extent_arcsec": 7.495331880577928,
+  "extent_ok": true,
+  "m0_pa_deg": 161.31345214408032,
+  "m0_pa_err_deg": 38.38654785591967,
+  "m0_pa_ok": true,
+  "m0_pa_note": "Morphological PA of a b/a~0.72 disk is weakly constrained; kinematic major/minor PV is the geometry gate",
+  "expected_vlos_kms": 173.35045706895323,
+  "v_cube_mid_kms": 8305.53317411156,
+  "transpose": "(2, 1, 0) KinMS (nx,ny,nv) -> FITS (nv,ny,nx)",
+  "sb_mode": "sbProf_from_M0_elliptical",
+  "pass": true
+}

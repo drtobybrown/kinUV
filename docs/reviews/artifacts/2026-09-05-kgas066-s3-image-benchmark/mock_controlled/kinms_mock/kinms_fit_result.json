@@ -1,0 +1,66 @@
+{
+  "success": true,
+  "message": "sbProf nSamps=100000; DE nfev=468; polish CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+  "sb_mode": "sbProf_from_M0_elliptical",
+  "n_clouds": 100000,
+  "n_clouds_de": 50000,
+  "de_workers": 12,
+  "phase_center_arcsec": [
+    0.0,
+    0.0
+  ],
+  "sb_pa_deg": 200.0,
+  "sb_inc_deg": 43.8,
+  "v_cube_mid_kms": 8305.53317411156,
+  "m0_data_extent_arcsec": 7.641989269817736,
+  "m0_model_extent_arcsec": 7.570997292299761,
+  "extent_ok": true,
+  "fitted": {
+    "v0_kms": 275.8661215829501,
+    "r_t_arcsec": 0.39525150014953636,
+    "pa_deg": 198.55862074421051,
+    "i_deg": 42.537564782625374,
+    "vsys_optical_kms": 8299.813427593299,
+    "gas_sigma_kms": 9.744645326012787,
+    "flux_scale": 97.92848831394696
+  },
+  "chi2_cube": 126.69024893437708,
+  "nfev": 475,
+  "init": {
+    "v0_kms": 250.0,
+    "r_t_arcsec": 0.5,
+    "pa_deg": 200.0,
+    "i_deg": 43.8,
+    "vsys_optical_kms": 8299.563000000002,
+    "gas_sigma_kms": 10.0,
+    "dx_arcsec": 0.0,
+    "dy_arcsec": 0.0
+  },
+  "bounds": {
+    "v0_kms": [
+      180.0,
+      320.0
+    ],
+    "r_t_arcsec": [
+      0.05,
+      2.0
+    ],
+    "pa_deg": [
+      185.0,
+      220.0
+    ],
+    "i_deg": [
+      35.0,
+      55.0
+    ],
+    "vsys_optical_kms": [
+      8250.0,
+      8400.0
+    ],
+    "gas_sigma_kms": [
+      5.0,
+      30.0
+    ]
+  },
+  "last_error": null
+}

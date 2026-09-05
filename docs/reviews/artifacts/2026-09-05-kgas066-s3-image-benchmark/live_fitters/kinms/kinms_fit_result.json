@@ -1,0 +1,50 @@
+{
+  "success": true,
+  "message": "DE nfev=90; polish CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+  "fitted": {
+    "v0_kms": 170.93420558686557,
+    "r_t_arcsec": 3.925494637082105,
+    "pa_deg": 162.0395096490746,
+    "i_deg": 49.43974570485261,
+    "vsys_optical_kms": 8394.968630935955,
+    "gas_sigma_kms": 48.91545910388268,
+    "flux_scale": 18.076252897976023
+  },
+  "chi2_cube": 717.253227142264,
+  "nfev": 97,
+  "init": {
+    "v0_kms": 200.0,
+    "r_t_arcsec": 1.04,
+    "pa_deg": 205.2,
+    "i_deg": 43.85986559577437,
+    "vsys_optical_kms": 8299.563,
+    "gas_sigma_kms": 10.0
+  },
+  "bounds": {
+    "v0_kms": [
+      0.0,
+      600.0
+    ],
+    "r_t_arcsec": [
+      0.01,
+      5.0
+    ],
+    "pa_deg": [
+      150.0,
+      250.0
+    ],
+    "i_deg": [
+      20.0,
+      70.0
+    ],
+    "vsys_optical_kms": [
+      8250.0,
+      8400.0
+    ],
+    "gas_sigma_kms": [
+      2.0,
+      50.0
+    ]
+  },
+  "last_error": null
+}

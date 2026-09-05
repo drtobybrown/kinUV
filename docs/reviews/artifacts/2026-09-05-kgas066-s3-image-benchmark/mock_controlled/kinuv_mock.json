@@ -1,0 +1,45 @@
+{
+  "status": "ran",
+  "truth": {
+    "flux": 70.0,
+    "pa_deg": 200.0,
+    "vsys_kms": 8075.984519235097,
+    "gas_sigma_kms": 10.0,
+    "dx_arcsec": 0.0,
+    "dy_arcsec": 0.0,
+    "v0_kms": 250.0,
+    "r_t_arcsec": 0.25,
+    "i_deg": 43.8
+  },
+  "fitted": {
+    "flux": 70.4351329773458,
+    "pa_deg": 200.01654852422064,
+    "vsys_kms": 8076.002580161564,
+    "gas_sigma_kms": 10.11024070546306,
+    "dx_arcsec": -0.004401306061271366,
+    "dy_arcsec": 0.0030658189974609633,
+    "v0_kms": 249.80654319683345,
+    "r_t_arcsec": 0.2526758334098491
+  },
+  "recovery": {
+    "r_eval_arcsec": 0.325,
+    "bmaj_arcsec": 1.3,
+    "slope_truth_kms_per_arcsec": 236.66162541545773,
+    "slope_vis_kms_per_arcsec": 237.11258937503777,
+    "delta_v0_kms": -0.1934568031665549,
+    "delta_sigma_kms": 0.11024070546305964,
+    "delta_slope_kms_per_arcsec": 0.45096395958003654,
+    "pass_v0": true,
+    "pass_sigma": true,
+    "i_held_fixed": true,
+    "i_deg": 43.86289587982063,
+    "h_z_in_model": false,
+    "pol": "XX",
+    "s": 0.5229109504791616,
+    "pipeline_kernel": "hann_then_bin"
+  },
+  "inner_slope_fit_kms_per_arcsec": 237.11258937503777,
+  "mock_inner_slope_recovered": true,
+  "quote_inner_slope": true,
+  "note": "mock only; inner slope recovery is licensed on synthetic truth"
+}

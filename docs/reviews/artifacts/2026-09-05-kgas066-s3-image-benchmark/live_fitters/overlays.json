@@ -1,10 +1,10 @@
 {
-  "quote_inner_slope": false,
-  "intervals_calibrated": false,
-  "leftover_gate": "SB-dominated",
-  "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
-  "status": "wrote_overlays",
-  "pv": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/pv_major_minor.png",
-  "moments": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/moments_slices.png",
-  "kinuv_nuts_r_t_arcsec": 0.22392216472996415
+  "status": "wrote_publication_panels",
+  "pv": "docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/pv_comparison_real.png",
+  "moments": "docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/moments_comparison_real.png",
+  "rotation_curves": "docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/rotation_curves_real.png",
+  "vsys_optical_kms": 8323.63275478255,
+  "kinuv_map": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map",
+  "kinms_cube": "docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms_best/model_cube.fits",
+  "quote_inner_slope": false
 }

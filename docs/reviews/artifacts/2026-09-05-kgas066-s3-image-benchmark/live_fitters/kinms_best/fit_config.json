@@ -1,0 +1,49 @@
+{
+  "cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+  "mask": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+  "work": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms_best",
+  "init": {
+    "v0_kms": 200.0,
+    "r_t_arcsec": 1.04,
+    "pa_deg": 205.2,
+    "i_deg": 43.85986559577437,
+    "vsys_optical_kms": 8323.6,
+    "gas_sigma_kms": 10.0,
+    "dx_arcsec": 0.09104737371760792,
+    "dy_arcsec": 0.018566961155444102
+  },
+  "bounds": {
+    "v0_kms": [
+      180.0,
+      320.0
+    ],
+    "r_t_arcsec": [
+      0.05,
+      2.0
+    ],
+    "pa_deg": [
+      185.0,
+      220.0
+    ],
+    "i_deg": [
+      35.0,
+      55.0
+    ],
+    "vsys_optical_kms": [
+      8250.0,
+      8400.0
+    ],
+    "gas_sigma_kms": [
+      5.0,
+      30.0
+    ]
+  },
+  "n_clouds": 100000,
+  "n_clouds_de": 50000,
+  "phase_center": [
+    0.09104737371760792,
+    0.018566961155444102
+  ],
+  "sb_pa_deg": 199.7,
+  "sb_inc_deg": 43.9
+}

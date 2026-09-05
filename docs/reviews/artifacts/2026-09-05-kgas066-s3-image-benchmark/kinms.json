@@ -2,15 +2,58 @@
   "quote_inner_slope": false,
   "intervals_calibrated": false,
   "leftover_gate": "SB-dominated",
-  "note": "vis chi2 is the fit; quote_inner_slope: false. Cube tools are comparators. Do not quote inner dV/dr.",
+  "note": "vis chi2 is the fit; quote_inner_slope: false. KinMS is an image-plane comparator fit to the cube. Init from kinUV Stage A catalogue seeds only; no kinUV posterior conditioning.",
   "tool": "KinMS",
   "ran": true,
   "status": "ran",
   "kinms_module": "/arc/projects/KILOGAS/analysis/toby_sandbox/external_fitters/venv/lib/python3.12/site-packages/kinms/__init__.py",
-  "parameterization": "arctan V=V0*(2/pi)*arctan(r/r_t) matching kinUV",
-  "r_t_arcsec": 0.22392216472996415,
-  "v0_kms": 254.9834109292598,
-  "pa_deg": 200.05,
-  "i_deg": 43.86,
-  "cube_npy": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms/kinms_arctan_cube.npy"
+  "init": {
+    "v0_kms": 200.0,
+    "r_t_arcsec": 1.04,
+    "pa_deg": 205.2,
+    "i_deg": 43.85986559577437,
+    "vsys_optical_kms": 8299.563,
+    "gas_sigma_kms": 10.0
+  },
+  "bounds": {
+    "v0_kms": [
+      0.0,
+      600.0
+    ],
+    "r_t_arcsec": [
+      0.01,
+      5.0
+    ],
+    "pa_deg": [
+      150.0,
+      250.0
+    ],
+    "i_deg": [
+      20.0,
+      70.0
+    ],
+    "vsys_optical_kms": [
+      8250.0,
+      8400.0
+    ],
+    "gas_sigma_kms": [
+      2.0,
+      50.0
+    ]
+  },
+  "init_source": "kinUV Stage A catalogue seeds; no kinUV posterior",
+  "sb_mode": "gaussian_sbProf",
+  "fitted": {
+    "v0_kms": 170.93420558686557,
+    "r_t_arcsec": 3.925494637082105,
+    "pa_deg": 162.0395096490746,
+    "i_deg": 49.43974570485261,
+    "vsys_optical_kms": 8394.968630935955,
+    "gas_sigma_kms": 48.91545910388268,
+    "flux_scale": 18.076252897976023
+  },
+  "chi2_cube": 717.253227142264,
+  "nfev": 97,
+  "n_clouds": null,
+  "model_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms/model_cube.fits"
 }
