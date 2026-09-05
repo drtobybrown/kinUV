@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
 last_propose: docs/reviews/2026-09-05-propose-ico-10-vs-30-and-figure-closeout.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-05-review-a-kgas007-nuts-revise.md
-last_review_b: docs/reviews/2026-09-05-review-b-kgas007-nuts-revise.md
+last_review_a: docs/reviews/2026-09-05-review-a-ico-10-vs-30-and-figure-closeout.md
+last_review_b: docs/reviews/2026-09-05-review-b-ico-10-vs-30-and-figure-closeout.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/
 open_questions: []
 deadlocks: []
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** Propose official 10 vs 30 Ico probe + S3 figure closeout
-* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels. Ico card board open
-* **Next Step:** Dual board on `2026-09-05-propose-ico-10-vs-30-and-figure-closeout.md`. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
+* **Last Action:** Dual accept (major) Ico 10 vs 30 + figure closeout; execute
+* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s this card (archive-only gate)
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
+* **Next Step:** Run official 10 vs 30 Ico probe + figure honesty audit. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (Ico 10 vs 30 tally).** Dual accept (major): `review-a-ico-10-vs-30-and-figure-closeout` and `review-b-ico-10-vs-30-and-figure-closeout`. Execute majors: production `load_sb_template` \(K=(0.02)^2\) (empty-corner \(n=0\) on both stamps; review-a empty-corner path cannot run). 30 km/s identity `|chi2-168675.6|<1`. \(B=\mathrm{hypot}(*\mathrm{vis\_uv\_wavelengths})\). Lock 30 km/s in all cases this card (artifact + STATUS only). Do not edit `DEC-066-SB.md` / `sb.py`. Label “10 km/s Ico product (Briggs)”, not Δv A/B. No G4. 007 pending four ids untouched.
 
 **2026-09-05 (Ico 10 vs 30 + figure closeout propose).** Board open. Candidate is official `.../10kms/KGAS66_Ico_K_kms-1.fits` (not cube M0). Conditional χ² at official MAP θ only. Lock 30 km/s unless long-baseline Δχ² < −9 and no high-k P(k) amplification. No SB-v2. No new 066 NUTS. No G4. 007 pending four ids untouched.
 
