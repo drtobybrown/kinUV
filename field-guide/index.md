@@ -4,7 +4,7 @@ Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-IND
 
 ## Mailbox
 
-Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated (`pa25/failure.md`). Closure + S3/007-MAP card on board. Do not start G4.
+Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated (`pa25/failure.md`). 2026-09-05 S3 shipped from S1 (PATH miss). 007 diagnostic MAP PA=151.6° Δχ²=+6212. Do not start G4.
 
 ## Gates (implementer decides)
 

@@ -1,0 +1,11 @@
+{
+  "tool": "KinMS",
+  "ran": false,
+  "cube_dir": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms",
+  "quote_inner_slope": false,
+  "intervals_calibrated": false,
+  "leftover_gate": "SB-dominated",
+  "note": "Comparator only. vis chi2 is the kinUV fit. This file is the only licensed KinMS import site.",
+  "status": "missing",
+  "error": "ModuleNotFoundError"
+}

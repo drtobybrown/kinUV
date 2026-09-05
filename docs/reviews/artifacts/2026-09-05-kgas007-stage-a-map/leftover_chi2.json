@@ -1,0 +1,27 @@
+{
+  "chi2_sum": 122070.76264784014,
+  "leftover_chi2_structured": false,
+  "leftover_uv_span": 0.7369988521984002,
+  "leftover_vel_span": 0.21380140044000942,
+  "quote_inner_slope": false,
+  "n_row": 956,
+  "n_chan": 66,
+  "s": 0.5707350424544269,
+  "params": {
+    "flux": 16.520990388784,
+    "pa_deg": 151.60246996291383,
+    "vsys_kms": 13554.477987837307,
+    "gas_sigma_kms": 11.254317000289888,
+    "dx_arcsec": -0.018618208613728593,
+    "dy_arcsec": -0.09096900872440915,
+    "v0_kms": 195.98447930318733,
+    "r_t_arcsec": 0.5
+  },
+  "note": "KGAS007 diagnostic Stage A leftover. TARGET stays KGAS066 only. sampler is map. No 007 NUTS. Official 066 MAP untouched. Do not quote inner dV/dr.",
+  "updated_at": "2026-09-05T12:11:22Z",
+  "galaxy": "KGAS007",
+  "diagnostic_only": true,
+  "dec_066_target_amended": false,
+  "sampler": "map",
+  "i_deg_frozen": 28.9
+}

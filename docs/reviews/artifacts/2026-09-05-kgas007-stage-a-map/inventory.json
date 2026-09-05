@@ -1,0 +1,30 @@
+{
+  "galaxy": "KGAS007",
+  "diagnostic_only": true,
+  "dec_066_target_amended": false,
+  "searched": {
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS007.npz": true,
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KGAS007.npz": false,
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS7.npz": false,
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms": true,
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS007/30kms": false,
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/../KGAS7": true,
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/uvkin/config/uvkin_settings.yaml": true
+  },
+  "vis": "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS007.npz",
+  "ico": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_Ico_K_kms-1.fits",
+  "cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_clipped_cube.fits",
+  "catalogue": "/arc/projects/KILOGAS/analysis/toby_sandbox/uvkin/config/uvkin_settings.yaml",
+  "catalogue_overrides": {
+    "ra_deg": 146.576065,
+    "dec_deg": 2.88434,
+    "vsys_optical_kms": 14229.0,
+    "pa_deg": 212.6,
+    "i_deg": 28.9
+  },
+  "sampler": "map",
+  "note": "TARGET stays KGAS066 only. This tree is a diagnostic. No 007 NUTS. Official 066 MAP untouched.",
+  "status": "map_written",
+  "delta_chi2": 6211.629482170902,
+  "chi2_map": 122070.76264784014
+}

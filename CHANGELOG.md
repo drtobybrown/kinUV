@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-05 — 066 S3 from S1; KGAS007 diagnostic MAP
+
+Dual accept (major) on closure + KinMS S3 + 007 MAP. 3DBarolo and KinMS missing on PATH; S3 restates S1 (truth r_t 0.25″ / vis 0.254″ / CLEAN M1 94.7 vs 236.7) vs NUTS **mean** r_t 0.2239″. No packages added to the recovery venv. KinMS stays under `external/`. KGAS007 diagnostic Stage A MAP: i=28.9°, PA 151.6°, Δχ² vs V=0 = +6212, `sampler: map`; TARGET stays 066; no 007 NUTS. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-05 — approaching search terminated; 066 unimodal
 
 Recovery job `j395zq60` SUCCEEDED. L-BFGS from official MAP θ + PA=25.2 walked back to 199.73°. Catalogue 25.2 start Δχ²=4260 vs receding 35553. `pa25/failure.md` closes approaching. Receding NUTS `sd3ckpf2` is the 066 posterior (V_0 255 km/s, r_t 0.224″, chi2 167486.8). Serial `xgepg7qy` deleted. Official MAP unchanged. Do not start G4.

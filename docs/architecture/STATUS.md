@@ -2,15 +2,15 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: idle
+board: idle
 build_licensed: true
 pending: []
 last_propose: docs/reviews/2026-09-05-propose-kgas066-closure-and-kinms-benchmark.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-03-review-a-approaching-recovery.md
-last_review_b: docs/reviews/2026-09-03-review-b-approaching-recovery.md
-user_review: docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/
+last_review_a: docs/reviews/2026-09-05-review-a-kgas066-closure-and-kinms-benchmark.md
+last_review_b: docs/reviews/2026-09-05-review-b-kgas066-closure-and-kinms-benchmark.md
+user_review: docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/
 open_questions: []
 deadlocks: []
 canon_generation: 4
@@ -18,15 +18,19 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** approaching search terminated; 066 closure + S3/007-MAP propose on board
-* **Last Action:** `j395zq60` SUCCEEDED 2026-09-03T21:40Z. Serial `xgepg7qy` deleted. Propose `docs/reviews/2026-09-05-propose-kgas066-closure-and-kinms-benchmark.md`
-* **Decisions Made:** Approaching closed (`pa25/failure.md`). Canonical 066 posterior is receding NUTS `sd3ckpf2` (PA 200.05°, V_0 255 km/s, r_t 0.224″, chi2 167486.8). Official MAP read-only. Do not start G4
-* **Blockers / Gates:** leftover_chi2_structured True (SB-dominated). 16/50/84 not calibrated. quote_inner_slope false. User TARGET stub requested for 007 MAP
-* **Next Step:** Dual review. No approaching NUTS. No 007 NUTS. Official MAP unchanged. Do not start G4
+* **Phase:** 066 closure executed (dual accept major)
+* **Last Action:** S3 from S1 (Barolo/KinMS missing on PATH). 007 Stage A MAP diagnostic if catalogue i/PA/vsys exist. No 007 NUTS. No G4
+* **Decisions Made:** Approaching closed. Receding `sd3ckpf2` is the 066 NUTS product (V_0 255 km/s, r_t mean 0.224″). Official MAP read-only. TARGET stays 066
+* **Blockers / Gates:** leftover SB-dominated. quote_inner_slope false. intervals_calibrated false. 3DBarolo/KinMS not on PATH
+* **Next Step:** Human review S3 folder + 007 leftover if the diagnostic MAP wrote. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
 
-**2026-09-05 (066 closure + KinMS/007 MAP propose).** Approaching terminated. Receding `sd3ckpf2` is the 066 NUTS product. Board open: external 3DBarolo+KinMS S3 on 10 km/s cube; KGAS007 Stage A MAP only. User TARGET stub requested (agents do not write DEC-*). Official MAP unchanged. Do not start G4.
+**2026-09-05 (066 closure execute).** S3 `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/`: Barolo `missing_on_path`, KinMS `missing`; table restates S1 vs NUTS **mean** r_t 0.2239″ (`quote_inner_slope: false`). No packages added to recovery. 007 diagnostic MAP wrote `results/KILOGAS007/kinuv-KGAS007-stage-a-map/` (and leftover PNG under `docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/`): i frozen 28.9°, both PA starts → 151.6°, V_0=196 km/s, r_t=0.5″ floor, χ²=122071, Δχ² vs V=0 = +6212, `sampler: map`. TARGET unamended. No 007 NUTS. Official MAP unchanged.
+
+**2026-09-05 (066 closure tally).** Dual accept (major): `review-a-kgas066-closure-and-kinms-benchmark` and `review-b-kgas066-closure-and-kinms-benchmark`. Execute: vis χ² is the only likelihood; KinMS only in `external/kinms_kgas66.py`; Barolo CLI subprocess; S3 leftover_gate SB-dominated; NUTS **mean** r_t ~0.2239″ not a science inner scale; 007 is a diagnostic new tree or stop; no nuts kind; no steal of KGAS066-latest; no pip into recovery; no G4. Official MAP unchanged.
+
+**2026-09-05 (066 closure + KinMS/007 MAP propose).** Approaching terminated. Receding `sd3ckpf2` is the 066 NUTS product. Board was open: external 3DBarolo+KinMS S3; KGAS007 Stage A MAP only. User TARGET stub requested (agents do not write DEC-*). Official MAP unchanged. Do not start G4.
 
 **2026-09-03 (approaching recovery done).** Session `j395zq60` SUCCEEDED. Catalogue 25.2 Δχ²=4260; MAP-θ + PA=25.2 walked to 199.73°. `pa25/failure.md` terminates the approaching search. Serial `xgepg7qy` deleted. Official MAP unchanged. Do not start G4.
 

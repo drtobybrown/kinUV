@@ -68,13 +68,15 @@ def write_corner(rec: dict, dest: Path, *, title: str = CORNER_TITLE) -> Path:
     return plot_posterior_corner(rec, dest, title=title)
 
 
-def write_leftover_at_params(params: dict, dest: Path, *, data, tmpl, grid) -> dict:
+def write_leftover_at_params(
+    params: dict, dest: Path, *, data, tmpl, grid, i_rad=None
+) -> dict:
     from kinuv.diagnostics.s1 import leftover_chi2
     from kinuv.infer.map import predict_binned
 
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
-    model = predict_binned(data, params, tmpl, grid, xla=True)
+    model = predict_binned(data, params, tmpl, grid, i_rad=i_rad, xla=True)
     b_m, per_row, vel, per_chan = leftover_chi2(data, model)
     total = float(np.sum(per_row))
     structured = leftover_velocity_structured(b_m, per_row, per_chan)

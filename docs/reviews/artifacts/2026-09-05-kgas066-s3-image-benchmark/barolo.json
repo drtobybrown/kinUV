@@ -1,0 +1,33 @@
+{
+  "tool": "3DBarolo",
+  "ran": false,
+  "executable": null,
+  "cube_dir": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms",
+  "cube_fits": [
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1_err.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1_ul.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2_err.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2_ul.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2_err.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2_ul.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1_err.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1_ul.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom0_SN.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom1.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom1_err.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom2.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom2_err.fits",
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_peak_temp_k.fits"
+  ],
+  "note": "Comparator only. vis chi2 = s * sum w |d-m|^2 is the kinUV fit. 3DBarolo was not on PATH for S1 (2026-08-29).",
+  "quote_inner_slope": false,
+  "intervals_calibrated": false,
+  "leftover_gate": "SB-dominated",
+  "status": "missing_on_path"
+}

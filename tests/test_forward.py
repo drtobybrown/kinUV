@@ -58,12 +58,46 @@ def _ico_path():
 
 def test_no_uvkin_or_kinms_import():
     repo = Path(__file__).resolve().parents[1]
-    banned = ("from kinms", "import kinms", "from uvkin", "import uvkin")
-    for root in (repo / "src" / "kinuv", repo / "scripts"):
-        for path in root.rglob("*.py"):
+    banned = (
+        "from kinms",
+        "import kinms",
+        "from uvkin",
+        "import uvkin",
+        'importlib.import_module("kinms")',
+        "importlib.import_module('kinms')",
+        '__import__("kinms")',
+        "__import__('kinms')",
+        "kinms_kgas66",
+        "pip install kinms",
+        "pip install kinms",
+    )
+    roots = [repo / "src" / "kinuv", repo / "scripts"]
+    for extra in ("tools", "bin"):
+        p = repo / extra
+        if p.is_dir():
+            roots.append(p)
+    for path in repo.glob("*.py"):
+        roots.append(path.parent)
+    seen = set()
+    for root in roots:
+        for path in Path(root).rglob("*.py"):
+            if path in seen:
+                continue
+            seen.add(path)
+            if path.resolve() == (repo / "external" / "kinms_kgas66.py").resolve():
+                continue
             text = path.read_text(encoding="utf-8").lower()
             for needle in banned:
                 assert needle not in text, f"{path} contains {needle}"
+            if "sys.path" in text and "external" in text:
+                raise AssertionError(f"{path} inserts external/ onto sys.path")
+
+
+def test_scripts_have_no_pip_install():
+    repo = Path(__file__).resolve().parents[1]
+    for path in (repo / "scripts").rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        assert "pip install" not in text, f"{path} contains pip install"
 
 
 def test_receding_major_axis_is_redshifted():

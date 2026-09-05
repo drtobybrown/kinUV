@@ -1,0 +1,78 @@
+{
+  "likelihood": "vis chi2 = s * sum w |d-m|^2 on 881x95; cube fitters are comparators",
+  "leftover_gate": "SB-dominated",
+  "quote_inner_slope": false,
+  "intervals_calibrated": false,
+  "nuts_mean_r_t_arcsec": 0.22392216472996415,
+  "nuts_mean_v0_kms": 254.9834109292598,
+  "chi2_nuts_mean": 167486.7639374534,
+  "s1": {
+    "truth_r_t_arcsec": 0.25,
+    "vis_r_t_arcsec": 0.254,
+    "clean_m1_inner_slope": 94.7,
+    "truth_inner_slope": 236.7,
+    "clean_m2": 56.1,
+    "truth_gas_sigma": 8.0,
+    "barolo_on_path_in_s1": false,
+    "note": "3DBarolo was not on PATH for S1; cube estimator was restoring-beam M1/M2"
+  },
+  "receding_nuts": {
+    "session": "sd3ckpf2",
+    "sampler": "nuts",
+    "mixing_pass": true,
+    "pa_deg_mean": 200.05,
+    "v0_kms_mean": 254.9834109292598,
+    "r_t_arcsec_mean": 0.22392216472996415,
+    "chi2": 167486.7639374534,
+    "quote_inner_slope": false,
+    "intervals_calibrated": false
+  },
+  "barolo": {
+    "tool": "3DBarolo",
+    "ran": false,
+    "executable": null,
+    "cube_dir": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms",
+    "cube_fits": [
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1_err.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Ico_K_kms-1_ul.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2_err.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_Lco_K_kms-1_pc2_ul.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2_err.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pc-2_ul.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1_err.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mmol_pix-1_ul.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom0_SN.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom1.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom1_err.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom2.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mom2_err.fits",
+      "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_peak_temp_k.fits"
+    ],
+    "note": "Comparator only. vis chi2 = s * sum w |d-m|^2 is the kinUV fit. 3DBarolo was not on PATH for S1 (2026-08-29).",
+    "quote_inner_slope": false,
+    "intervals_calibrated": false,
+    "leftover_gate": "SB-dominated",
+    "status": "missing_on_path"
+  },
+  "kinms": {
+    "tool": "KinMS",
+    "ran": false,
+    "cube_dir": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms",
+    "quote_inner_slope": false,
+    "intervals_calibrated": false,
+    "leftover_gate": "SB-dominated",
+    "note": "Comparator only. vis chi2 is the kinUV fit. This file is the only licensed KinMS import site.",
+    "status": "missing",
+    "error": "ModuleNotFoundError"
+  },
+  "geometry_soak": {
+    "kinuv_i_frozen_deg": 43.86,
+    "note": "kinUV does not unfreeze i. Cube-fitter Delta i if a tool ran; not a harmonic amplitude."
+  }
+}

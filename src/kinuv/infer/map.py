@@ -294,17 +294,30 @@ def _result(params, c, c0, dchi, data, eval_s, nfev, success, ran, message, pa_s
 
 
 def _lbfgs_one_start(
-    data, template, grid, seeds, eval_s, maxiter, pa_start, extra_bounds=None
+    data,
+    template,
+    grid,
+    seeds,
+    eval_s,
+    maxiter,
+    pa_start,
+    extra_bounds=None,
+    i_rad=None,
+    xla=False,
 ):
     offsets = _offsets(seeds)
     params = dict(seeds)
-    unit = predict_binned(data, params, template, grid)
+    unit = np.asarray(
+        predict_binned(data, params, template, grid, i_rad=i_rad, xla=xla)
+    )
     params["flux"] = _optimal_flux(data.vis, unit, data.weights)
     nfev = {"n": 0}
 
     def fun(z):
         p = _unpack(z, offsets)
-        model_z = predict_binned(data, p, template, grid)
+        model_z = np.asarray(
+            predict_binned(data, p, template, grid, i_rad=i_rad, xla=xla)
+        )
         c_z = chi2(data.vis, model_z, data.weights, data.s)
         return map_objective(c_z, p["dx_arcsec"], p["dy_arcsec"])
 
@@ -331,7 +344,9 @@ def _lbfgs_one_start(
         options={"maxiter": int(maxiter), "ftol": 1e-9},
     )
     params = _unpack(opt.x, offsets)
-    model = predict_binned(data, params, template, grid)
+    model = np.asarray(
+        predict_binned(data, params, template, grid, i_rad=i_rad, xla=xla)
+    )
     c, c0, dchi = map_gate_scores(data.vis, model, data.weights, data.s)
     return _result(
         params,
