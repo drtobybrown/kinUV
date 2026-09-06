@@ -18,15 +18,23 @@ from .kinms_benchmark import (
     major_axis_rotation_profile,
     write_cube_benchmark,
 )
+from .comparator import (
+    INTRINSIC_SCHEMA_VERSION,
+    load_intrinsic_kinms_cube,
+    sample_intrinsic_kinms,
+)
 
 __all__ = [
+    "INTRINSIC_SCHEMA_VERSION",
     "map_quality_flags",
     "jy_per_pixel_to_k",
+    "load_intrinsic_kinms_cube",
     "match_model_to_imaging",
     "masked_moments",
     "offset_world",
     "pv_diagram",
     "radio_header_velocity_kms",
+    "sample_intrinsic_kinms",
     "aperture_spectrum",
     "cube_metrics",
     "major_axis_rotation_profile",

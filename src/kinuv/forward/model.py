@@ -25,11 +25,10 @@ from kinuv.profiles.rotation import (
     arctan_vc,
     ring_vc,
 )
-from kinuv.response.primary_beam import attenuate, primary_beam
 from kinuv.template.fourier_shift import fourier_shift
 from kinuv.transforms.grid import ImageGrid
-from kinuv.transforms.nufft import nufft2_degrid
 
+from .operators import attenuate_intrinsic_cube, sample_intrinsic_cube_native
 from .sb import image_grid_xy_arcsec
 
 VSYS_SEED_KM_S = 8299.563
@@ -97,8 +96,8 @@ def _gaussian_pdf(v_kms, v_los, sigma_kms):
     return xp.exp(-0.5 * delta**2) / (sig * xp.sqrt(2.0 * xp.pi))
 
 
-@requires("DEC-066-PB", "DEC-066-SHIFT", "DEC-066-VC", "DEC-066-PA", "DEC-066-INC")
-def sky_cube(
+@requires("DEC-066-SHIFT", "DEC-066-VC", "DEC-066-PA", "DEC-066-INC")
+def intrinsic_sky_cube(
     template,
     grid: ImageGrid,
     freqs_hz,
@@ -116,7 +115,7 @@ def sky_cube(
     v_knots_kms=None,
     velocity_profile=None,
 ):
-    """Attenuated sky cube ``(ny, nx, n_chan)`` in Jy/pixel (native channels).
+    """Intrinsic pre-PB cube ``(ny, nx, n_chan)`` in Jy/pixel.
 
     Spatial interpolator is :func:`fourier_shift` on the template. ``A`` is
     evaluated at the phase centre, not ``(dx, dy)``. Kinematics follow the
@@ -133,7 +132,6 @@ def sky_cube(
         raise TypeError("sky_cube freqs_hz must be NumPy; dv is a host scalar")
     freqs_host = np.asarray(freqs_hz, dtype=np.float64)
     dv = channel_width_kms(freqs_host)
-    nu_mid = float(np.median(freqs_host))
     freqs = xp.asarray(freqs_host)
     vel = freq_to_velocity_kms(freqs)
     shifted = fourier_shift(sb, dx_arcsec, dy_arcsec, grid.cell_arcsec)
@@ -156,11 +154,47 @@ def sky_cube(
     )
     phi = _gaussian_pdf(vel[None, None, :], v_los[:, :, None], gas_sigma_kms)
     d_omega = grid.cell_arcsec**2
-    cube = flux * shifted[:, :, None] * d_omega * phi * dv
-    ones = xp.ones((grid.ny, grid.nx), dtype=sb.dtype)
-    att = attenuate(ones, x, y, nu_mid)
-    _ = primary_beam(x, y, nu_mid)
-    return cube * att[:, :, None]
+    return flux * shifted[:, :, None] * d_omega * phi * dv
+
+
+@requires("DEC-066-PB", "DEC-066-SHIFT", "DEC-066-VC", "DEC-066-PA", "DEC-066-INC")
+def sky_cube(
+    template,
+    grid: ImageGrid,
+    freqs_hz,
+    *,
+    flux,
+    pa_rad,
+    vsys_kms,
+    dx_arcsec,
+    dy_arcsec,
+    gas_sigma_kms,
+    v0_kms: float = CALIBRATION_V0_KM_S,
+    r_t_arcsec: float = CALIBRATION_RT_ARCSEC,
+    i_rad=None,
+    r_knots_arcsec=None,
+    v_knots_kms=None,
+    velocity_profile=None,
+):
+    """Primary-beam attenuated kinUV native cube in Jy/pixel."""
+    intrinsic = intrinsic_sky_cube(
+        template,
+        grid,
+        freqs_hz,
+        flux=flux,
+        pa_rad=pa_rad,
+        vsys_kms=vsys_kms,
+        dx_arcsec=dx_arcsec,
+        dy_arcsec=dy_arcsec,
+        gas_sigma_kms=gas_sigma_kms,
+        v0_kms=v0_kms,
+        r_t_arcsec=r_t_arcsec,
+        i_rad=i_rad,
+        r_knots_arcsec=r_knots_arcsec,
+        v_knots_kms=v_knots_kms,
+        velocity_profile=velocity_profile,
+    )
+    return attenuate_intrinsic_cube(intrinsic, grid, freqs_hz)
 
 
 @requires(
@@ -196,7 +230,7 @@ def predict_vis(
 
     No visibility phase ramp after PB (DEC-066-SHIFT / PB).
     """
-    cube = sky_cube(
+    cube = intrinsic_sky_cube(
         template,
         grid,
         freqs_hz,
@@ -213,4 +247,11 @@ def predict_vis(
         v_knots_kms=v_knots_kms,
         velocity_profile=velocity_profile,
     )
-    return nufft2_degrid(grid, cube, u_m, v_m, freqs_hz, eps=eps)
+    return sample_intrinsic_cube_native(
+        cube,
+        grid,
+        u_m,
+        v_m,
+        freqs_hz,
+        eps=eps,
+    )

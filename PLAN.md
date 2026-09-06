@@ -10,11 +10,11 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Review the recovery specification.** Obtain two independent proposal verdicts on [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md); implementation remains unlicensed.
-2. **Audit evidence and fairness.** After a two-accept tally, execute S0 null/smoothness/provenance corrections and S1 intrinsic-comparator/operator closure.
-3. **Test one-factor candidates.** Execute S2--S4 geometry/covariance, joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
+1. **Close S1 review.** Obtain independent science/numerics and software/reproducibility code verdicts on the exact intrinsic-comparator implementation and durable closure dossier.
+2. **Execute S2 geometry/covariance.** Run the frozen turnover grid, twelve-start basin audit, and line-free covariance/whitening report without changing target priors or visibility selection.
+3. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
 4. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
-5. **Re-export KGAS007 through `ms2kinuv`.** Replace the historical export when its source Measurement Set becomes available.
+5. **Re-export KGAS007 through `ms2kinuv`.** Replace the historical export when its source Measurement Set becomes available; until then real grouped holdout remains blocked rather than approximated.
 
 ## Exit criteria for the next production increment
 

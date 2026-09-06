@@ -1,14 +1,15 @@
 ---
-generation: 10
-phase: s0-closed-s1-ready
+generation: 11
+phase: s1-awaiting-dual-code-review
 code_freeze: false
-next_role: senior-implementer-s1
-board: s0-accepted-s1-ready
+next_role: reviewers-a-b-s1
+board: s1-code-review-active
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s1-fair-comparator
+  - s1-dual-code-review
+  - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md
 last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md
@@ -17,16 +18,36 @@ last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 10
+canon_generation: 11
 ---
 
 ## Agent Run Status
 
-* **Phase:** S0 scientific accounting is closed; S1 fair-comparator implementation is next; MILESTONE-001 remains a sealed historical engineering baseline
-* **Last Action:** Reviewer A and Reviewer B independently accepted exact S0 commit `fb4a14543d579168c9224c8ebca6a7591147f4db`; the durable dossier and all input checksums verified
+* **Phase:** S1 intrinsic-comparator and operator-parity implementation passes its principal numerical gates and awaits exact-commit Reviewer A/B verification
+* **Last Action:** Generated beam-free KinMS 3.0.13 cubes for KGAS066 and KGAS007 through the isolated `cleanOut=True` worker; both comparator branches use kinUV's shared PB, NUFFT, and Hann/bin operator exactly once
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
 * **Blockers / Gates:** at least 199 complete non-rotating null refits for a rotation claim; a newly registered mock-calibrated Stage B criterion; legacy KGAS007 grouping may block valid real holdout; posterior intervals remain uncalibrated
-* **Next Step:** execute S1 intrinsic KinMS operator-parity closure before any new campaign
+* **Next Step:** independent Reviewer A science/numerics and Reviewer B software/reproducibility checks of the frozen S1 implementation commit
+
+## S1 operator/comparator closure
+
+The durable dossier is
+`results/validation/crossdomain-recovery-s1-20260906/`. No fit, bootstrap,
+posterior, NUTS, or G4 campaign was run. The external KinMS process emitted
+intrinsic native-channel cubes with no restoring beam, primary beam, or
+spectral response. kinUV then applied its production measurement operator.
+
+| Gate | KGAS066 | KGAS007 | Limit |
+|---|---:|---:|---:|
+| Analytic complex-visibility relative L2 | 4.70e-14 | 4.70e-14 | <=1e-6 |
+| Analytic noise-normalized component RMS | 1.04e-12 | 1.04e-12 | <=0.001 |
+| Zero-baseline flux relative error | 3.70e-15 | 3.70e-15 | <=0.1% |
+| Native centroid error (channel) | <1e-9 | <1e-9 | <=0.02 |
+| Doubled-sampling delta chi2 | 2.40e-5 | 2.40e-5 | <=0.1 |
+| Nominal/high render RMS (thermal SD) | 1.34e-4 | 3.35e-5 | <=0.1 |
+| Independent high-repeat RMS (thermal SD) | 6.76e-5 | 1.63e-5 | <=0.1 |
+| High-cloud absolute chi2 change | 0.04294 | 0.02802 | <=0.1 |
+| S0 baseline replay absolute chi2 error | 0.0 | 0.0 | <=0.1 |
 
 ## Corrected prospective rotation accounting
 

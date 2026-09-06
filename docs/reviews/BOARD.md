@@ -8,9 +8,10 @@ The board tracks one active proposal and its independent reviews. Scientific val
 [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](../decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md)
 and licensed S0/S1 on 2026-09-06. S0 closed after independent Reviewer A and
 Reviewer B accepted exact commit
-`fb4a14543d579168c9224c8ebca6a7591147f4db`. S1 intrinsic KinMS adapter and
-operator-parity implementation is the next active stage; no S1 code review is
-open yet.
+`fb4a14543d579168c9224c8ebca6a7591147f4db`. The S1 intrinsic KinMS adapter
+and operator-parity implementation now passes its implementation gates. The
+active card is independent S1 code review; both reviewers must name the exact
+frozen implementation commit before S2 begins.
 
 ## Roles and files
 

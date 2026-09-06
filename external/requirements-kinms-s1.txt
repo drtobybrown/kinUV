@@ -1,0 +1,19 @@
+# Isolated comparator environment used for S1 closure on 2026-09-06.
+# KinMS remains an optional external process and is not a kinUV dependency.
+astropy==8.0.1
+astropy-iers-data==0.2026.8.31.0.57.9
+contourpy==1.3.3
+cycler==0.12.1
+fonttools==4.64.0
+kinms==3.0.13
+kiwisolver==1.5.1
+matplotlib==3.11.1
+numpy==2.5.3
+packaging==26.3
+pillow==12.3.0
+pyerfa==2.0.1.5
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+scipy==1.18.1
+six==1.17.0

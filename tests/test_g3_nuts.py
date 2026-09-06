@@ -186,7 +186,7 @@ def test_chart_and_nuts_source_gates():
     los = SRC_MODEL.read_text().split("def _gaussian_pdf", 1)[0]
     assert "float(vsys" not in los
     gauss = SRC_MODEL.read_text().split("def _gaussian_pdf", 1)[1].split(
-        "def sky_cube", 1
+        "def intrinsic_sky_cube", 1
     )[0]
     assert "float(" not in gauss
     assert 'pa_rad = xp.asarray(params["pa_deg"]) * (np.pi / 180.0)' in SRC_MAP.read_text()
