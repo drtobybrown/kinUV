@@ -105,11 +105,20 @@ def write_job_status_md(
     approaching = "pa25" in str(run_id).lower() or "pa25" in str(kind or "").lower()
     kgas007 = "kgas007" in str(run_id).lower() or "kgas007" in str(kind or "").lower()
     if kgas007:
-        phase = f"007 NUTS {state} (`{run_id}`)"
-        next_step = (
-            "Copy posteriors into docs/reviews/artifacts/2026-09-05-kgas007-nuts/. "
-            "Official 066 MAP unchanged. Do not start G4"
-        )
+        shard_pending = str(sampler) == "pending_merge"
+        if shard_pending:
+            phase = f"007 NUTS chain pending_merge (`{run_id}`)"
+            next_step = (
+                "Wait for four valid shards then merge to "
+                "docs/reviews/artifacts/2026-09-05-kgas007-nuts/. "
+                "Official 066 MAP unchanged. Do not start G4"
+            )
+        else:
+            phase = f"007 NUTS {state} (`{run_id}`)"
+            next_step = (
+                "Copy posteriors into docs/reviews/artifacts/2026-09-05-kgas007-nuts/. "
+                "Official 066 MAP unchanged. Do not start G4"
+            )
         default_note = (
             "007 NUTS job. DEC-067 items 3-4 left as 066-only. "
             "Official MAP unchanged. Do not start G4"
@@ -149,7 +158,11 @@ def write_job_status_md(
         ),
         "Next Step": next_step,
     }
-    pending: list[str] | None = [] if state in {"SUCCEEDED", "COMPLETED_UNMIXED"} else None
+    pending: list[str] | None
+    if kgas007 and str(sampler) == "pending_merge":
+        pending = None
+    else:
+        pending = [] if state in {"SUCCEEDED", "COMPLETED_UNMIXED"} else None
     patch_agent_run_status(path, bullets, pending=pending)
     return path
 

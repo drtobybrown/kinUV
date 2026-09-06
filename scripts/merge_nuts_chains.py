@@ -28,6 +28,37 @@ from kinuv.runner.kind import ARTIFACT_G3  # noqa: E402
 from kinuv.runner.plots import write_nuts_product_plots  # noqa: E402
 
 
+def _resolve_run(raw: str) -> Path:
+    dest = Path(raw)
+    if not dest.is_absolute():
+        dest = RUNS_ROOT / raw
+    return dest
+
+
+def _preflight_007_shard(dest: Path, chain_id: int) -> None:
+    """Refuse merge before any product write if a 007 shard is incomplete."""
+    trigger = dest / ".trigger_complete"
+    if not trigger.is_file():
+        raise SystemExit(f"007 merge missing sentinel {trigger}")
+    rec_path = dest / "logs" / f"chain_{chain_id}.json"
+    try:
+        rec = json.loads(rec_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        raise SystemExit(f"007 merge missing {rec_path}")
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"007 merge truncated {rec_path}: {exc}")
+    if list(rec.get("z6_shape") or []) != [600, 6]:
+        raise SystemExit(f"007 merge bad z6_shape in {rec_path}")
+    npz = dest / "checkpoints" / f"chain_{chain_id}.npz"
+    if not npz.is_file():
+        raise SystemExit(f"missing {npz}")
+    z6 = np.asarray(np.load(npz)["z6"], dtype=np.float64)
+    if z6.ndim == 3:
+        z6 = z6[0]
+    if tuple(z6.shape) != (600, 6) or not np.isfinite(z6).all():
+        raise SystemExit(f"007 merge bad npz shape in {npz}")
+
+
 def _load_chain(path: Path, chain_id: int) -> tuple[np.ndarray, float]:
     npz = path / "checkpoints" / f"chain_{chain_id}.npz"
     if not npz.is_file():
@@ -90,6 +121,11 @@ def main() -> int:
     )
     if "kgas007" in kind.lower() and "KGAS066" in str(map_path):
         raise SystemExit("007 merge refuses official 066 MAP JSON")
+    if "kgas007" in kind.lower():
+        if len(args.run_dirs) != 4:
+            raise SystemExit("007 merge requires exactly four run dirs")
+        for raw, cid in zip(args.run_dirs, chain_ids, strict=True):
+            _preflight_007_shard(_resolve_run(raw), cid)
     rec_map = json.loads(map_path.read_text())
     pa_init = float(args.pa_init if args.pa_init is not None else rec_map["pa_deg"])
     dx, dy = rec_map["dx_arcsec"], rec_map["dy_arcsec"]
@@ -97,9 +133,7 @@ def main() -> int:
     kept_elapsed = []
     dropped = []
     for raw, cid in zip(args.run_dirs, chain_ids, strict=True):
-        dest = Path(raw)
-        if not dest.is_absolute():
-            dest = RUNS_ROOT / raw
+        dest = _resolve_run(raw)
         z6, el = _load_chain(dest, cid)
         phys = physical_sampled_from_z6(z6[None, ...], dx, dy)[0]
         if not chain_physically_ok(phys):

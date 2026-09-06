@@ -651,3 +651,136 @@ def test_job_status_kgas007_does_not_name_g3(tmp_path, monkeypatch):
     assert "2026-09-05-kgas007-nuts" in out
     assert "keep." in out
 
+
+def test_job_status_kgas007_pending_merge_leaves_pending(tmp_path, monkeypatch):
+    from kinuv.runner.status_md import write_job_status_md
+
+    path = tmp_path / "docs" / "architecture" / "STATUS.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "---\npending: [\"newc2\"]\n---\n\n## Agent Run Status\n\n"
+        "* **Phase:** old\n* **Last Action:** old\n"
+        "* **Decisions Made:** old\n* **Blockers / Gates:** old\n"
+        "* **Next Step:** old\n\n# Architecture mailbox\n\nkeep.\n"
+    )
+    monkeypatch.setenv("KINUV_REPO", str(tmp_path))
+    write_job_status_md(
+        run_id="KGAS007-20260906T000000Z-nuts-kgas007-c2",
+        session_id="newc2",
+        state="SUCCEEDED",
+        mixing_pass=False,
+        sampler="pending_merge",
+        elapsed_s=3600.0,
+        kind="nuts-kgas007",
+    )
+    out = path.read_text()
+    assert 'pending: ["newc2"]' in out
+    assert "pending_merge" in out
+    assert "007 NUTS SUCCEEDED" not in out
+    assert "keep." in out
+
+
+def _fake_007_shard(root, name, chain_id, *, trigger=True, json_ok=True, shape=(600, 6)):
+    import json
+
+    import numpy as np
+
+    dest = root / name
+    (dest / "logs").mkdir(parents=True)
+    (dest / "checkpoints").mkdir(parents=True)
+    if trigger:
+        (dest / ".trigger_complete").write_text("ok\n")
+    rec = {"chain": chain_id, "elapsed_s": 1.0, "z6_shape": list(shape)}
+    rec_path = dest / "logs" / f"chain_{chain_id}.json"
+    if json_ok:
+        rec_path.write_text(json.dumps(rec) + "\n")
+    else:
+        rec_path.write_text('{"chain": 2, "z6_shape": [600, 6]')
+    np.savez(dest / "checkpoints" / f"chain_{chain_id}.npz", z6=np.zeros(shape))
+    return dest
+
+
+def test_kgas007_merge_refuses_incomplete_shards(tmp_path):
+    import subprocess
+    import sys
+
+    repo = Path(__file__).resolve().parents[1]
+    merge = repo / "scripts" / "merge_nuts_chains.py"
+    dest = tmp_path / "docs" / "reviews" / "artifacts" / "2026-09-05-kgas007-nuts"
+    map007 = (
+        Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007")
+        / "kinuv-KGAS007-stage-a-map"
+        / "stage_a_map.json"
+    )
+    shards = tmp_path / "runs"
+    good = [_fake_007_shard(shards, f"c{i}", i) for i in (1, 3, 4)]
+    missing = _fake_007_shard(shards, "c2-missing", 2, trigger=False)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(merge),
+            str(good[0]),
+            str(missing),
+            str(good[1]),
+            str(good[2]),
+            "--kind",
+            "nuts-kgas007",
+            "--artifact-dir",
+            str(dest),
+            "--map-json",
+            str(map007),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode != 0
+    assert "sentinel" in (proc.stderr + proc.stdout).lower()
+    assert not dest.exists()
+
+    truncated = _fake_007_shard(shards, "c2-trunc", 2, json_ok=False)
+    proc2 = subprocess.run(
+        [
+            sys.executable,
+            str(merge),
+            str(good[0]),
+            str(truncated),
+            str(good[1]),
+            str(good[2]),
+            "--kind",
+            "nuts-kgas007",
+            "--artifact-dir",
+            str(dest),
+            "--map-json",
+            str(map007),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc2.returncode != 0
+    assert "truncated" in (proc2.stderr + proc2.stdout).lower()
+    assert not dest.exists()
+
+    proc3 = subprocess.run(
+        [
+            sys.executable,
+            str(merge),
+            str(good[0]),
+            str(good[1]),
+            str(good[2]),
+            "--kind",
+            "nuts-kgas007",
+            "--artifact-dir",
+            str(dest),
+            "--map-json",
+            str(map007),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert proc3.returncode != 0
+    assert "four" in (proc3.stderr + proc3.stdout).lower()
+    assert not dest.exists()
+
