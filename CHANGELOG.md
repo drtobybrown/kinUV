@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-06 — 007 NUTS c2 relaunch dual accept (major)
+
+Leftover execute of `nuts-kgas007`. Relaunch crashed chain 2 only; merge four finite shards. Watcher must not clear `pending` on `pending_merge`. Merge refuses fewer than four sentinels or a bad `z6_shape`. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-05 — 007 NUTS dispatched; live S3 KinMS; TARGET KGAS066+KGAS007
 
 Kind `nuts-kgas007` (`steal_latest` False, dest `2026-09-05-kgas007-nuts`, PA 151.6, `i_rad=0.5044` in U). MAP-θ identity passed (007 χ²=122070.76; official 066 χ²=168675.60). Four CPU chains: `b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`. Isolated KinMS ran under `toby_sandbox/external_fitters/`; Barolo still missing_on_path. S3 header: vis χ² is the fit; `quote_inner_slope: false`. DEC-067 items 3–4 left as 066-only. Official MAP unchanged. Do not start G4.

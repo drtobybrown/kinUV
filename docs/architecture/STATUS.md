@@ -2,14 +2,14 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: board
-board: open
+next_role: implementer
+board: accepted
 build_licensed: true
 pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
 last_propose: docs/reviews/2026-09-06-propose-kgas007-c2-relaunch.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-05-review-a-m2-surface-brightness.md
-last_review_b: docs/reviews/2026-09-05-review-b-m2-surface-brightness.md
+last_review_a: docs/reviews/2026-09-06-review-a-kgas007-c2-relaunch.md
+last_review_b: docs/reviews/2026-09-06-review-b-kgas007-c2-relaunch.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas066-m2-sb/
 open_questions: []
 deadlocks: []
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 007 NUTS c2 relaunch board open
-* **Last Action:** Propose c2 relaunch + four-shard merge (`2026-09-06-propose-kgas007-c2-relaunch`)
+* **Phase:** 007 NUTS c2 relaunch accepted; execute
+* **Last Action:** Tally dual accept (major) on c2 relaunch + four-shard merge
 * **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
 * **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. c2 `xkytxih1` CRASHED; c1/c3/c4 SUCCEEDED
-* **Next Step:** Dual review of c2 relaunch. Do not merge 1/3/4 as official NUTS. Official MAP unchanged. Do not start G4
+* **Next Step:** Land mailbox/merge gates, then launch chain 2 only (`--kind nuts-kgas007`). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-06 (007 c2 relaunch tally).** Dual accept (major): `review-a-kgas007-c2-relaunch` and `review-b-kgas007-c2-relaunch`. Execute majors: do not let watcher clear `pending` on `pending_merge`; merge requires four dirs + four sentinels + parseable `z6_shape==[600,6]` + npz `(600,6)`; launch argv stays `--kind nuts-kgas007` (not `nuts`); `pending` after launch is the new session only. Official MAP unchanged. No G4.
 
 **2026-09-06 (007 c2 relaunch propose).** Board open. Leftover execute of accepted `nuts-kgas007`. Relaunch chain 2 only (`--kind nuts-kgas007`, not `--kind nuts`). Keep crashed `xkytxih1` as evidence. Replace that id in `pending` only after the new session exists. Merge after `.trigger_complete` and uncorrupted `chain_2.json` `[600, 6]`. Official MAP unchanged. No G4.
 
