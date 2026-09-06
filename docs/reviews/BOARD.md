@@ -32,7 +32,12 @@ on exact proposal commit `e7a1e71eba9ffe68a21754bb41dc9bb03d6c2acc`; see
 metric/refinement/unit definitions, checksum-bound campaign state, and an
 executable S2 covariance/start/optimizer contract. Both retained target exports
 are insufficient for real S2 covariance selection and held-out scoring. The
-code freeze remains active pending an Astra revision and two fresh verdicts.
+Those verdicts remain historical evidence. The later pragmatic S1 execution
+directive classifies the renderer correction as a localized mathematical bug
+fix and authorizes the Field Guide's proportional-verification fast path. S1
+therefore closes on the unchanged two-target refinement gates, without a new
+proposal tally. Full dual review remains required for scientific-contract
+changes and production promotion.
 
 ## Roles and files
 

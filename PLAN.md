@@ -10,10 +10,10 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Complete the executable S1/S2 amendment.** Astra freezes the metric algebra, refinement schedule, unit/flux ledger, covariance estimators, finite parameter chart, exact starts, optimizer budgets, and checksum-bound campaign configuration required by both proposal reviewers.
-2. **Implement and close S1 after dual acceptance.** Replace nearest-cell and finite Gauss-Hermite rendering with the external cubic-B-spline/analytic-LOSVD continuum adapter, correct the flux-density contract, and pass the unchanged closure gates.
-3. **Re-export both targets through `ms2kinuv`.** Neither retained file meets the new real-S2 grouping and provenance contract; covariance selection and held-out scoring remain blocked until compliant exports exist.
-4. **Execute and close S2.** Run the frozen geometry/basin/covariance protocol with valid metadata and dual review before any S3 work.
+1. **Close S1 through proportional verification.** Run the two-target refinement matrix for the cubic-B-spline/analytic-LOSVD adapter and close immediately if every `|Delta chi2| <= 0.1` and relative-L2 gate passes.
+2. **Begin S2 geometry work.** Execute the turnover and basin audits that do not depend on missing Measurement Set grouping metadata.
+3. **Re-export both targets through `ms2kinuv`.** Neither retained file meets the real-S2 grouping and provenance contract; covariance selection and held-out scoring remain blocked until compliant exports exist.
+4. **Complete S2 covariance validation.** Run grouped covariance selection and held-out scoring when compliant exports exist.
 5. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
 6. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
 

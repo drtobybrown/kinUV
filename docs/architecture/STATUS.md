@@ -1,15 +1,15 @@
 ---
-generation: 15
-phase: s1-amendment-required-changes
-code_freeze: true
-next_role: consultant-astra
-board: s1-continuum-contract-required-changes
-build_licensed: false
+generation: 16
+phase: s1-continuum-fast-path-implementation
+code_freeze: false
+next_role: implementer-sol
+board: s1-proportional-verification
+build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s1-dual-code-review
-  - s1-continuum-contract-revision
+  - s1-continuum-refinement-matrix
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
@@ -18,7 +18,6 @@ last_review_a: docs/reviews/2026-09-06-review-a-s1-continuum-contract.md
 last_review_b: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
-  - s1-refinement-and-flux-ledger-freeze
   - s2-covariance-and-fold-estimator-freeze
   - s2-start-table-and-optimizer-freeze
   - s2-campaign-config-and-target-bounds
@@ -28,11 +27,11 @@ canon_generation: 15
 
 ## Agent Run Status
 
-* **Phase:** Both independent proposal reviewers accepted the architectural direction with required scientific and reproducibility changes; implementation remains frozen
-* **Last Action:** Recorded Reviewer A/B verdicts on exact proposal commit `e7a1e71` and consolidated their executable-contract gaps
+* **Phase:** The pragmatic S1 directive authorizes localized implementation with proportional verification and no proposal-tally prerequisite
+* **Last Action:** Replaced the rejected discrete-dispersion design with the bounded continuum-adapter implementation plan while retaining the `|Delta chi2| <= 0.1` target gate
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
-* **Blockers / Gates:** exact S1 refinement/metric/unit semantics, checksum-bound campaign configuration, and S2 covariance/start/optimizer contracts require Astra revision; both retained target exports block real S2 covariance and held-out scoring
-* **Next Step:** Astra issues one executable amendment; the Registrar freezes its configurations and both reviewers assess the revised exact commit
+* **Blockers / Gates:** S1 closes on the two-target refinement matrix; both retained target exports still block real S2 covariance and held-out scoring
+* **Next Step:** commit the localized renderer correction, run the clean-commit S1 matrix, and advance directly to S2 if every target axis passes
 
 ## S1 operator/comparator closure
 

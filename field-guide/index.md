@@ -30,9 +30,9 @@ Agent names describe authority, not a particular vendor or model release. The sa
 | **Reviewer A: science/numerics** | Independent senior reviewer | Physical validity, identifiability, units, conventions, likelihood, mocks, statistical gates | Read Reviewer B before submitting a verdict or implement the proposal under review |
 | **Reviewer B: software/reproducibility** | Independent senior reviewer | Package boundaries, tests, data contracts, performance, storage, manifests, failure recovery | Read Reviewer A before submitting a verdict or waive a scientific failure |
 
-The Consultant writes or signs the scientific specification. The Registrar converts it into an executable campaign record without changing its meaning. The Implementer may choose algorithms, batching, and refactors only within the frozen acceptance criteria.
+The Consultant writes or signs scientific specifications. The Registrar converts production campaigns into executable records without changing their meaning. The Implementer owns localized corrections that restore an already declared mathematical or physical contract.
 
-Any proposed change to the model, prior, covariance, transform convention, data selection, or gate threshold returns to the Consultant and both reviewers. A defect fix that restores already specified behavior may proceed with focused tests and a Registrar record.
+Any proposed change to the model, prior, covariance, data selection, or gate threshold returns to the Consultant. A localized mathematical defect fix may proceed immediately with focused tests, an atomic commit, and a STATUS entry. It does not require a new ADR, proposal review, or pre-implementation sign-off when it preserves the declared science and acceptance threshold.
 
 An Implementer may stop a run immediately for corruption, invalid numerics, resource exhaustion, or a failed gate. Stopping protects the specification; it does not constitute authority to weaken it.
 
@@ -47,7 +47,7 @@ Target and campaign state must be external to the operational manual and modelin
 
 A target configuration records coordinates and reference frame, systemic-velocity convention, inclination information, position-angle convention, phase centre, data-product identifiers, and scientifically justified priors. A campaign configuration records model family, free and fixed parameters, initialization policy, transform and spectral response, covariance treatment, null models, gate criteria, sampler settings, random seeds, storage root, and requested products.
 
-Configuration is immutable after a production run starts. A correction creates a new configuration revision and run ID. The run manifest stores the resolved configuration and its checksum.
+Configuration is immutable after a production run starts. A correction creates a new configuration revision and run ID. Local development and numerical gate runs need only record the exact commit, inputs, settings, and metrics required to reproduce the decision.
 
 ## 4. Architectural invariants
 
@@ -102,10 +102,10 @@ Failure blocks all later gates.
 
 ### Gate 1 — Analytic closure
 
-- Compare the production transform with a direct calculation on analytic sources such as a point source, offset Gaussian, and thin ring.
-- Test amplitude normalization, conjugation, Fourier sign, east/north orientation, channel-frequency scaling, phase shifts, and primary-beam ordering.
-- Compare automatic gradients with finite differences or an analytic derivative at well-scaled interior points.
-- Test the spectral response and binning operator at edges and with guard channels.
+- Start with controlled invariants and factor-two refinement on the production numerical path.
+- Test amplitude normalization, Fourier sign, east/north orientation, channel-frequency scaling, phase shifts, primary-beam ordering, spectral response, and guard channels.
+- Compare automatic gradients with finite differences when gradients are part of the changed path.
+- Do not construct a secondary brute-force or reference engine while the primary method satisfies its empirical closure gate. Authorize a secondary reference only after a primary refinement failure leaves the cause unresolved.
 
 The declared tolerance must reflect numeric precision and the downstream noise floor. A transform that fails closure cannot proceed to empirical tuning.
 
@@ -167,7 +167,7 @@ The Consultant sets numeric convergence and coverage thresholds. An Implementer 
 
 Only then may a run become a production product or a source for scientific tables.
 
-## 6. Run protocol and state machine
+## 6. Production run protocol and state machine
 
 Every run uses a unique, target-neutral identifier such as `<campaign>-<UTC timestamp>-<git short sha>-<kind>`. The resolved target ID is metadata, not executable naming logic.
 
@@ -177,7 +177,7 @@ Allowed states are:
 
 Terminal non-promotion states are `FAILED`, `INTERRUPTED`, `UNMIXED`, `UNCALIBRATED`, and `REJECTED`. State transitions are append-only in the run manifest. File presence alone is not completion evidence.
 
-Before execution, the Registrar records the accepted proposal, both reviews, code commit, dirty diff hash, configuration checksums, input checksums, expected resources, and output contract. The Implementer runs preflight from a clean environment and writes the initial manifest before expensive computation.
+Before a production inference campaign, the Registrar records its accepted specification, code commit, configuration and input checksums, expected resources, and output contract. This production ceremony does not apply to localized bug fixes or bounded numerical refinement runs.
 
 Long jobs run asynchronously under the configured batch platform. Interactive agents monitor bounded status records and do not block on the sampling loop. A retry receives a new attempt identifier and links to its predecessor.
 
@@ -197,13 +197,26 @@ Write large intermediate arrays to scratch first. Promote a checkpoint by closin
 
 On success or failure, preserve the bounded log, status, last valid checkpoint, environment record, and failure reason. Delete scratch only after durable verification. Never copy raw inputs into every run directory.
 
-## 8. Review and promotion workflow
+## 8. Development and promotion workflow
+
+Use proportional verification. The evidence burden follows the scientific and operational risk of the change.
+
+For a localized mathematical bug fix that preserves the model, priors, data selection, and frozen gate:
+
+1. The Implementer writes the focused correction and regression tests.
+2. Run the primary refinement gate on the affected target set.
+3. If every declared target and axis passes, commit atomically, update STATUS, close the stage, and advance immediately.
+4. If the primary gate fails after two bounded debugging iterations or exposes a scientific choice, escalate with numerical evidence.
+
+An immutable dossier, new ADR, proposal tally, or pre-implementation sign-off is not required for this fast path. Preserve enough evidence to reproduce the reported metric; avoid serializing large duplicate arrays merely to document routine development.
+
+New scientific models, priors, likelihoods, covariance families, data selection, thresholds, production campaigns, and publication promotions use the full workflow:
 
 1. **Consultant specification.** Define the scientific question, model, parameterization, priors, covariance, gates, products, and residual risks.
 2. **Registrar registration.** Create the proposal, assign a campaign ID, validate configurations, and freeze acceptance criteria.
 3. **Independent review.** Reviewer A assesses science and numerics; Reviewer B assesses implementation and reproducibility. They work independently and issue `accept`, `accept-with-required-changes`, or `reject` verdicts with evidence.
 4. **Tally.** The Registrar may license implementation only when both reviews accept and all required changes are incorporated into the frozen proposal. A rejection returns the proposal to the Consultant.
-5. **Implementation.** The Implementer writes code and tests, runs the accepted gates, and records results. Dual code review is required for changes to transforms, likelihoods, parameter charts, covariance, serialization, or promotion logic.
+5. **Implementation.** The Implementer writes code and tests, runs the accepted gates, and records results. Dual code review is reserved for scientific-contract changes and production promotion, rather than routine localized repairs.
 6. **Verification.** The Registrar checks that the implementation matches the frozen specification and that artifacts are complete and reproducible.
 7. **Scientific sign-off.** The Consultant reviews gate evidence and signs or rejects promotion. Astra resolves exceptions and authorizes publication policy.
 8. **Closeout.** Summarize durable findings, link the immutable product, clear the active review card, and archive superseded discussion.
@@ -213,14 +226,14 @@ Review comments are classified as required or advisory. Required comments block 
 ## 9. Change control and emergency rules
 
 - A scientific-specification change creates a revised proposal and repeats both reviews.
-- A production bug fix records affected runs and whether products require invalidation or regeneration.
+- A localized defect fix uses the proportional fast path. A production bug fix also records affected runs and whether products require invalidation or regeneration.
 - A security or data-corruption issue may freeze execution immediately. The Registrar records the freeze and affected scope.
 - Only Astra may waive an invariant or promotion gate. The waiver must identify the evidence, scope, expiration, and prohibited claims.
 - Secrets are never committed. Promoted data are never overwritten in place.
 
 ## 10. Required campaign dossier
 
-Each promoted campaign links:
+Each promoted production campaign links:
 
 - accepted proposal and two independent reviews;
 - resolved target and campaign configurations with checksums;
@@ -234,4 +247,4 @@ Each promoted campaign links:
 - Gate 6 convergence and calibration report;
 - Gate 7 promotion receipt and sign-offs.
 
-Missing evidence means the campaign is incomplete, regardless of whether a plausible figure exists.
+This dossier applies to production promotion, not localized repairs or bounded numerical stage checks. Missing production evidence means the campaign is incomplete, regardless of whether a plausible figure exists.

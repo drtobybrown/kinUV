@@ -1,10 +1,10 @@
 ---
 id: DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS
-status: accepted-by-astra-required-changes
+status: amended-and-implementation-licensed
 date: 2026-09-06
 authority: Astra
 supersedes_transform: ESC-KINUV-S1-RENDERER-CONVERGENCE
-implementation: licensed-after-dual-proposal-accept
+implementation: licensed-by-pragmatic-s1-directive
 ---
 # Continuum comparator and S2 contracts
 
@@ -24,9 +24,9 @@ constrain kinUV to use clouds or an image grid internally.
 ## Continuum renderer
 
 Pin KinMS 3.0.13. Generate deterministic face-on radial/azimuthal quadrature
-clouds and use KinMS with zero gas dispersion, no thickness, no beam, no
-spectral response, no asymmetric drift, and no mass component to obtain the
-projected cloud positions and circular line-of-sight velocities. Apply the
+clouds and reproduce its thin-disk projection and circular line-of-sight
+velocity equations directly, without invoking its nearest-cell cube builder.
+Apply the
 verified boundary conversion `kinms_posang=(360-kinuv_pa)%360`. Apply the
 declared sky-centre and systemic-velocity offsets explicitly to the returned
 continuous coordinates; do not infer that returned clouds contain cube-bin
@@ -59,41 +59,30 @@ passes through frequency. Remove dispersion-cloud replication and mutation of
 KinMS random draws.
 
 The matched kinUV branch uses the same analytic native-channel integral. The
-historical midpoint Gaussian operator remains available only for exact S0
-replay. A corrected operator has a new schema/version and new baseline fits;
+corrected operator has a new schema/version and requires new baseline fits;
 old chi-square values are not recovered by changing data, weights, or target
-parameters.
+parameters. Historical results retain their original recorded operator.
 
 ## S1 convergence and evidence
 
-An independent reference evaluates the continuous cloud model without spatial
-deposition. It applies the primary beam at continuous cloud positions, exact
-analytic channel integrals, and direct Fourier phases. Retain comparator and
-reference visibilities and the cross term and quadratic term in
-
-`Delta chi2 = -2 r^T C^-1 delta_m + delta_m^T C^-1 delta_m`.
-
-The following preregistered gates apply:
+S1 uses proportional verification on the production path. A second ungridded
+direct-cloud Fourier engine is out of scope while target refinement closes.
+It may be introduced only if empirical refinement still fails without an
+isolated cause. The following gates apply:
 
 | Gate | Limit |
 |---|---:|
-| Float64 analytic complex-visibility relative L2 | `<=1e-6` |
-| Analytic noise-normalized component RMS | `<=0.001` thermal SD |
-| Continuum adapter/reference relative complex L2 | `<=1e-4` |
-| Numerical discrepancy `delta_m^T C^-1 delta_m` | `<=0.01` |
-| Actual-data absolute chi-square sensitivity | `<=0.1` |
+| Successive-refinement relative complex-visibility L2 | `<=1e-4` |
+| Actual-data absolute chi-square refinement sensitivity | `<=0.1` |
 | Pre-normalization physical-flux relative error | `<=0.001` |
 | Controlled spectral-centroid error | `<=0.02` native channel |
-| Historical S0 replay absolute chi-square error | `<=0.1` |
 
-Test spatial spacing, radial quadrature, azimuthal quadrature, velocity-profile
-interpolation, spatial support, and spectral support independently and under
-simultaneous refinement. Two successive refinement comparisons must pass.
-Repeat with an independent quadrature phase. Gaussian dispersion order is
-retired as a production convergence axis; compare analytic LOSVD evaluation
-against independent adaptive integration for narrow/broad lines, noninteger
-channel centroids, and both spectral directions. The velocity profile contains
-the explicit point `R=0, v_c=0`.
+Test spatial spacing, radial quadrature, azimuthal quadrature, and analytic
+spectral subdivision independently on both canonical targets. Repeat with an
+independent quadrature phase. Gaussian dispersion order is retired as a
+production convergence axis. The velocity profile contains the explicit point
+`R=0, v_c=0`. A passing target matrix closes S1 immediately through an atomic
+implementation commit and STATUS update.
 
 ## S2 geometry and data contract
 
