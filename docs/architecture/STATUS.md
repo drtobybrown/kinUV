@@ -5,7 +5,7 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
+pending: ["faoik171"]
 last_propose: docs/reviews/2026-09-06-propose-kgas007-c2-relaunch.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-06-review-a-kgas007-c2-relaunch.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 007 NUTS c2 relaunch accepted; execute
-* **Last Action:** Tally dual accept (major) on c2 relaunch + four-shard merge
+* **Phase:** 007 NUTS c2 relaunch running (`faoik171`)
+* **Last Action:** Relunched chain 2 only (`faoik171` / `KGAS007-20260906T003036Z-nuts-kgas007-c2`); c1/c3/c4 complete
 * **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. c2 `xkytxih1` CRASHED; c1/c3/c4 SUCCEEDED
-* **Next Step:** Land mailbox/merge gates, then launch chain 2 only (`--kind nuts-kgas007`). Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. c1 `b1mqxsov` c3 `y5tspgit` c4 `zq1olquy` complete. Crashed `xkytxih1` evidence only
+* **Next Step:** After new c2 `.trigger_complete` and `chain_2.json` `[600, 6]`, merge four shards. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-06 (007 c2 relaunch).** Session `faoik171` run `KGAS007-20260906T003036Z-nuts-kgas007-c2` (`--kind nuts-kgas007 --chain-id 2 --skip-pull`). `pending` is that id only. c1/c3/c4 complete. Crashed `xkytxih1` kept as evidence. `KGAS066-latest` untouched. Official MAP unchanged. No G4.
 
 **2026-09-06 (007 c2 relaunch tally).** Dual accept (major): `review-a-kgas007-c2-relaunch` and `review-b-kgas007-c2-relaunch`. Execute majors: do not let watcher clear `pending` on `pending_merge`; merge requires four dirs + four sentinels + parseable `z6_shape==[600,6]` + npz `(600,6)`; launch argv stays `--kind nuts-kgas007` (not `nuts`); `pending` after launch is the new session only. Official MAP unchanged. No G4.
 

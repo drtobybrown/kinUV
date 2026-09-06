@@ -4,21 +4,22 @@ MAP-θ identity passed: χ² = 122070.76 on 956×66 at `i_rad=0.5044`. Official 
 
 Four flexible CPU chains (`--skip-pull`, image `skaha/astroml:latest`):
 
-| chain | session | run_id |
-|---|---|---|
-| 1 | `b1mqxsov` | `KGAS007-20260905T141720Z-nuts-kgas007-c1` |
-| 2 | `xkytxih1` | `KGAS007-20260905T141746Z-nuts-kgas007-c2` |
-| 3 | `y5tspgit` | `KGAS007-20260905T141754Z-nuts-kgas007-c3` |
-| 4 | `zq1olquy` | `KGAS007-20260905T141801Z-nuts-kgas007-c4` |
+| chain | session | run_id | state |
+|---|---|---|---|
+| 1 | `b1mqxsov` | `KGAS007-20260905T141720Z-nuts-kgas007-c1` | SUCCEEDED |
+| 2 | `xkytxih1` | `KGAS007-20260905T141746Z-nuts-kgas007-c2` | CRASHED (evidence only; shared `status.json` tmp race) |
+| 2 | `faoik171` | `KGAS007-20260906T003036Z-nuts-kgas007-c2` | RUNNING (relaunch) |
+| 3 | `y5tspgit` | `KGAS007-20260905T141754Z-nuts-kgas007-c3` | SUCCEEDED |
+| 4 | `zq1olquy` | `KGAS007-20260905T141801Z-nuts-kgas007-c4` | SUCCEEDED |
 
 `KGAS066-latest` still points at the receding 066 run. Official MAP `kinuv-KGAS066-uvsign-map` was not written. DEC-067 items 3–4 (G3 copy / `kinuv-KGAS066-…` session) are left as 066-only.
 
-Merge after four sentinels (do not use live merge defaults):
+Merge after the new c2 sentinel (do not use the crashed dir; do not use live merge defaults):
 
 ```bash
 python scripts/merge_nuts_chains.py \
   KGAS007-20260905T141720Z-nuts-kgas007-c1 \
-  KGAS007-20260905T141746Z-nuts-kgas007-c2 \
+  KGAS007-20260906T003036Z-nuts-kgas007-c2 \
   KGAS007-20260905T141754Z-nuts-kgas007-c3 \
   KGAS007-20260905T141801Z-nuts-kgas007-c4 \
   --kind nuts-kgas007 \
