@@ -17,7 +17,6 @@ R_SCALE_066_ARCSEC = 3.0
 ICO_FITS = Path(
     "/Users/thbrown/kilogas/analysis/kinms_test/kgas066/KGAS66_Ico_K_kms-1.fits"
 )
-NU_OBS_ICO_HZ = 224.3e9
 
 
 def image_grid_xy_arcsec(grid: ImageGrid):
@@ -93,9 +92,56 @@ def exponential_template(grid: ImageGrid, r_scale_arcsec: float = R_SCALE_066_AR
     return sb / (float(sb.sum()) * d_omega)
 
 
-@requires("DEC-066-SB", "DEC-066-GRID")
-def load_sb_template(grid: ImageGrid, ico_path: Path | None = None) -> np.ndarray:
-    """``ico_to_template`` when the FITS is present; exponential otherwise."""
+def _ico_wiener_metadata(path: Path, data: np.ndarray) -> dict:
+    from astropy.io import fits
+
+    error_path = path.with_name(f"{path.stem}_err{path.suffix}")
+    if not error_path.is_file():
+        raise FileNotFoundError(f"Ico uncertainty map required: {error_path}")
+    with fits.open(error_path) as hdul:
+        error = fits_image_east_north(hdul[0].data, hdul[0].header)
+    valid_error = np.isfinite(error) & (error > 0.0) & np.isfinite(data)
+    if not np.any(valid_error):
+        raise ValueError(f"no positive finite Ico uncertainties in {error_path}")
+    sigma_ico = float(np.median(error[valid_error]))
+    peak = float(np.nanmax(np.abs(data)))
+    if not np.isfinite(peak) or peak <= 0.0:
+        raise ValueError(f"Ico peak is not positive finite in {path}")
+    return {
+        "ico_path": str(path),
+        "error_path": str(error_path),
+        "noise_reduction": "median_positive_error_on_finite_ico_support",
+        "sigma_ico": sigma_ico,
+        "ico_peak": peak,
+        "k_wiener_dimensionless": (sigma_ico / peak) ** 2,
+        "template_units": "relative_unit_integral",
+    }
+
+
+def ico_template_metadata(ico_path: Path) -> dict:
+    """Return the audited Wiener inputs used by :func:`load_sb_template`."""
+    from astropy.io import fits
+
+    path = Path(ico_path)
+    with fits.open(path) as hdul:
+        data = fits_image_east_north(hdul[0].data, hdul[0].header)
+    return _ico_wiener_metadata(path, data)
+
+
+def _load_sb_template(
+    grid: ImageGrid,
+    ico_path: Path | None = None,
+    *,
+    legacy_relative_noise_fraction: float | None = None,
+    legacy_observed_frequency_hz: float | None = None,
+) -> np.ndarray:
+    """Load a normalized Ico morphology using its propagated error map.
+
+    The companion ``*_err.fits`` supplies the Wiener noise scale. A guessed
+    fraction of the image peak is not a scientifically valid substitute. The
+    paired ``legacy_*`` arguments exist only to replay sealed artifacts,
+    including their historical K-versus-Jy noise-unit inconsistency.
+    """
     path = ICO_FITS if ico_path is None else Path(ico_path)
     if path.is_file():
         from astropy.io import fits
@@ -103,6 +149,28 @@ def load_sb_template(grid: ImageGrid, ico_path: Path | None = None) -> np.ndarra
         with fits.open(path) as hdul:
             h = hdul[0].header
             data = fits_image_east_north(hdul[0].data, h)
+        if legacy_relative_noise_fraction is None:
+            if legacy_observed_frequency_hz is not None:
+                raise ValueError(
+                    "legacy_observed_frequency_hz requires "
+                    "legacy_relative_noise_fraction"
+                )
+            metadata = _ico_wiener_metadata(path, data)
+            sigma_ico = float(metadata["sigma_ico"])
+            units = "relative"
+            observed_frequency_hz = None
+        else:
+            if legacy_observed_frequency_hz is None:
+                raise ValueError(
+                    "legacy_relative_noise_fraction requires an explicit "
+                    "legacy_observed_frequency_hz"
+                )
+            fraction = float(legacy_relative_noise_fraction)
+            if not np.isfinite(fraction) or fraction <= 0.0:
+                raise ValueError("legacy_relative_noise_fraction must be positive")
+            sigma_ico = fraction * float(np.nanmax(np.abs(data)))
+            units = "K"
+            observed_frequency_hz = float(legacy_observed_frequency_hz)
         bmaj = float(h["BMAJ"]) * 3600.0
         bmin = float(h["BMIN"]) * 3600.0
         bpa = float(h["BPA"])
@@ -110,14 +178,38 @@ def load_sb_template(grid: ImageGrid, ico_path: Path | None = None) -> np.ndarra
         tmpl = ico_to_template(
             data,
             cell,
-            NU_OBS_ICO_HZ,
+            observed_frequency_hz,
             bmaj,
             bmin,
             bpa,
-            sigma_empty=0.02 * np.nanmax(np.abs(data)),
+            units=units,
+            sigma_empty=sigma_ico,
         )
         return place_template_on_grid(tmpl.sb, tmpl.cell_arcsec, grid)
     return exponential_template(grid)
+
+
+@requires("DEC-066-SB", "DEC-066-GRID")
+def load_sb_template(grid: ImageGrid, ico_path: Path | None = None) -> np.ndarray:
+    """Load normalized Ico morphology with its propagated uncertainty map."""
+    return _load_sb_template(grid, ico_path)
+
+
+@requires("DEC-066-SB", "DEC-066-GRID")
+def load_legacy_sb_template(
+    grid: ImageGrid,
+    ico_path: Path,
+    *,
+    relative_noise_fraction: float,
+    observed_frequency_hz: float,
+) -> np.ndarray:
+    """Replay a sealed template with its explicitly supplied legacy choices."""
+    return _load_sb_template(
+        grid,
+        ico_path,
+        legacy_relative_noise_fraction=relative_noise_fraction,
+        legacy_observed_frequency_hz=observed_frequency_hz,
+    )
 
 
 M2_R2_ARCSEC = 2.5

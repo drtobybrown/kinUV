@@ -16,7 +16,7 @@ import numpy as np
 from astropy.io import fits
 
 from kinuv.diagnostics.style import COLOUR, apply_style, save_fig
-from kinuv.forward.sb import NU_OBS_ICO_HZ, load_sb_template, place_template_on_grid
+from kinuv.forward.sb import load_legacy_sb_template, place_template_on_grid
 from kinuv.infer.map import _optimal_flux, image_grid_for_vis, predict_binned
 from kinuv.io.vis import load_kgas066
 from kinuv.likelihood.chi2 import chi2, chi2_zero
@@ -51,6 +51,7 @@ S_OFFICIAL = 0.5136098555284736
 DELTA_VS_ZERO = 35552.65225039818
 LEFTOVER_SB = 1373.0
 K_PROD = (0.02) ** 2
+HISTORICAL_NU_OBS_ICO_HZ = 224.3e9
 BINS_KLAM = (0.0, 50.0, 146.0, 182.0, math.inf)
 BIN_LABELS = ("lt_50", "50_146", "146_182", "gt_182")
 THETA_30 = 1.2948
@@ -83,7 +84,7 @@ def _self_test_180() -> dict:
     tmpl = ico_to_template(
         img,
         cell,
-        NU_OBS_ICO_HZ,
+        HISTORICAL_NU_OBS_ICO_HZ,
         1.04,
         0.95,
         -44.8,
@@ -230,8 +231,12 @@ def main() -> int:
     if tuple(data.vis.shape) != (881, 95):
         raise RuntimeError(f"vis shape {data.vis.shape} != (881, 95)")
     grid = image_grid_for_vis(data)
-    tmpl30 = load_sb_template(grid, ico_path=ICO_30)
-    tmpl10 = load_sb_template(grid, ico_path=ICO_10)
+    replay = {
+        "relative_noise_fraction": 0.02,
+        "observed_frequency_hz": HISTORICAL_NU_OBS_ICO_HZ,
+    }
+    tmpl30 = load_legacy_sb_template(grid, ico_path=ICO_30, **replay)
+    tmpl10 = load_legacy_sb_template(grid, ico_path=ICO_10, **replay)
 
     model30 = np.asarray(predict_binned(data, params, tmpl30, grid))
     model10 = np.asarray(predict_binned(data, params, tmpl10, grid))

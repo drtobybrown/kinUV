@@ -4,6 +4,24 @@ Do not import ``hann_then_bin`` from this package (that miss used to fall
 back to the removed ``native_diagonal`` kernel).
 """
 
-from .chi2 import chi2, chi2_zero, delta_chi2, empirical_s
+from .chi2 import (
+    chi2,
+    chi2_blank,
+    chi2_nonrot,
+    chi2_zero,
+    delta_chi2,
+    delta_chi2_blank,
+    delta_chi2_nonrot,
+    empirical_s,
+)
 
-__all__ = ["chi2", "chi2_zero", "delta_chi2", "empirical_s"]
+__all__ = [
+    "chi2",
+    "chi2_blank",
+    "chi2_nonrot",
+    "chi2_zero",
+    "delta_chi2",
+    "delta_chi2_blank",
+    "delta_chi2_nonrot",
+    "empirical_s",
+]

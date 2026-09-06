@@ -30,8 +30,9 @@ from kinuv.diagnostics.figures import plot_leftover_chi2
 from kinuv.diagnostics.flags import leftover_velocity_structured, map_quality_flags
 from kinuv.diagnostics.kinms_benchmark import write_cube_benchmark
 from kinuv.diagnostics.s1 import leftover_chi2
-from kinuv.forward.sb import load_sb_template
+from kinuv.forward.sb import ico_template_metadata, load_sb_template
 from kinuv.infer.map import PARAM_NAMES, _lbfgs_one_start, image_grid_for_vis
+from kinuv.infer.nulls import fit_nonrotating_emission
 from kinuv.infer.seeds import PA_AMBIGUITY_DEG, PA_BOUND_HALF_DEG, VSYS_BOUND_HALF_KM_S, stage_a_seeds
 from kinuv.infer.stage_b import (
     nuisance_from_params,
@@ -43,8 +44,13 @@ from kinuv.io.vis import load_target_vis, optical_to_radio_kms, radio_to_optical
 from kinuv.likelihood.chi2 import chi2
 from kinuv.profiles.rotation import V_K_MAX_KM_S, V_K_MIN_KM_S, arctan_vc, ring_vc
 from kinuv.runner.plots import write_imaging_plots, write_model_cube
+from kinuv.runner.state import terminal_validation_state
+from kinuv.validation import ROTATION_GATE_ID, rotation_test_metrics
 
 REPO = Path(__file__).resolve().parents[1]
+TARGET_CONFIG_SCHEMA = "kinuv-production-target-v2"
+RUN_MANIFEST_SCHEMA = "kinuv-run-manifest-v2"
+SUMMARY_SCHEMA = "kinuv-milestone-summary-v2"
 
 
 def _utc() -> str:
@@ -90,6 +96,15 @@ def _require_files(config: dict) -> dict[str, dict[str, str | int]]:
         if not path.is_file():
             raise FileNotFoundError(f"kinms.{key}: {path}")
         out[f"kinms_{key}"] = {"path": str(path), "bytes": path.stat().st_size, "sha256": _sha256(path)}
+    ico_path = Path(config["template_ico"])
+    error_path = ico_path.with_name(f"{ico_path.stem}_err{ico_path.suffix}")
+    if not error_path.is_file():
+        raise FileNotFoundError(f"template_ico_error: {error_path}")
+    out["template_ico_error"] = {
+        "path": str(error_path),
+        "bytes": error_path.stat().st_size,
+        "sha256": _sha256(error_path),
+    }
     return out
 
 
@@ -116,6 +131,13 @@ def _write_checksums(root: Path) -> None:
         if path.is_file() and path.name != "CHECKSUMS.sha256":
             lines.append(f"{_sha256(path)}  {path.relative_to(root)}")
     (root / "CHECKSUMS.sha256").write_text("\n".join(lines) + "\n")
+
+
+def _validate_target_config(config: dict) -> None:
+    if config.get("schema_version") != TARGET_CONFIG_SCHEMA:
+        raise ValueError("unsupported target configuration schema")
+    if config.get("acceptance", {}).get("rotation_gate_id") != ROTATION_GATE_ID:
+        raise ValueError("target config does not name the frozen rotation gate")
 
 
 def _write_leftover(data, model, destination: Path, params: dict) -> dict:
@@ -166,32 +188,28 @@ def _write_rotation_curve(destination: Path, stage_a: dict, stage_b: dict, selec
     return {"selected": selected, "radius_max_arcsec": rmax}
 
 
-def _consolidate_posterior(source: Path, destination: Path, map_chi2: float) -> dict:
-    destination.mkdir(parents=True, exist_ok=True)
+def _historical_posterior_reference(source: Path, destination: Path) -> dict:
+    """Record old draws without presenting them as samples of this likelihood."""
     required = ("posterior_samples.json", "summary.json", "METRICS.md", "config.yaml")
-    copied = []
     for name in required:
         src = source / name
         if not src.is_file():
             raise FileNotFoundError(src)
-        shutil.copy2(src, destination / name)
-        copied.append(name)
-    old = json.loads((source / "summary.json").read_text())
-    metrics = old.get("metrics", {})
     result = {
-        "status": "retained_mixed_draws_revalidated_after_hot_path_refactor",
+        "status": "incompatible_historical_likelihood_reference",
         "source": str(source),
         "source_checksums": {name: _sha256(source / name) for name in required},
         "sampler": "nuts",
-        "chains": metrics.get("chains", old.get("chains", old.get("n_chains", 4))),
-        "max_rhat": metrics.get("max_rhat", old.get("max_rhat")),
-        "min_ess": metrics.get("min_bulk_ess", old.get("min_ess")),
-        "intervals_calibrated": False,
-        "new_map_chi2": float(map_chi2),
-        "note": "Sampling was not repeated because the mathematical visibility likelihood is unchanged. Existing mixed draws remain uncalibrated by coverage tests.",
-        "files": copied,
+        "current_posterior_available": False,
+        "current_rhat": None,
+        "current_ess": None,
+        "note": (
+            "The audited Wiener template changes the forward likelihood. "
+            "Historical draws are linked for provenance only and are not "
+            "copied or summarized as a current posterior."
+        ),
     }
-    (destination / "validation.json").write_text(json.dumps(result, indent=2) + "\n")
+    destination.write_text(json.dumps(result, indent=2) + "\n")
     return result
 
 
@@ -201,8 +219,7 @@ def main(argv=None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     config = json.loads(args.config.read_text())
-    if config.get("schema_version") != "kinuv-production-target-v1":
-        raise ValueError("unsupported target configuration schema")
+    _validate_target_config(config)
     output = args.output.resolve()
     if output.exists() and any(output.iterdir()):
         raise FileExistsError(f"immutable output exists and is nonempty: {output}")
@@ -210,7 +227,7 @@ def main(argv=None) -> int:
     plots = output / "plots"
     plots.mkdir()
     benchmark_dir = output / "benchmark"
-    state = {"schema_version": "kinuv-run-manifest-v1", "target_id": config["target_id"], "state_transitions": []}
+    state = {"schema_version": RUN_MANIFEST_SCHEMA, "target_id": config["target_id"], "state_transitions": []}
     state["state_transitions"].append({"state": "PREFLIGHTED", "at": _utc()})
     code = _git_state()
     if code["dirty"]:
@@ -230,6 +247,7 @@ def main(argv=None) -> int:
     )
     grid = image_grid_for_vis(data)
     template = load_sb_template(grid, ico_path=config["template_ico"])
+    template_metadata = ico_template_metadata(Path(config["template_ico"]))
     geom = config["geometry"]
     i_rad = math.radians(float(geom["inclination_deg"]))
     pa_seed = float(geom["pa_seed_deg"])
@@ -262,7 +280,39 @@ def main(argv=None) -> int:
     stage_a = dict(max(starts, key=lambda item: item["delta_chi2"]))
     stage_a["starts"] = starts
     stage_a["inclination_deg_frozen"] = float(geom["inclination_deg"])
+    stage_a["chi2_blank"] = float(stage_a["chi2_zero"])
+    stage_a["delta_chi2_blank"] = float(stage_a["delta_chi2"])
     (output / "stage_a_map.json").write_text(json.dumps(stage_a, indent=2) + "\n")
+
+    nonrot_seed = {
+        key: float(value)
+        for key, value in stage_a_cfg["parameter_seed"].items()
+        if key in {"flux", "vsys_kms", "gas_sigma_kms", "dx_arcsec", "dy_arcsec"}
+    }
+    nonrot = _jsonable(
+        fit_nonrotating_emission(
+            data,
+            template,
+            grid,
+            seeds=nonrot_seed,
+            bounds={"vsys_kms": bounds["vsys_kms"]},
+            maxiter=int(stage_a_cfg["maxiter"]),
+            xla=True,
+        )
+    )
+    if not nonrot["success"]:
+        raise RuntimeError(f"non-rotating emitting-disk fit failed: {nonrot}")
+    rotation_metrics = _jsonable(
+        rotation_test_metrics(
+            chi2_blank=float(stage_a["chi2_blank"]),
+            chi2_nonrot=float(nonrot["chi2_nonrot"]),
+            chi2_rot=float(stage_a["chi2_map"]),
+        )
+    )
+    (output / "nonrotating_map.json").write_text(json.dumps(nonrot, indent=2) + "\n")
+    (output / "rotation_test.json").write_text(
+        json.dumps(rotation_metrics, indent=2) + "\n"
+    )
 
     stage_b_rec = run_stage_b_map(
         data,
@@ -277,6 +327,7 @@ def main(argv=None) -> int:
         maxiter=int(config["stage_b"]["maxiter"]),
         i_rad=i_rad,
         r_last_arcsec=float(config["stage_b"]["r_last_arcsec"]),
+        target_id=str(config["target_id"]),
     )
     stage_b = _jsonable(stage_b_rec)
     stage_b["delta_chi2_vs_stage_a"] = float(stage_a["chi2_map"] - stage_b["chi2_map"])
@@ -285,15 +336,12 @@ def main(argv=None) -> int:
         np.any(np.isclose(v_knots, V_K_MIN_KM_S, atol=1.0e-6))
         or np.any(np.isclose(v_knots, V_K_MAX_KM_S, atol=1.0e-6))
     )
-    stage_b["oscillation_pass"] = bool(
-        stage_b["max_omega"] <= config["acceptance"]["maximum_stage_b_omega_kms"]
-    )
+    stage_b["oscillation_pass"] = False
+    stage_b["oscillation_gate_status"] = "blocked_pending_mock_calibration"
     (output / "stage_b_map.json").write_text(json.dumps(stage_b, indent=2) + "\n")
     print(json.dumps({"target": config["target_id"], "stage": "B", "chi2": stage_b["chi2_map"], "delta_chi2_vs_a": stage_b["delta_chi2_vs_stage_a"], "success": stage_b["success"]}), flush=True)
 
-    stage_b_accepted = stage_b_model_adequate(
-        stage_b, config["acceptance"]["maximum_stage_b_omega_kms"]
-    )
+    stage_b_accepted = stage_b_model_adequate(stage_b, None)
     selected = "stage_b" if stage_b_accepted else "stage_a"
     params = {name: float(stage_a[name]) for name in PARAM_NAMES}
     if selected == "stage_b":
@@ -356,38 +404,65 @@ def main(argv=None) -> int:
         dy_arcsec=params["dy_arcsec"],
     )
     shutil.copy2(config["kinms"]["result"], benchmark_dir / "kinms_fit_result.json")
-    posterior = _consolidate_posterior(Path(config["retained_posterior"]), output / "posterior", identity)
+    posterior = _historical_posterior_reference(
+        Path(config["retained_posterior"]), output / "historical_posterior_reference.json"
+    )
 
     gates = {
         "preflight": {"status": "pass", "inputs_hashed": True, "standalone_import": True},
         "analytic_closure": {"status": "pass", "evidence": f"git:{code['commit']} test suite"},
         "mock_recovery": {"status": "pass", "evidence": "docs/reviews/artifacts/2026-08-29-s1-mock", "scope": "validated production transform and optimizer"},
-        "null_comparison": {"status": "pass" if stage_a["delta_chi2"] >= config["acceptance"]["minimum_delta_chi2"] else "fail", "delta_chi2": stage_a["delta_chi2"]},
+        "blank_comparison": {
+            "status": "diagnostic_only",
+            "delta_chi2_blank": stage_a["delta_chi2_blank"],
+        },
+        "rotation_test": rotation_metrics,
         "covariance": {"status": "pass_for_map_baseline", "weight_scale": float(data.s), "structured_residual": leftover["leftover_chi2_structured"]},
         "map_stability": {"status": "pass" if len(starts) == 2 and identity_error <= config["acceptance"]["likelihood_identity_atol"] else "fail", "starts": 2, "identity_error": identity_error},
         "stage_b_model_adequacy": {
-            "status": "pass" if stage_b_accepted else "rejected_with_stage_a_fallback",
+            "status": "blocked_pending_mock_calibration",
             "aic_stage_a": stage_b["aic_stage_a"],
             "aic_stage_b": stage_b["aic_stage_b"],
             "bound_pressure": stage_b["bound_pressure"],
-            "max_omega_kms": stage_b["max_omega"],
-            "maximum_omega_kms": config["acceptance"]["maximum_stage_b_omega_kms"],
+            "max_omega_dimensionless": stage_b["max_omega_dimensionless"],
+            "criterion": None,
         },
-        "posterior": {"status": "mixed_but_uncalibrated", "max_rhat": posterior["max_rhat"], "min_ess": posterior["min_ess"], "intervals_calibrated": False},
-        "promotion": {"status": "ready_for_astra_directed_promotion"},
+        "posterior": {
+            "status": "blocked_no_current_likelihood_draws",
+            "historical_reference": posterior["source"],
+        },
+        "promotion": {"status": "blocked_pending_rotation_bootstrap_and_stage_b_calibration"},
     }
-    blocking = [name for name, gate in gates.items() if gate["status"] == "fail"]
+    terminal_status = terminal_validation_state(gates)
+    blocking = [
+        name
+        for name, gate in gates.items()
+        if str(gate.get("status", "unknown")).startswith("fail")
+    ]
     summary = {
-        "schema_version": "kinuv-milestone-summary-v1",
+        "schema_version": SUMMARY_SCHEMA,
         "milestone": "MILESTONE-001",
         "target_id": config["target_id"],
-        "status": "verified" if not blocking else "failed",
+        "status": terminal_status,
         "selected_model": selected,
         "fit_domain": "complex visibility chi2",
-        "stage_a": {key: stage_a[key] for key in (*PARAM_NAMES, "chi2_map", "chi2_zero", "delta_chi2", "success", "nfev")},
+        "stage_a": {
+            key: stage_a[key]
+            for key in (
+                *PARAM_NAMES,
+                "chi2_map",
+                "chi2_blank",
+                "delta_chi2_blank",
+                "chi2_zero",
+                "delta_chi2",
+                "success",
+                "nfev",
+            )
+        },
         "stage_b": stage_b,
         "likelihood_identity": {"saved_chi2": expected_chi2, "recomputed_chi2": identity, "absolute_error": identity_error},
         "data_contract": {"n_row": int(data.vis.shape[0]), "n_chan": int(data.vis.shape[1]), "dv_kms": float(data.dv_kms), "n_bin": int(data.n_bin), "weight_scale": float(data.s), "load": load_meta},
+        "surface_brightness_template": template_metadata,
         "posterior": posterior,
         "benchmark_metrics": benchmark["metrics"],
         "rotation_curve": rotation,
@@ -402,24 +477,26 @@ def main(argv=None) -> int:
         f"- Selected model: `{selected}`\n"
         f"- Stage A visibility chi2: {stage_a['chi2_map']:.6f}\n"
         f"- Stage B visibility chi2: {stage_b['chi2_map']:.6f}\n"
-        f"- Delta chi2 versus V=0: {stage_a['delta_chi2']:.6f}\n"
+        f"- Delta chi2 versus blank visibilities: {stage_a['delta_chi2_blank']:.6f}\n"
+        f"- Delta chi2 versus fitted non-rotating disk: {rotation_metrics['delta_chi2_nonrot']:.6f}\n"
+        f"- Rotation-test status: {rotation_metrics['status']}\n"
         f"- Likelihood identity error: {identity_error:.6g}\n"
-        f"- Maximum retained posterior R-hat: {posterior['max_rhat']}\n"
-        f"- Minimum retained posterior ESS: {posterior['min_ess']}\n"
-        f"- Posterior intervals calibrated: no\n"
+        f"- Current-likelihood posterior available: no\n"
+        f"- Historical posterior status: {posterior['status']}\n"
         f"- Image-cube normalized RMSE (kinUV): {benchmark['metrics']['kinuv']['normalized_rmse']:.6f}\n"
         f"- Image-cube normalized RMSE (KinMS): {benchmark['metrics']['kinms']['normalized_rmse']:.6f}\n"
     )
     state["summary"] = summary
-    state["state_transitions"].extend(
-        [{"state": "SUCCEEDED", "at": _utc()}, {"state": "VERIFIED", "at": _utc()}]
+    state["state_transitions"].append({"state": "COMPLETED", "at": _utc()})
+    state["state_transitions"].append(
+        {"state": terminal_status.upper(), "at": _utc()}
     )
     (output / "manifest.json").write_text(json.dumps(state, indent=2) + "\n")
     _write_checksums(output)
     if blocking:
         raise RuntimeError(f"blocking gates failed: {blocking}")
-    print(json.dumps({"target": config["target_id"], "status": "verified", "output": str(output), "selected_model": selected, "chi2": identity}, indent=2), flush=True)
-    return 0
+    print(json.dumps({"target": config["target_id"], "status": terminal_status, "output": str(output), "selected_model": selected, "chi2": identity}, indent=2), flush=True)
+    return 0 if terminal_status == "verified" else 2
 
 
 if __name__ == "__main__":

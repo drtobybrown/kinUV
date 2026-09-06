@@ -29,7 +29,7 @@ from kinuv.io.vis import VisData, load_kgas066
 from kinuv.profiles.rotation import (
     CALIBRATION_RT_ARCSEC,
     CALIBRATION_V0_KM_S,
-    N_RINGS_MAX,
+    HISTORICAL_KGAS066_OMEGA_CRITERION,
     RECOVERY_RT_ARCSEC,
     RECOVERY_V0_KMS,
     select_lambda_reg,
@@ -81,14 +81,22 @@ def mock_visdata(base: VisData, vis_clean, rng: np.random.Generator) -> VisData:
 
 
 def _prior_checkpoint(out_dir: Path | None, n_rings: int, n_use: int, smoke: bool):
-    """Load ``campaign.json`` if it is the same residual-Ω n_rings / n_mock run."""
+    """Load only a dimensionally explicit historical residual-Ω checkpoint."""
     if out_dir is None or smoke:
         return None
     path = Path(out_dir) / "campaign.json"
     if not path.is_file():
         return None
     prior = json.loads(path.read_text())
+    if prior.get("schema_version") != "kinuv-omega-campaign-v2":
+        return None
     if prior.get("omega_mode") != "residual":
+        return None
+    if prior.get("omega_units") != "dimensionless":
+        return None
+    if prior.get("omega_criterion_id") != (
+        HISTORICAL_KGAS066_OMEGA_CRITERION.criterion_id
+    ):
         return None
     if int(prior.get("n_rings", -1)) != int(n_rings):
         return None
@@ -120,6 +128,8 @@ def calibrate_lambda_reg(
         data = load_kgas066(NPZ, cube_path=cube)
     if data.vis.shape != (881, 95):
         raise RuntimeError(f"unexpected fit shape {data.vis.shape}")
+    if int(n_rings) != HISTORICAL_KGAS066_OMEGA_CRITERION.n_rings:
+        raise ValueError("historical omega replay is calibrated only for 7 rings")
     if grid is None:
         grid = image_grid_for_vis(data)
     if template is None:
@@ -173,6 +183,7 @@ def calibrate_lambda_reg(
         if out is None:
             return
         payload = {
+            "schema_version": "kinuv-omega-campaign-v2",
             "chosen_lambda": chosen,
             "n_mock": n_use,
             "n_rings": int(n_rings),
@@ -181,6 +192,8 @@ def calibrate_lambda_reg(
             "rows": rows,
             "smoke": bool(smoke),
             "omega_mode": "residual",
+            "omega_units": "dimensionless",
+            "omega_criterion_id": HISTORICAL_KGAS066_OMEGA_CRITERION.criterion_id,
         }
         (out / "campaign.json").write_text(json.dumps(payload, indent=2) + "\n")
 
@@ -193,7 +206,7 @@ def calibrate_lambda_reg(
             key = (float(lam_i), j)
             if key in done:
                 prev = done[key]
-                om[j] = float(prev["max_omega"])
+                om[j] = float(prev["max_omega_dimensionless"])
                 v0s[j] = float(prev["v0_b"])
                 rts[j] = float(prev["rt_b"])
                 print(
@@ -212,14 +225,15 @@ def calibrate_lambda_reg(
                 rt_init=truth["r_t_arcsec"],
                 n_rings=int(n_rings),
                 chi2_stage_a=stage_a[j]["chi2"],
+                target_id="KGAS066",
             )
-            om[j] = rec_b.max_omega
+            om[j] = rec_b.max_omega_dimensionless
             v0s[j] = rec_b.v0_recovered
             rts[j] = rec_b.r_t_recovered
             row = {
                 "lambda": float(lam_i),
                 "mock": j,
-                "max_omega": rec_b.max_omega,
+                "max_omega_dimensionless": rec_b.max_omega_dimensionless,
                 "v0_b": rec_b.v0_recovered,
                 "rt_b": rec_b.r_t_recovered,
                 "v0_a": stage_a[j]["v0_kms"],
@@ -228,7 +242,7 @@ def calibrate_lambda_reg(
             rows.append(row)
             done[key] = row
             print(
-                f"lambda={lam_i} mock={j} maxΩ={rec_b.max_omega:.3f} "
+                f"lambda={lam_i} mock={j} maxΩ={rec_b.max_omega_dimensionless:.3f} "
                 f"V0={rec_b.v0_recovered:.1f} rt={rec_b.r_t_recovered:.2f}",
                 flush=True,
             )
@@ -248,29 +262,15 @@ def calibrate_lambda_reg(
             v0_sigma=RECOVERY_V0_KMS,
             rt_sigma=RECOVERY_RT_ARCSEC,
             v0_stage_a=v0_a,
+            omega_criterion=HISTORICAL_KGAS066_OMEGA_CRITERION,
         )
         if picked is not None:
             chosen = float(picked)
             break
         _checkpoint()
-    if chosen is None and int(n_rings) < N_RINGS_MAX and not smoke:
-        if out is not None:
-            snap = out / f"campaign_n{int(n_rings)}.json"
-            if (out / "campaign.json").is_file():
-                snap.write_text((out / "campaign.json").read_text())
-        return calibrate_lambda_reg(
-            data=data,
-            template=template,
-            grid=grid,
-            n_mock=n_mock,
-            lambdas=lambdas,
-            n_rings=int(n_rings) + 1,
-            seed=seed,
-            out_dir=out_dir,
-            smoke=False,
-        )
     _checkpoint()
     return {
+        "schema_version": "kinuv-omega-campaign-v2",
         "chosen_lambda": chosen,
         "n_mock": n_use,
         "n_rings": int(n_rings),
@@ -279,4 +279,6 @@ def calibrate_lambda_reg(
         "rows": rows,
         "smoke": bool(smoke),
         "omega_mode": "residual",
+        "omega_units": "dimensionless",
+        "omega_criterion_id": HISTORICAL_KGAS066_OMEGA_CRITERION.criterion_id,
     }

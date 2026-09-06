@@ -1,5 +1,5 @@
 {
-  "schema_version": "kinuv-production-target-v1",
+  "schema_version": "kinuv-production-target-v2",
   "target_id": "KGAS066",
   "visibility_npz": "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz",
   "template_ico": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/KGAS66_Ico_K_kms-1.fits",
@@ -35,8 +35,8 @@
   },
   "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/posterior",
   "acceptance": {
-    "minimum_delta_chi2": 1.0,
+    "rotation_gate_id": "crossdomain-nonrot-bootstrap-v1",
     "likelihood_identity_atol": 0.05,
-    "maximum_stage_b_omega_kms": 20.0
+    "stage_b_omega_criterion": null
   }
 }

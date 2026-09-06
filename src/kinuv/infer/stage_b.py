@@ -1,7 +1,8 @@
 """Stage B ring MAP: fit ``V_k`` only (066-12). No NUTS. No PA search.
 
 Nuisance (flux, PA, vsys, σ, dx, dy) is frozen. ``V_c`` is ``ring_vc``.
-Objective is ``χ² + ring_regulariser``; the V=0 gate is likelihood Δχ².
+Objective is ``χ² + ring_regulariser``. Historical ``chi2_zero`` fields are
+blank-visibility emission scores and are not rotation gates.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from kinuv.profiles.rotation import (
     DISK_RADIUS_ARCSEC,
     V_K_MAX_KM_S,
     V_K_MIN_KM_S,
+    OmegaCriterion,
     aic_keep_stage_a,
     arctan_vc,
     omega_residual,
@@ -60,23 +62,63 @@ class StageBResult:
     message: str
     v0_recovered: float
     r_t_recovered: float
-    max_omega: float
+    max_omega_dimensionless: float
     dv_kms: float
+    target_id: str
+    omega_definition_id: str
+    omega_reference_id: str
+    spectral_response_id: str
+
+    @property
+    def max_omega(self) -> float:
+        """Compatibility accessor for historical in-memory callers."""
+        return self.max_omega_dimensionless
 
 
-def stage_b_model_adequate(result: StageBResult | dict, maximum_omega_kms: float) -> bool:
-    """Require AIC improvement, interior ring speeds, and bounded oscillation."""
+def stage_b_model_adequate(
+    result: StageBResult | dict,
+    omega_criterion: OmegaCriterion | None,
+) -> bool:
+    """Require AIC improvement, interior speeds, and a registered Ω criterion.
+
+    ``None`` deliberately blocks promotion. An unlabeled scalar threshold or a
+    serialized ``max_omega`` field cannot establish dimensional provenance.
+    """
+    if omega_criterion is None:
+        return False
+    if not isinstance(omega_criterion, OmegaCriterion):
+        raise TypeError("omega_criterion must be an OmegaCriterion or None")
+    from kinuv.profiles.rotation import REGISTERED_OMEGA_CRITERIA
+
+    registered = REGISTERED_OMEGA_CRITERIA.get(omega_criterion.criterion_id)
+    if (
+        registered is None
+        or registered != omega_criterion
+        or not omega_criterion.calibration_artifact_sha256
+    ):
+        return False
     get = result.get if isinstance(result, dict) else lambda key: getattr(result, key)
+    if isinstance(result, dict) and "max_omega_dimensionless" not in result:
+        raise ValueError("Stage B record lacks max_omega_dimensionless provenance")
     speeds = np.asarray(get("v_knots_kms"), dtype=np.float64)
+    scope_matches = bool(
+        str(get("target_id")) == omega_criterion.target_id
+        and int(get("n_rings")) == omega_criterion.n_rings
+        and str(get("omega_definition_id")) == omega_criterion.omega_definition_id
+        and str(get("omega_reference_id")) == omega_criterion.omega_reference_id
+        and str(get("spectral_response_id")) == omega_criterion.spectral_response_id
+    )
     at_bound = bool(
         np.any(np.isclose(speeds, V_K_MIN_KM_S, atol=1.0e-6))
         or np.any(np.isclose(speeds, V_K_MAX_KM_S, atol=1.0e-6))
     )
     return bool(
         not get("keep_stage_a")
+        and scope_matches
         and float(get("chi2_map")) < float(get("chi2_stage_a"))
         and not at_bound
-        and float(get("max_omega")) <= float(maximum_omega_kms)
+        and float(get("max_omega_dimensionless"))
+        <= omega_criterion.maximum_dimensionless
     )
 
 
@@ -249,6 +291,7 @@ def run_stage_b_map(
     maxiter: int = MAXITER_STAGE_B,
     i_rad=None,
     r_last_arcsec: float = DISK_RADIUS_ARCSEC,
+    target_id: str = "UNSPECIFIED",
 ) -> StageBResult:
     """L-BFGS on ``V_k``. Init ``rings_from_arctan``. Freeze nuisance."""
     r_k = uniform_knot_radii(int(n_rings), r_last_arcsec=float(r_last_arcsec))
@@ -343,6 +386,10 @@ def run_stage_b_map(
         message=str(opt.message),
         v0_recovered=v0_r,
         r_t_recovered=rt_r,
-        max_omega=float(np.max(om)),
+        max_omega_dimensionless=float(np.max(om)),
         dv_kms=float(data.dv_kms),
+        target_id=str(target_id),
+        omega_definition_id="abs-second-difference-over-fit-channel-width-v1",
+        omega_reference_id="stage-a-arctan-initialization-v1",
+        spectral_response_id=f"hann-then-bin{int(data.n_bin)}-v1",
     )

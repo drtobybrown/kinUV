@@ -1,16 +1,16 @@
 ---
 id: DEC-KINUV-CROSSDOMAIN-RECOVERY
-status: accepted-strategy-review-pending
+status: accepted
 date: 2026-09-06
 authority: Astra
-implementation: unlicensed
-proposal_reviews: pending
+implementation: licensed-s0-s1
+proposal_reviews: authority-approved-2026-09-06
 ---
 # Cross-domain truth-recovery architecture
 
 ## Decision and evidence boundary
 
-Astra accepts this scientific strategy. It does not license implementation or production: independent Reviewer A science/numerics and Reviewer B software/reproducibility proposal verdicts are pending. The sealed MILESTONE-001 artifacts remain historical engineering baselines; their accepted state is not retroactively changed, but it does not validate superiority or rotation significance.
+Astra accepted this scientific strategy and licensed S0/S1 implementation on 2026-09-06. Each stage still requires independent Reviewer A science/numerics and Reviewer B software/reproducibility code verdicts before its gate can close. The sealed MILESTONE-001 artifacts remain historical engineering baselines; their accepted state is not retroactively changed, but it does not validate superiority or rotation significance.
 
 kinUV will be judged on prospective ground-truth recovery across declared regimes. Both real targets currently have lower restored-cube NRMSE under KinMS (KGAS066: 0.536 versus 0.818; KGAS007: 0.427 versus 0.671). KGAS066 favors kinUV on one seed-66 exact-family mock (`r_t=0.2527` versus truth `0.25`, KinMS `0.3953`), but kinUV generated its own exact 2-D model while KinMS used radial brightness and free inclination. This is useful unmatched evidence, not a general superiority demonstration.
 

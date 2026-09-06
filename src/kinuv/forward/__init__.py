@@ -25,6 +25,8 @@ from .sb import (
     exponential_template,
     fourier_shift_padded,
     image_grid_xy_arcsec,
+    ico_template_metadata,
+    load_legacy_sb_template,
     load_sb_template,
     place_template_on_grid,
 )
@@ -44,7 +46,9 @@ __all__ = [
     "exponential_template",
     "fourier_shift_padded",
     "image_grid_xy_arcsec",
+    "ico_template_metadata",
     "load_sb_template",
+    "load_legacy_sb_template",
     "los_velocity",
     "place_template_on_grid",
     "predict_vis",

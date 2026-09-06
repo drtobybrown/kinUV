@@ -17,6 +17,8 @@ from kinuv.profiles.rotation import (
     CALIBRATION_RT_ARCSEC,
     CALIBRATION_V0_KM_S,
     DISK_RADIUS_ARCSEC,
+    HISTORICAL_KGAS066_OMEGA_CRITERION,
+    OmegaCriterion,
     ring_vc,
     rings_from_arctan,
     uniform_knot_radii,
@@ -69,7 +71,7 @@ def test_run_stage_b_map_stores_residual_omega():
     src = Path(sb.__file__).read_text(encoding="utf-8")
     chunk = src.split("def run_stage_b_map", 1)[1]
     assert "om = omega_residual(v_k, v_init, data.dv_kms)" in chunk
-    assert "max_omega=float(np.max(om))" in chunk
+    assert "max_omega_dimensionless=float(np.max(om))" in chunk
 
 
 def test_stage_b_uses_caller_inclination(monkeypatch):
@@ -106,14 +108,53 @@ def test_stage_b_uses_caller_inclination(monkeypatch):
     assert seen["i_rad"] == pytest.approx(0.37)
 
 
-def test_stage_b_adequacy_rejects_bound_pressure_and_oscillation():
+def test_stage_b_adequacy_enforces_registered_scope(monkeypatch):
     base = {
         "v_knots_kms": [100.0, 140.0, 170.0],
         "keep_stage_a": False,
         "chi2_map": 90.0,
         "chi2_stage_a": 110.0,
-        "max_omega": 12.0,
+        "max_omega_dimensionless": 0.12,
+        "target_id": "KGAS066",
+        "n_rings": 7,
+        "omega_definition_id": "abs-second-difference-over-fit-channel-width-v1",
+        "omega_reference_id": "stage-a-arctan-initialization-v1",
+        "spectral_response_id": "hann-then-bin4-v1",
     }
-    assert stage_b_model_adequate(base, 20.0)
-    assert not stage_b_model_adequate({**base, "v_knots_kms": [100.0, 0.0, 170.0]}, 20.0)
-    assert not stage_b_model_adequate({**base, "max_omega": 76.0}, 20.0)
+    criterion = OmegaCriterion(
+        criterion_id="test-reviewed-calibration",
+        maximum_dimensionless=0.3,
+        target_id="KGAS066",
+        n_rings=7,
+        omega_definition_id=base["omega_definition_id"],
+        omega_reference_id=base["omega_reference_id"],
+        spectral_response_id=base["spectral_response_id"],
+        mock_count=20,
+        calibration_artifact_sha256="a" * 64,
+    )
+    monkeypatch.setitem(
+        __import__("kinuv.profiles.rotation", fromlist=["REGISTERED_OMEGA_CRITERIA"])
+        .REGISTERED_OMEGA_CRITERIA,
+        criterion.criterion_id,
+        criterion,
+    )
+    assert stage_b_model_adequate(base, criterion)
+    assert not stage_b_model_adequate(
+        {**base, "v_knots_kms": [100.0, 0.0, 170.0]}, criterion
+    )
+    assert not stage_b_model_adequate(
+        {**base, "max_omega_dimensionless": 0.76}, criterion
+    )
+    assert not stage_b_model_adequate({**base, "target_id": "KGAS007"}, criterion)
+    assert not stage_b_model_adequate({**base, "n_rings": 8}, criterion)
+    assert not stage_b_model_adequate(
+        {**base, "omega_reference_id": "absolute"}, criterion
+    )
+    assert not stage_b_model_adequate(base, None)
+    with pytest.raises(TypeError, match="OmegaCriterion"):
+        stage_b_model_adequate(base, 20.0)
+    legacy = {key: value for key, value in base.items() if key != "max_omega_dimensionless"}
+    legacy["max_omega"] = 0.12
+    with pytest.raises(ValueError, match="dimensionless"):
+        stage_b_model_adequate(legacy, criterion)
+    assert not stage_b_model_adequate(base, HISTORICAL_KGAS066_OMEGA_CRITERION)

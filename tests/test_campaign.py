@@ -34,8 +34,12 @@ def _fake_stage_b(*_args, **kwargs):
         message="stub",
         v0_recovered=200.0,
         r_t_recovered=3.0,
-        max_omega=omega,
+        max_omega_dimensionless=omega,
         dv_kms=5.08,
+        target_id="KGAS066",
+        omega_definition_id="abs-second-difference-over-fit-channel-width-v1",
+        omega_reference_id="stage-a-arctan-initialization-v1",
+        spectral_response_id="hann-then-bin4-v1",
     )
 
 
@@ -95,6 +99,7 @@ def test_calibrate_lambda_reg_stub_early_exit(monkeypatch):
     assert out["chosen_lambda"] == pytest.approx(0.1)
     assert out["lambdas_tried"] == [0.01, 0.1]
     assert out["omega_mode"] == "residual"
+    assert out["omega_units"] == "dimensionless"
 
 
 def test_prior_checkpoint_refuses_absolute_omega(tmp_path):
@@ -111,6 +116,13 @@ def test_prior_checkpoint_refuses_absolute_omega(tmp_path):
     path.write_text(json.dumps(payload) + "\n")
     assert _prior_checkpoint(tmp_path, 7, 4, False) is None
     payload["omega_mode"] = "residual"
+    path.write_text(json.dumps(payload) + "\n")
+    assert _prior_checkpoint(tmp_path, 7, 4, False) is None
+    from kinuv.profiles.rotation import HISTORICAL_KGAS066_OMEGA_CRITERION
+
+    payload["schema_version"] = "kinuv-omega-campaign-v2"
+    payload["omega_units"] = "dimensionless"
+    payload["omega_criterion_id"] = HISTORICAL_KGAS066_OMEGA_CRITERION.criterion_id
     path.write_text(json.dumps(payload) + "\n")
     loaded = _prior_checkpoint(tmp_path, 7, 4, False)
     assert loaded is not None

@@ -15,7 +15,7 @@ This document is the durable synthesis of completed review cards, architecture n
 | Target | Product | Result | Interpretation |
 |---|---|---|---|
 | KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Selected Stage B chi2 167302.366; Stage A PA 199.729 deg, V0 267.670 km/s, rt 0.500 arcsec, delta chi2 versus V=0 35552.645; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable baseline. Stage B passes AIC, bound-pressure, and oscillation gates. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
-| KGAS007 | MILESTONE-001, `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus V=0 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s and `max_omega=76.329 km/s`. Posterior intervals remain uncalibrated. |
+| KGAS007 | MILESTONE-001, `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s. Historical `max_omega=76.329` is dimensionless; its old km/s threshold label was invalid. Posterior intervals remain uncalibrated. |
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 

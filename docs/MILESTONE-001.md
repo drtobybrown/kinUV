@@ -4,10 +4,10 @@ Promoted by Astra directive on 2026-09-06. This milestone establishes one accept
 
 | Target | Production product | Selected model | Visibility result | Posterior status |
 |---|---|---|---|---|
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus V=0 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
-| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Stage A arctan | chi2 122070.763375; delta chi2 versus V=0 6211.628755 | Four retained chains; max Rhat 1.00214; min bulk ESS 1093; intervals uncalibrated |
+| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus blank visibilities 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
+| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Stage A arctan | chi2 122070.763375; delta chi2 versus blank visibilities 6211.628755 | Four retained chains; max Rhat 1.00214; min bulk ESS 1093; intervals uncalibrated |
 
-Both two-start optimizations converged to the same physical PA mode, and both saved likelihoods reproduce exactly from the serialized selected model. KGAS007 Stage B reached a 0 km/s ring bound and `max_omega=76.329 km/s`, above the 20 km/s campaign threshold, so it is retained as rejected evidence and does not supply the accepted cube or rotation curve.
+Both two-start optimizations converged to the same physical PA mode, and both saved likelihoods reproduce exactly from the serialized selected model. KGAS007 Stage B reached a 0 km/s ring bound. Its historical `max_omega=76.329` is dimensionless (`|Delta2 V|/|Delta v_chan|`); the old 20 km/s label was invalid, so this value is retained only as rejected historical evidence and does not supply the accepted cube or rotation curve.
 
 Each product contains the resolved target configuration, environment, input hashes, append-only state history, Stage A and Stage B records, native and 10 km/s matched cubes, moments 0/1/2, integrated and aperture spectra, rotation curves, channel maps, major and minor PVDs, visibility residuals, KinMS products, posterior provenance, `METRICS.md`, and `CHECKSUMS.sha256`.
 

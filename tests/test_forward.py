@@ -23,6 +23,7 @@ from kinuv.forward.sb import (
     exponential_template,
     fits_image_east_north,
     fourier_shift_padded,
+    ico_template_metadata,
     load_sb_template,
     place_template_on_grid,
 )
@@ -257,6 +258,12 @@ def test_ico_resampled_onto_vis_grid_not_cdelt():
     grid = image_grid_from_uv(305e3, fov_co_plus_pb_arcsec())
     assert grid.cell_arcsec != pytest.approx(0.4)
     sb = load_sb_template(grid, ico)
+    metadata = ico_template_metadata(ico)
+    assert Path(metadata["error_path"]).is_file()
+    assert metadata["noise_reduction"] == "median_positive_error_on_finite_ico_support"
+    assert metadata["k_wiener_dimensionless"] == pytest.approx(
+        (metadata["sigma_ico"] / metadata["ico_peak"]) ** 2
+    )
     assert sb.shape == (grid.ny, grid.nx)
     assert abs(float(sb.sum()) * grid.cell_arcsec**2 - 1.0) < 1e-8
     from astropy.io import fits
@@ -264,15 +271,20 @@ def test_ico_resampled_onto_vis_grid_not_cdelt():
     with fits.open(ico) as hdul:
         h = hdul[0].header
         data = fits_image_east_north(hdul[0].data, h)
+    error_path = ico.with_name(f"{ico.stem}_err{ico.suffix}")
+    with fits.open(error_path) as hdul:
+        error = fits_image_east_north(hdul[0].data, hdul[0].header)
+    valid_error = np.isfinite(error) & (error > 0.0) & np.isfinite(data)
     cell = abs(float(h["CDELT2"])) * 3600.0
     tmpl = ico_to_template(
         data,
         cell,
-        224.3e9,
+        None,
         float(h["BMAJ"]) * 3600.0,
         float(h["BMIN"]) * 3600.0,
         float(h["BPA"]),
-        sigma_empty=0.02 * np.nanmax(np.abs(data)),
+        units="relative",
+        sigma_empty=float(np.median(error[valid_error])),
     )
     placed = place_template_on_grid(tmpl.sb, tmpl.cell_arcsec, grid)
     flux_in = float(tmpl.sb.sum()) * tmpl.cell_arcsec**2

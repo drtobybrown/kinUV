@@ -277,7 +277,7 @@ def test_official_chi2_after_roundtrip():
     stage = MAP_DIR / "stage_a_map.json"
     if not npz.is_file() or not stage.is_file():
         pytest.skip("official 066 npz or MAP json missing")
-    from kinuv.forward.sb import load_sb_template
+    from kinuv.forward.sb import load_legacy_sb_template
     from kinuv.infer.map import image_grid_for_vis, predict_binned
     from kinuv.io.vis import load_kgas066
     from kinuv.likelihood.chi2 import chi2
@@ -289,7 +289,12 @@ def test_official_chi2_after_roundtrip():
     )
     data = load_kgas066(npz, cube_path=cube30 if cube30.is_file() else None)
     grid = image_grid_for_vis(data)
-    tmpl = load_sb_template(grid, ico_path=ico)
+    tmpl = load_legacy_sb_template(
+        grid,
+        ico_path=ico,
+        relative_noise_fraction=0.02,
+        observed_frequency_hz=224.3e9,
+    )
     params = {n: rec[n] for n in PARAM_NAMES}
     z = params_to_unconstrained(params)
     assert np.isfinite(z[_I_RT])

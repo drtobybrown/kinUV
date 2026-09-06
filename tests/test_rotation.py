@@ -13,7 +13,7 @@ from kinuv.profiles.rotation import (
     DV_CHAN_NATIVE_KM_S,
     N_RINGS_MAX,
     N_RINGS_MIN,
-    OMEGA_ACCEPT_MAX,
+    HISTORICAL_KGAS066_OMEGA_CRITERION,
     R0_MIN_OVER_BMAJ,
     RECOVERY_RT_ARCSEC,
     RECOVERY_V0_KMS,
@@ -168,6 +168,8 @@ def test_omega_k_uses_passed_channel_width():
     assert np.allclose(bin8, d2 / 10.6)
     assert not np.allclose(native, bin8)
     assert DV_CHAN_NATIVE_KM_S == pytest.approx(1.270)
+    # km/s divided by km/s is dimensionless.
+    assert omega_k(2.0 * v, 2.0 * DV_CHAN_NATIVE_KM_S)[0] == pytest.approx(native[0])
 
 
 def test_aic_keeps_stage_a_unless_delta_exceeds_two_k_extra():
@@ -199,6 +201,7 @@ def test_select_lambda_reg_acceptance_on_fake_omega():
         v0_sigma=RECOVERY_V0_KMS,
         rt_sigma=RECOVERY_RT_ARCSEC,
         v0_stage_a=v0_a,
+        omega_criterion=HISTORICAL_KGAS066_OMEGA_CRITERION,
     )
     assert chosen == pytest.approx(0.1)
     assert RECOVERY_V0_KMS == pytest.approx(10.0)
@@ -223,6 +226,7 @@ def test_select_lambda_reg_returns_none_if_criteria_conflict():
             v0_sigma=RECOVERY_V0_KMS,
             rt_sigma=RECOVERY_RT_ARCSEC,
             v0_stage_a=v0_a,
+            omega_criterion=HISTORICAL_KGAS066_OMEGA_CRITERION,
         )
         is None
     )
@@ -239,7 +243,9 @@ def test_truth_arctan_omega_exceeds_gate_at_oscmmetric_knots():
         r_k = uniform_knot_radii(n)
         v_k = rings_from_arctan(r_k, CALIBRATION_V0_KM_S, CALIBRATION_RT_ARCSEC)
         om = omega_k(v_k, dv_chan_kms=dv)
-        assert float(np.max(om)) > OMEGA_ACCEPT_MAX
+        assert float(np.max(om)) > (
+            HISTORICAL_KGAS066_OMEGA_CRITERION.maximum_dimensionless
+        )
 
 
 def test_omega_residual_truth_is_zero_and_zigzag_fails_gate():
@@ -255,7 +261,9 @@ def test_omega_residual_truth_is_zero_and_zigzag_fails_gate():
     zigzag = v_ref.copy()
     zigzag[3] += 20.0
     om_z = omega_residual(zigzag, v_ref, dv)
-    assert float(np.max(om_z)) > OMEGA_ACCEPT_MAX
+    assert float(np.max(om_z)) > (
+        HISTORICAL_KGAS066_OMEGA_CRITERION.maximum_dimensionless
+    )
 
 
 def test_lambda_reg_campaign_delegates_to_calibrator():

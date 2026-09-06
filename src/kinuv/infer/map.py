@@ -3,7 +3,8 @@
 Fit flux, PA, vsys, gas σ, (dx, dy), V_0, r_t. Freeze i. Shift lives inside
 ``predict_vis`` via ``fourier_shift`` then PB — no visibility phase ramp.
 Model path is native ``predict_vis`` → ``hann_then_bin`` (DEC-066-SPECRESP).
-Gate is likelihood ``Δχ² = χ²_zero − χ²``; the (dx, dy) prior is MAP-only.
+The historical score is likelihood ``Δχ² = χ²_blank − χ²``; the
+(dx, dy) prior is MAP-only. This detects emission, not rotation.
 Two-start PA: 205.2° and 25.2°. Keep the larger likelihood Δχ².
 """
 
@@ -20,7 +21,7 @@ from kinuv.forward.model import predict_vis
 from kinuv.forward.sb import load_sb_template
 from kinuv.geometry import inclination_rad
 from kinuv.io.vis import VisData, load_kgas066
-from kinuv.likelihood.chi2 import chi2, chi2_zero, delta_chi2
+from kinuv.likelihood.chi2 import chi2, chi2_blank, delta_chi2_blank
 from kinuv.response.spectral import hann_then_bin
 from kinuv.transforms.grid import (
     fov_co_plus_pb_arcsec,
@@ -53,7 +54,7 @@ PARAM_NAMES = (
 
 @dataclass
 class MapResult:
-    """Stage A MAP. ``delta_chi2`` is the V=0 gate (prior not included)."""
+    """Stage A MAP with historical blank-baseline compatibility fields."""
 
     flux: float
     pa_deg: float
@@ -80,7 +81,16 @@ class MapResult:
 
     @property
     def beats_zero(self) -> bool:
+        """Historical alias: true when the model beats blank visibilities."""
         return self.delta_chi2 > 0.0
+
+    @property
+    def chi2_blank(self) -> float:
+        return self.chi2_zero
+
+    @property
+    def delta_chi2_blank(self) -> float:
+        return self.delta_chi2
 
 
 @requires("DEC-066-SHIFT")
@@ -100,16 +110,16 @@ def map_objective(chi2_val: float, dx_arcsec: float, dy_arcsec: float) -> float:
 
 
 @requires("DEC-066-ZEROMODEL")
-def gate_delta_chi2(chi2_map: float, chi2_zero_val: float) -> float:
-    """Likelihood gate ``χ²_zero − χ²``. Not reduced χ²; prior is not folded in."""
-    return delta_chi2(chi2_map, chi2_zero_val)
+def gate_delta_chi2(chi2_map: float, chi2_blank_val: float) -> float:
+    """Historical emission score against blank visibilities, with no prior."""
+    return delta_chi2_blank(chi2_map, chi2_blank_val)
 
 
 @requires("DEC-066-WEIGHT", "DEC-066-ZEROMODEL")
 def map_gate_scores(vis, model, weights, s):
-    """Return ``(χ², χ²_zero, Δχ²)``. The score is not ``χ² / n``."""
+    """Return ``(χ²_model, χ²_blank, Δχ²_blank)``; never ``χ² / n``."""
     c = chi2(vis, model, weights, s)
-    c0 = chi2_zero(vis, weights, s)
+    c0 = chi2_blank(vis, weights, s)
     return c, c0, gate_delta_chi2(c, c0)
 
 

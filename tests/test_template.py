@@ -91,6 +91,22 @@ def test_k_to_jy_recomputed_not_hardcoded():
     assert got / rest == pytest.approx((NU / F_REST_CO21_HZ) ** 2, rel=1e-12)
 
 
+def test_relative_template_does_not_require_frequency_and_is_scale_invariant():
+    restored = convolve_restoring_beam(_gaussian(2.0, 1.5), CELL, BMAJ, BMIN, BPA)
+    kwargs = {
+        "cell_arcsec": CELL,
+        "nu_obs_hz": None,
+        "bmaj_arcsec": BMAJ,
+        "bmin_arcsec": BMIN,
+        "bpa_deg": BPA,
+        "units": "relative",
+        "k_wiener": 1.0e-8,
+    }
+    one = ico_to_template(restored, **kwargs)
+    scaled = ico_to_template(37.0 * restored, **kwargs)
+    np.testing.assert_allclose(one.sb, scaled.sb, rtol=1.0e-12, atol=1.0e-14)
+
+
 def test_gaussian_fake_long_baseline_matches_unconvolved_not_restored():
     truth = _gaussian(2.0, 1.5, amp=5.0)
     restored = convolve_restoring_beam(truth, CELL, BMAJ, BMIN, BPA)

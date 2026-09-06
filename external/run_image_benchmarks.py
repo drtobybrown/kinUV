@@ -302,7 +302,17 @@ def _run_mock() -> dict:
     return {"status": "mock_unknown"}
 
 
+def _validate_mock_recovery_schema(mock: dict) -> None:
+    for fitter in ("kinuv_mock", "kinms_mock"):
+        record = mock.get(fitter) or {}
+        if record.get("status") == "ran" and "mock_turnover_radius_recovered" not in record:
+            raise RuntimeError(
+                f"{fitter} lacks mock_turnover_radius_recovered in S0 schema"
+            )
+
+
 def _rebuild_s3(kin: dict, kin_best: dict, mock: dict) -> None:
+    _validate_mock_recovery_schema(mock)
     table_path = DEST / "s3_table.json"
     cmp_path = (
         REPO
@@ -365,8 +375,8 @@ def _rebuild_s3(kin: dict, kin_best: dict, mock: dict) -> None:
             "kinuv_real_nuts_mean": None,
             "kinms_best_real": None,
             "quote_inner_slope_real": False,
-            "mock_inner_slope_recovered": mock.get("kinuv_mock", {}).get(
-                "mock_inner_slope_recovered"
+            "mock_turnover_radius_recovered": mock.get("kinuv_mock", {}).get(
+                "mock_turnover_radius_recovered"
             ),
         },
     ]
@@ -425,13 +435,13 @@ def _rebuild_s3(kin: dict, kin_best: dict, mock: dict) -> None:
         "s3_parameter_table": rows,
         "mock_controlled": {
             "dir": str(MOCK),
-            "mock_inner_slope_recovered": mock.get("kinuv_mock", {}).get(
-                "mock_inner_slope_recovered"
+            "mock_turnover_radius_recovered": mock.get("kinuv_mock", {}).get(
+                "mock_turnover_radius_recovered"
             ),
             "kinms_r_t_inflation": mock.get("kinms_mock", {}).get("r_t_inflation_factor"),
             "figure": str(MOCK / "mock_benchmark.png"),
             "quote_inner_slope": True,
-            "note": "mock_inner_slope_recovered applies to synthetic test only",
+            "note": "turnover-radius recovery applies to the synthetic test only",
         },
         "receding_nuts": {
             "session": "sd3ckpf2",

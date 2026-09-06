@@ -4,10 +4,12 @@ The board tracks one active proposal and its independent reviews. Scientific val
 
 ## Active card
 
-`crossdomain-recovery`: Astra accepted the strategy in
-[`DEC-KINUV-CROSSDOMAIN-RECOVERY`](../decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md).
-Reviewer A and Reviewer B specification verdicts are pending. No formal review,
-tally, or implementation license has been recorded.
+`crossdomain-recovery-s0`: Astra formally approved
+[`DEC-KINUV-CROSSDOMAIN-RECOVERY`](../decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md)
+and licensed S0/S1 on 2026-09-06. S0 implementation is complete locally;
+independent Reviewer A science/numerics and Reviewer B
+software/reproducibility code verdicts are pending. S0 remains open until both
+verdicts accept the same commit.
 
 ## Roles and files
 

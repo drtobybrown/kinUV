@@ -27,8 +27,17 @@ from .infer.map import (
     stage_a_bounds,
     stage_a_seeds,
 )
+from .infer.nulls import NonRotatingResult, fit_nonrotating_emission
 from .io.vis import VisData, load_kgas066
-from .likelihood.chi2 import chi2, chi2_zero, delta_chi2
+from .likelihood.chi2 import (
+    chi2,
+    chi2_blank,
+    chi2_nonrot,
+    chi2_zero,
+    delta_chi2,
+    delta_chi2_blank,
+    delta_chi2_nonrot,
+)
 from .response.primary_beam import fwhm_pb_arcsec, primary_beam
 from .response.spectral import hann_then_bin
 from .template.wiener import ico_to_template, k_to_jy_per_beam
@@ -43,15 +52,21 @@ __all__ = [
     "DX_DY_BOUND_ARCSEC",
     "F_REST_CO21_HZ",
     "MapResult",
+    "NonRotatingResult",
     "SHIFT_PRIOR_SIGMA_ARCSEC",
     "VisData",
     "catalogue_ba",
     "chi2",
+    "chi2_blank",
+    "chi2_nonrot",
     "chi2_zero",
     "delta_chi2",
+    "delta_chi2_blank",
+    "delta_chi2_nonrot",
     "gate_delta_chi2",
     "dft_numpy",
     "fwhm_pb_arcsec",
+    "fit_nonrotating_emission",
     "galaxy_to_sky",
     "hann_then_bin",
     "ico_to_template",

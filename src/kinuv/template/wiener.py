@@ -226,9 +226,11 @@ def ico_to_template(
     sigma_empty=None,
     units="K",
 ):
-    """K km/s (or Jy/beam km/s) → unit-integral Wiener template.
+    """Integrated intensity → unit-integral Wiener template.
 
-    ``nu_obs_hz`` is the observed line frequency, not rest CO.
+    ``units='relative'`` is appropriate when only the normalized morphology is
+    used: a global K-to-Jy conversion cancels exactly during normalization.
+    For ``units='K'``, ``nu_obs_hz`` is the observed line frequency.
     """
     raw = np.asarray(ico, dtype=np.float64)
     if raw.ndim != 2:
@@ -237,8 +239,10 @@ def ico_to_template(
         jy = k_to_jy_per_beam(raw, nu_obs_hz, bmaj_arcsec, bmin_arcsec)
     elif units == "Jy":
         jy = raw.copy()
+    elif units == "relative":
+        jy = raw.copy()
     else:
-        raise ValueError("units must be 'K' or 'Jy'")
+        raise ValueError("units must be 'K', 'Jy', or 'relative'")
     jy = np.where(np.isfinite(raw), jy, np.nan)
 
     if mask is None:

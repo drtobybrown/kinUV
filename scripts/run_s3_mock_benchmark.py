@@ -177,7 +177,7 @@ def main(argv=None) -> int:
         "fitted": params_from_map(kinuv_rec),
         "recovery": kinuv_table,
         "inner_slope_fit_kms_per_arcsec": _inner_slope(kinuv_rec.v0_kms, kinuv_rec.r_t_arcsec),
-        "mock_inner_slope_recovered": bool(
+        "mock_turnover_radius_recovered": bool(
             abs(float(kinuv_rec.r_t_arcsec) - truth["r_t_arcsec"]) < 0.08
         ),
         "quote_inner_slope": True,
@@ -210,7 +210,7 @@ def main(argv=None) -> int:
         )
         if fitted
         else float("nan"),
-        "mock_inner_slope_recovered": False,
+        "mock_turnover_radius_recovered": False,
         "quote_inner_slope": True,
         "sb_mode": kinms_fit.get("sb_mode", "inClouds_from_M0"),
         "chi2_cube": kinms_fit.get("chi2_cube"),
@@ -219,7 +219,9 @@ def main(argv=None) -> int:
     if fitted:
         rt_ratio = float(fitted["r_t_arcsec"]) / float(truth["r_t_arcsec"])
         kinms_out["r_t_inflation_factor"] = rt_ratio
-        kinms_out["mock_inner_slope_recovered"] = bool(rt_ratio >= 2.5)
+        kinms_out["mock_turnover_radius_recovered"] = bool(
+            abs(float(fitted["r_t_arcsec"]) - truth["r_t_arcsec"]) < 0.08
+        )
     (MOCK / "kinms_mock.json").write_text(json.dumps(kinms_out, indent=2) + "\n")
 
     summary = {

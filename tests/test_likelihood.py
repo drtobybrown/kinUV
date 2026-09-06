@@ -16,7 +16,16 @@ from kinuv.io.vis import (
     load_kgas066,
     optical_to_radio_kms,
 )
-from kinuv.likelihood.chi2 import chi2, chi2_zero, delta_chi2, empirical_s
+from kinuv.likelihood.chi2 import (
+    chi2,
+    chi2_blank,
+    chi2_nonrot,
+    chi2_zero,
+    delta_chi2,
+    delta_chi2_blank,
+    delta_chi2_nonrot,
+    empirical_s,
+)
 from kinuv.response.spectral import s_theory
 
 NPZ = DEFAULT_NPZ
@@ -41,6 +50,20 @@ def test_chi2_zero_is_v_equals_zero_and_delta():
     c = chi2(vis, model, w, s)
     assert delta_chi2(c, z) == pytest.approx(z - c)
     assert delta_chi2(c, z) > 0.0
+
+
+def test_blank_and_nonrotating_emission_are_distinct_scores():
+    vis = np.asarray([[2.0 + 0.5j, 1.0 - 1.0j]])
+    nonrot_model = np.asarray([[1.5 + 0.25j, 0.75 - 0.5j]])
+    rot_model = np.asarray([[1.9 + 0.45j, 0.95 - 0.9j]])
+    weights = np.ones(vis.shape)
+    blank = chi2_blank(vis, weights, 1.0)
+    nonrot = chi2_nonrot(vis, nonrot_model, weights, 1.0)
+    rotating = chi2(vis, rot_model, weights, 1.0)
+    assert chi2_zero(vis, weights, 1.0) == pytest.approx(blank)
+    assert blank != pytest.approx(nonrot)
+    assert delta_chi2_blank(rotating, blank) == pytest.approx(blank - rotating)
+    assert delta_chi2_nonrot(rotating, nonrot) == pytest.approx(nonrot - rotating)
 
 
 def test_chi2_accumulates_float64():

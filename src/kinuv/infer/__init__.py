@@ -14,6 +14,7 @@ from .map import (
     stage_a_bounds,
     stage_a_seeds,
 )
+from .nulls import NonRotatingResult, fit_nonrotating_emission
 from .stage_b import StageBResult, fit_v0_rt, run_stage_b_map
 from .seeds import (
     BLOB_VSYS_KMS,
@@ -28,9 +29,11 @@ __all__ = [
     "PA_BOUND_HALF_DEG",
     "SHIFT_PRIOR_SIGMA_ARCSEC",
     "MapResult",
+    "NonRotatingResult",
     "StageBResult",
     "calibrate_lambda_reg",
     "fit_v0_rt",
+    "fit_nonrotating_emission",
     "run_stage_b_map",
     "gate_delta_chi2",
     "map_gate_scores",

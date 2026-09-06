@@ -9,6 +9,8 @@ encoded as constants for a later fitter.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from kinuv.decisions import requires
@@ -30,15 +32,66 @@ V_K_MAX_KM_S = 400.0
 # Callers pass replica ~5.3 or bin-8 ~10.6 later; do not hardcode 10.6.
 DV_CHAN_NATIVE_KM_S = 1.270
 
-# Calibration truth and acceptance (DEC-066-OSCMETRIC). Campaign is later.
+# Historical KGAS066 exact-family calibration. Ω is dimensionless because both
+# the second difference and the channel width have velocity units. The 0.3
+# threshold is not a production-wide criterion.
 CALIBRATION_V0_KM_S = 200.0
 CALIBRATION_RT_ARCSEC = 3.0
-OMEGA_ACCEPT_MAX = 0.3
 OMEGA_PASS_FRACTION = 0.95
 RECOVERY_1SIGMA_FRACTION = 0.68
 # Field-guide Gate 4: beam-scale window, not mock-sample scatter.
 RECOVERY_V0_KMS = 10.0
 RECOVERY_RT_ARCSEC = 0.5
+
+
+@dataclass(frozen=True)
+class OmegaCriterion:
+    """Mock-calibrated bound on dimensionless residual curvature."""
+
+    criterion_id: str
+    maximum_dimensionless: float
+    target_id: str
+    n_rings: int
+    omega_definition_id: str
+    omega_reference_id: str
+    spectral_response_id: str
+    mock_count: int
+    calibration_artifact_sha256: str | None
+
+    def __post_init__(self):
+        if not np.isfinite(self.maximum_dimensionless) or self.maximum_dimensionless <= 0:
+            raise ValueError("maximum_dimensionless must be positive and finite")
+        for name in (
+            "criterion_id",
+            "target_id",
+            "omega_definition_id",
+            "omega_reference_id",
+            "spectral_response_id",
+        ):
+            if not str(getattr(self, name)).strip():
+                raise ValueError(f"{name} is required")
+        if int(self.n_rings) < 3:
+            raise ValueError("n_rings must be >= 3")
+        if int(self.mock_count) < 2:
+            raise ValueError("mock_count must be >= 2")
+
+
+HISTORICAL_KGAS066_OMEGA_CRITERION = OmegaCriterion(
+    criterion_id="historical-kgas066-residual-omega-v1",
+    maximum_dimensionless=0.3,
+    target_id="KGAS066",
+    n_rings=7,
+    omega_definition_id="abs-second-difference-over-fit-channel-width-v1",
+    omega_reference_id="stage-a-arctan-initialization-v1",
+    spectral_response_id="hann-then-bin4-v1",
+    mock_count=20,
+    calibration_artifact_sha256=None,
+)
+
+# Promotion registry. Empty until a calibration artifact and checksum are
+# registered by a later reviewed decision. The historical criterion remains
+# usable to replay its calibration but cannot promote a new Stage B result.
+REGISTERED_OMEGA_CRITERIA: dict[str, OmegaCriterion] = {}
 
 _INNER_SOLID = "solid_body"
 _INNER_FLAT = "flat"
@@ -204,7 +257,11 @@ def ring_regulariser(v_knots_kms, lam_reg: float) -> float:
 
 @requires("DEC-066-OSCMETRIC")
 def omega_k(v_knots_kms, dv_chan_kms: float = DV_CHAN_NATIVE_KM_S) -> np.ndarray:
-    """``Ω_k = |V_{k+1} − 2 V_k + V_{k-1}| / Δv_chan`` (length ``N_rings − 2``)."""
+    """Dimensionless ``Ω_k = |Δ²V_k| / |Δv_chan|``.
+
+    Both numerator and denominator are in km/s. The result must never be
+    labeled in km/s.
+    """
     dv = abs(float(dv_chan_kms))
     if dv == 0.0:
         raise ValueError("dv_chan_kms must be nonzero")
@@ -260,7 +317,7 @@ def select_lambda_reg(
     *,
     v0_truth: float = CALIBRATION_V0_KM_S,
     rt_truth: float = CALIBRATION_RT_ARCSEC,
-    omega_max: float = OMEGA_ACCEPT_MAX,
+    omega_criterion: OmegaCriterion,
     omega_pass_fraction: float = OMEGA_PASS_FRACTION,
     recovery_fraction: float = RECOVERY_1SIGMA_FRACTION,
 ):
@@ -290,7 +347,10 @@ def select_lambda_reg(
     rt_sig = _broadcast_sigma(rt_sigma, omega.shape)
     order = np.argsort(lam)
     for i in order:
-        omega_ok = np.mean(omega[i] < omega_max) >= omega_pass_fraction
+        omega_ok = (
+            np.mean(omega[i] < omega_criterion.maximum_dimensionless)
+            >= omega_pass_fraction
+        )
         within = (np.abs(v0_b[i] - v0_truth) <= v0_sig[i]) & (
             np.abs(rt_b[i] - rt_truth) <= rt_sig[i]
         )
