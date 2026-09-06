@@ -31,13 +31,14 @@ on exact proposal commit `e7a1e71eba9ffe68a21754bb41dc9bb03d6c2acc`; see
 [`review-b`](2026-09-06-review-b-s1-continuum-contract.md). Both require exact
 metric/refinement/unit definitions, checksum-bound campaign state, and an
 executable S2 covariance/start/optimizer contract. Both retained target exports
-are insufficient for real S2 covariance selection and held-out scoring. The
+are insufficient for real S2 covariance selection and held-out scoring.
 Those verdicts remain historical evidence. The later pragmatic S1 execution
 directive classifies the renderer correction as a localized mathematical bug
 fix and authorizes the Field Guide's proportional-verification fast path. S1
 therefore closes on the unchanged two-target refinement gates, without a new
-proposal tally. Full dual review remains required for scientific-contract
-changes and production promotion.
+proposal tally. The r4 attempt at `c55c985` passed every tested dimension except
+radial quadrature, so S1 did not close and S2 did not begin. Full dual review
+remains required for scientific-contract changes and production promotion.
 
 ## Roles and files
 

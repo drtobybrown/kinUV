@@ -1,6 +1,6 @@
 ---
 id: DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS
-status: amended-and-implementation-licensed
+status: accepted
 date: 2026-09-06
 authority: Astra
 supersedes_transform: ESC-KINUV-S1-RENDERER-CONVERGENCE
@@ -161,3 +161,11 @@ gate. Endpoint selection triggers the previously specified extended audit.
 The S4 superiority and non-regression gates in
 [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](DEC-KINUV-CROSSDOMAIN-RECOVERY.md) remain
 unchanged. No NUTS campaign or calibrated-interval claim is licensed.
+
+## Implementation outcome
+
+The localized implementation at `97548f7` and its second refinement correction
+at `c55c985` removed the discrete-dispersion failure. The r4 canonical matrix
+passes spatial, azimuthal, spectral, phase, flux, coordinate, and centroid
+checks. Radial refinement remains above both frozen thresholds for KGAS066 and
+KGAS007. S1 therefore remains open under the two-iteration escalation rule.

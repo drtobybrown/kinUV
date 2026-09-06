@@ -10,8 +10,8 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Close S1 through proportional verification.** Run the two-target refinement matrix for the cubic-B-spline/analytic-LOSVD adapter and close immediately if every `|Delta chi2| <= 0.1` and relative-L2 gate passes.
-2. **Begin S2 geometry work.** Execute the turnover and basin audits that do not depend on missing Measurement Set grouping metadata.
+1. **Resolve the remaining S1 radial convergence blocker.** Astra selects a radial representation or integration strategy after the second bounded continuum-adapter iteration reduced, but did not close, the frozen gates.
+2. **Begin S2 only after S1 closes.** Execute the turnover and basin audits that do not depend on missing Measurement Set grouping metadata.
 3. **Re-export both targets through `ms2kinuv`.** Neither retained file meets the real-S2 grouping and provenance contract; covariance selection and held-out scoring remain blocked until compliant exports exist.
 4. **Complete S2 covariance validation.** Run grouped covariance selection and held-out scoring when compliant exports exist.
 5. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.

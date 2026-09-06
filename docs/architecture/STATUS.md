@@ -1,15 +1,14 @@
 ---
-generation: 16
-phase: s1-continuum-fast-path-implementation
-code_freeze: false
-next_role: implementer-sol
-board: s1-proportional-verification
-build_licensed: true
+generation: 17
+phase: s1-continuum-radial-refinement-blocked
+code_freeze: true
+next_role: consultant-astra
+board: s1-radial-convergence-escalated
+build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s1-dual-code-review
-  - s1-continuum-refinement-matrix
+  - s1-radial-quadrature-convergence
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
@@ -18,20 +17,21 @@ last_review_a: docs/reviews/2026-09-06-review-a-s1-continuum-contract.md
 last_review_b: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
+  - s1-radial-quadrature-strategy
   - s2-covariance-and-fold-estimator-freeze
   - s2-start-table-and-optimizer-freeze
   - s2-campaign-config-and-target-bounds
 deadlocks: []
-canon_generation: 15
+canon_generation: 17
 ---
 
 ## Agent Run Status
 
-* **Phase:** The pragmatic S1 directive authorizes localized implementation with proportional verification and no proposal-tally prerequisite
-* **Last Action:** Replaced the rejected discrete-dispersion design with the bounded continuum-adapter implementation plan while retaining the `|Delta chi2| <= 0.1` target gate
+* **Phase:** The continuum adapter removed the dispersion instability, but S1 remains open after its second bounded iteration failed radial refinement
+* **Last Action:** Sealed the r4 target matrix at `c55c985`; spatial, azimuthal, spectral, phase, flux, PA, and centroid checks pass, while radial quadrature fails both principal thresholds
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
-* **Blockers / Gates:** S1 closes on the two-target refinement matrix; both retained target exports still block real S2 covariance and held-out scoring
-* **Next Step:** commit the localized renderer correction, run the clean-commit S1 matrix, and advance directly to S2 if every target axis passes
+* **Blockers / Gates:** radial refinement gives `|Delta chi2|=0.7568/1.0361` and relative L2 `9.27e-4/1.26e-3` for KGAS066/KGAS007; both retained target exports also block real S2 covariance and held-out scoring
+* **Next Step:** Astra selects a better radial integration rule or revises the representation; S2 has not begun
 
 ## S1 operator/comparator closure
 
@@ -55,6 +55,24 @@ was run.
 | Maximum per-axis doubled-sampling absolute chi2 change | **896.724** | **143.100** | <=0.1; **FAIL** |
 | Signed worker PA error | 0.001397 deg | 0.001397 deg | <=3 deg |
 | S0 baseline replay absolute chi2 error | 0.0 | 0.0 | <=0.1 |
+
+The pragmatic continuum-adapter runs are retained as failed numerical evidence.
+The second and final bounded iteration is
+`results/validation/crossdomain-recovery-s1-20260906-r4/` at exact commit
+`c55c985c131a48e1516a1e189920be5a67694074`.
+
+| r4 refinement axis | KGAS066 absolute Delta chi-square / relative L2 | KGAS007 absolute Delta chi-square / relative L2 | Status |
+|---|---:|---:|---|
+| Spatial grid | 0.06773 / 9.26e-5 | 0.003810 / 9.38e-5 | pass |
+| Radial quadrature | **0.7568 / 9.27e-4** | **1.0361 / 1.26e-3** | **fail** |
+| Azimuth quadrature | 3.72e-7 / 2.12e-6 | 7.58e-6 / 2.50e-7 | pass |
+| Analytic spectral subdivision | 0.0 / 8.65e-15 | 0.0 / 2.37e-14 | pass |
+
+The analytic LOSVD eliminated the previous 896.7/143.1 dispersion-order
+failure. Cubic assignment-window compensation reduced the spatial-grid changes
+below both thresholds. Gauss-Legendre radial refinement improved but did not
+close the unchanged `|Delta chi2| <= 0.1` and relative-L2 `<=1e-4` gates.
+Per the two-iteration stop rule, no S2 work followed.
 
 ## Corrected prospective rotation accounting
 

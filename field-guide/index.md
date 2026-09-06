@@ -197,7 +197,7 @@ Write large intermediate arrays to scratch first. Promote a checkpoint by closin
 
 On success or failure, preserve the bounded log, status, last valid checkpoint, environment record, and failure reason. Delete scratch only after durable verification. Never copy raw inputs into every run directory.
 
-## 8. Development and promotion workflow
+## 8. Review and promotion workflow
 
 Use proportional verification. The evidence burden follows the scientific and operational risk of the change.
 

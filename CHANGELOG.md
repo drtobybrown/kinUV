@@ -4,6 +4,8 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-06 — production closeout and documentation cleanup
 
+- Replaced KinMS nearest-cell/Gauss-Hermite rendering with analytic Gaussian channel integration, cubic B-spline deposition, explicit Jy/Jy km/s accounting, and proportional validation. The second refinement iteration removed the catastrophic dispersion instability and closed every axis except radial quadrature; S1 remains open and S2 did not begin.
+- Streamlined the Field Guide so localized mathematical corrections use focused tests and empirical target closure without mandatory ADR, dossier, or proposal-review ceremony; full review remains for scientific-contract changes and production promotion.
 - Registered Astra's continuum-adapter/S2 architecture at `e7a1e71`; independent Reviewer A/B verdicts both require executable metric, refinement, unit, campaign-configuration, covariance, and optimizer details before implementation is licensed.
 - Closed S0 scientific accounting at `fb4a145`, distinguishing blank from fitted non-rotating emission and blocking universal use of the historical dimensionless omega threshold.
 - Added the S1 intrinsic KinMS adapter and shared PB/NUFFT/Hann-bin operator, then repaired the independently discovered PA, fail-closed metadata, atomic-publication, input-lock, and provenance defects at `0c95240`.
