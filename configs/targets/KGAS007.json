@@ -14,8 +14,15 @@
   },
   "stage_a": {
     "maxiter": 80,
-    "v0_seed_kms": 250.0,
-    "r_t_seed_arcsec": 3.0
+    "parameter_seed": {
+      "flux": 16.520990388784,
+      "vsys_kms": 13554.477987837307,
+      "gas_sigma_kms": 11.254317000289888,
+      "dx_arcsec": -0.018618208613728593,
+      "dy_arcsec": -0.09096900872440915,
+      "v0_kms": 195.98447930318733,
+      "r_t_arcsec": 0.5
+    }
   },
   "stage_b": {
     "n_rings": 7,

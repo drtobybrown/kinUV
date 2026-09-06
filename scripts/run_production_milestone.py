@@ -237,11 +237,9 @@ def main(argv=None) -> int:
     starts = []
     for pa in (pa_seed, pa_seed - PA_AMBIGUITY_DEG):
         seed = stage_a_seeds(pa_deg=pa)
-        seed.update(
-            vsys_kms=vsys_radio,
-            v0_kms=float(stage_a_cfg["v0_seed_kms"]),
-            r_t_arcsec=float(stage_a_cfg["r_t_seed_arcsec"]),
-        )
+        seed.update({key: float(value) for key, value in stage_a_cfg["parameter_seed"].items()})
+        seed["pa_deg"] = pa
+        seed.setdefault("vsys_kms", vsys_radio)
         rec = _lbfgs_one_start(
             data,
             template,
