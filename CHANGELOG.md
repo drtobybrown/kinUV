@@ -14,6 +14,7 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 - Retained the official KGAS066 Stage A MAP and Stage B N=7 products unchanged.
 - Consolidated closed proposals, reviews, architecture notes, superseded figures, and rejected experiments into the production record and `../archives/kinuv_docs_legacy_20260906.tar.gz`.
 - Moved tests and the Stage B plotting default from the superseded 2026-08-30 final-fit bundle to the current 2026-09-02 comparison artifacts.
+- Curated all legacy run artifacts into `results/production` and `results/archive`, verified merged NUTS shards and archive checksums, removed `kinuv_runs`, and rendered the missing KGAS007 production diagnostics.
 
 ## 2026-09-05 — second target and image-plane benchmark
 

@@ -6,11 +6,11 @@ This document is the durable synthesis of completed review cards, architecture n
 
 | Target | Product | Result | Interpretation |
 |---|---|---|---|
-| KGAS066 | Stage A MAP, `results/KILOGAS066/kinuv-KGAS066-uvsign-map/` | PA 199.730 deg; V0 267.670 km/s; rt 0.500 arcsec; gas sigma 12.050 km/s; chi2 168675.596; delta chi2 versus V=0 = 35552.652 | Official read-only arctan MAP. The optimizer reached the rt lower bound, so no real-data inner slope is quoted. |
+| KGAS066 | Stage A MAP, `results/production/KGAS066/kinuv-KGAS066-uvsign-map/` | PA 199.730 deg; V0 267.670 km/s; rt 0.500 arcsec; gas sigma 12.050 km/s; chi2 168675.596; delta chi2 versus V=0 = 35552.652 | Official read-only arctan MAP. The optimizer reached the rt lower bound, so no real-data inner slope is quoted. |
 | KGAS066 | Stage B, N=7 and lambda=0 | chi2 167302.187; improvement over Stage A 1373.409 | AIC favors the ring model, but Stage A remains the quoted rotation-curve product. Rings are not evidence for a warp. |
-| KGAS066 | Receding CPU NUTS, session `sd3ckpf2` | mean V0 254.983 km/s; mean rt 0.223922 arcsec; chi2 at mean 167486.764; max Rhat 1.004; min ESS 889 | Valid `sampler: nuts` product. Intervals remain uncalibrated because the earlier SBC failed; do not quote V0/rt as an inner slope. |
-| KGAS007 | Stage A MAP | PA 151.602 deg; V0 195.984 km/s; rt 0.500 arcsec; chi2 122070.763; delta chi2 versus V=0 = 6211.629 | MAP initialized the licensed KGAS007 NUTS run. |
-| KGAS007 | Four-shard CPU NUTS, chain-2 relaunch `faoik171` plus chains 1, 3, and 4 | mean PA 151.608 deg; mean V0 194.867 km/s; mean rt 0.48199 arcsec; max Rhat 1.00214; min ESS 1093 | Valid `sampler: nuts` product. Intervals are not calibrated and no inner slope is quoted. |
+| KGAS066 | Receding CPU NUTS, `results/production/KGAS066/kinuv-KGAS066-3de838-nuts/` | mean V0 254.983 km/s; mean rt 0.223922 arcsec; chi2 at mean 167486.764; max Rhat 1.004; min ESS 889 | Valid `sampler: nuts` product. Intervals remain uncalibrated because the earlier SBC failed; do not quote V0/rt as an inner slope. |
+| KGAS007 | Stage A MAP, `results/production/KGAS007/kinuv-KGAS007-stage-a-map/` | PA 151.602 deg; V0 195.984 km/s; rt 0.500 arcsec; chi2 122070.763; delta chi2 versus V=0 = 6211.629 | MAP initialized the licensed KGAS007 NUTS run. |
+| KGAS007 | Four-shard CPU NUTS, `results/production/KGAS007/kinuv-KGAS007-32cbbd-nuts/` | mean PA 151.608 deg; mean V0 194.867 km/s; mean rt 0.48199 arcsec; max Rhat 1.00214; min ESS 1093 | Valid `sampler: nuts` product. Intervals are not calibrated and no inner slope is quoted. |
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 

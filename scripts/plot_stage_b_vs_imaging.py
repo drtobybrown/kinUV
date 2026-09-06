@@ -46,7 +46,7 @@ ROOT_10KMS = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms"
 )
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
     "kinuv-KGAS066-uvsign-map"
 )
 ARTIFACT = Path(
@@ -55,7 +55,19 @@ ARTIFACT = Path(
 LENGTH_ARCSEC = 16.0
 
 
-def _moment_figure(data, model, residual, extent, vsys, beam, centre, out, *, model_label="Stage B"):
+def _moment_figure(
+    data,
+    model,
+    residual,
+    extent,
+    vsys,
+    beam,
+    centre,
+    out,
+    *,
+    model_label="Stage B",
+    target_id="KGAS066",
+):
     apply_style()
     import matplotlib.pyplot as plt
 
@@ -99,7 +111,7 @@ def _moment_figure(data, model, residual, extent, vsys, beam, centre, out, *, mo
         cbar(fig, ims[0], unit, cax=cax_pair[i])
         cbar(fig, ims[2], res_unit, cax=cax_res[i])
     beam_ellipse(axes[0][0], bmaj, bmin, bpa, (cx + crop - 2.1, cy - crop + 2.1))
-    fig.suptitle(f"KGAS066  ·  {model_label} vs 10 km/s cube", fontsize=11, y=0.97)
+    fig.suptitle(f"{target_id}  ·  {model_label} vs 10 km/s cube", fontsize=11, y=0.97)
     fig.text(
         0.50, 0.015,
         "east left, north up  ·  same 2-D spatial mask  ·  M1 shown as v − vsys (optical, LSRK)",
@@ -247,6 +259,8 @@ def main(argv=None) -> int:
         default="Stage B",
         help="Legend/suptitle for the model (Stage A MAP / NUTS-mean Stage A / Stage B rings).",
     )
+    p.add_argument("--target-id", default="KGAS066")
+    p.add_argument("--catalog-vsys-optical", type=float, default=VSYS_SEED_KM_S)
     args = p.parse_args(argv)
     for label, path in (("data-cube", args.data_cube), ("mask-cube", args.mask_cube)):
         if "30kms" in str(path):
@@ -276,7 +290,7 @@ def main(argv=None) -> int:
     dx, dy = float(geom["dx_arcsec"]), float(geom["dy_arcsec"])
     vsys_radio = float(geom["vsys_kms"])
     vsys_opt = float(radio_to_optical_kms(vsys_radio))
-    catalog_vsys = float(VSYS_SEED_KM_S)
+    catalog_vsys = float(args.catalog_vsys_optical)
 
     wcs_rows = [
         spectral_wcs_report(data_hdu.header, label="data_10kms"),
@@ -318,6 +332,7 @@ def main(argv=None) -> int:
         (dx, dy),
         out_dir / "moments.png",
         model_label=args.model_label,
+        target_id=args.target_id,
     )
 
     spec_d = _spectrum_mjy(data, mask2d, hdr, vel)

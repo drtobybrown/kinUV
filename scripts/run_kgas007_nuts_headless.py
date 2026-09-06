@@ -63,13 +63,10 @@ from kinuv.targets import get_target
 from kinuv.transforms.nufft import BACKEND
 
 MAP = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/"
     "kinuv-KGAS007-stage-a-map"
 )
-PRODUCT = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007/"
-    "kinuv-KGAS007-nuts"
-)
+PRODUCT = RUNS_ROOT / "KGAS007-aggregate"
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS007.npz")
 ICO = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/"

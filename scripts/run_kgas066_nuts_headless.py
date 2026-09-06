@@ -55,7 +55,7 @@ from kinuv.scratch import kinuv_scratch_root
 from kinuv.transforms.nufft import BACKEND
 
 MAP = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
     "kinuv-KGAS066-uvsign-map"
 )
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz")

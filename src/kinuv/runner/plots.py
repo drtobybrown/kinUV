@@ -22,7 +22,10 @@ from kinuv.runner.kind import ARTIFACT_G3, ARTIFACT_PA25, corner_title
 
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-MAP_DIR = PROJECT_ROOT / "results" / "KILOGAS066" / "kinuv-KGAS066-uvsign-map"
+MAP_DIR = (
+    PROJECT_ROOT / "results" / "production" / "KGAS066"
+    / "kinuv-KGAS066-uvsign-map"
+)
 ICO = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
     "KGAS66_Ico_K_kms-1.fits"
@@ -69,14 +72,14 @@ def write_corner(rec: dict, dest: Path, *, title: str = CORNER_TITLE) -> Path:
 
 
 def write_leftover_at_params(
-    params: dict, dest: Path, *, data, tmpl, grid, i_rad=None
+    params: dict, dest: Path, *, data, tmpl, grid, i_rad=None, xla=True
 ) -> dict:
     from kinuv.diagnostics.s1 import leftover_chi2
     from kinuv.infer.map import predict_binned
 
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
-    model = predict_binned(data, params, tmpl, grid, i_rad=i_rad, xla=True)
+    model = predict_binned(data, params, tmpl, grid, i_rad=i_rad, xla=xla)
     b_m, per_row, vel, per_chan = leftover_chi2(data, model)
     total = float(np.sum(per_row))
     structured = leftover_velocity_structured(b_m, per_row, per_chan)
@@ -122,7 +125,16 @@ def write_leftover_at_params(
     return summary
 
 
-def write_stage_a_cube(params: dict, dest: Path, *, data, tmpl, grid) -> Path:
+def write_stage_a_cube(
+    params: dict,
+    dest: Path,
+    *,
+    data,
+    tmpl,
+    grid,
+    ico_path: Path = ICO,
+    object_name: str = "KGAS066",
+) -> Path:
     """Native-channel Stage A cube at NUTS mean. Never the official MAP tree."""
     from astropy.io import fits
     from astropy.wcs import WCS
@@ -149,7 +161,8 @@ def write_stage_a_cube(params: dict, dest: Path, *, data, tmpl, grid) -> Path:
         v0_kms=params["v0_kms"],
         r_t_arcsec=params["r_t_arcsec"],
     )
-    ico_hdr = fits.getheader(ICO) if ICO.is_file() else {}
+    ico_path = Path(ico_path)
+    ico_hdr = fits.getheader(ico_path) if ico_path.is_file() else {}
     w = WCS(naxis=3)
     w.wcs.crpix = [grid.nx // 2 + 1, grid.ny // 2 + 1, 1.0]
     cdelt = float(grid.cell_arcsec) / 3600.0
@@ -167,7 +180,7 @@ def write_stage_a_cube(params: dict, dest: Path, *, data, tmpl, grid) -> Path:
     hdr = w.to_header()
     hdr["BUNIT"] = "Jy/pixel"
     hdr["RESTFRQ"] = (float(F_REST_CO21_HZ), "CO(2-1) rest frequency [Hz]")
-    hdr["OBJECT"] = "KGAS066"
+    hdr["OBJECT"] = str(object_name)
     hdr["ORIGIN"] = "kinUV Stage A NUTS-mean sky_cube"
     hdr["V0"] = (float(params["v0_kms"]), "km/s")
     hdr["RT"] = (float(params["r_t_arcsec"]), "arcsec")
@@ -176,26 +189,35 @@ def write_stage_a_cube(params: dict, dest: Path, *, data, tmpl, grid) -> Path:
 
 
 def write_imaging_plots(
-    geom_json: Path, model_cube: Path, out_dir: Path, *, model_label: str = "Stage B"
+    geom_json: Path,
+    model_cube: Path,
+    out_dir: Path,
+    *,
+    model_label: str = "Stage B",
+    data_cube: Path | None = None,
+    mask_cube: Path | None = None,
+    target_id: str = "KGAS066",
+    catalog_vsys_optical: float | None = None,
 ) -> None:
     scripts = REPO / "scripts"
     sys.path.insert(0, str(scripts))
     from plot_stage_b_vs_imaging import main as imaging_main
 
-    imaging_main(
-        [
-            "--stage-a",
-            str(geom_json),
-            "--model-cube",
-            str(model_cube),
-            "--out-dir",
-            str(out_dir),
-            "--matched-fits",
-            str(out_dir / "model_on_10kms.fits"),
-            "--model-label",
-            str(model_label),
-        ]
-    )
+    argv = [
+        "--stage-a", str(geom_json),
+        "--model-cube", str(model_cube),
+        "--out-dir", str(out_dir),
+        "--matched-fits", str(out_dir / "model_on_10kms.fits"),
+        "--model-label", str(model_label),
+        "--target-id", str(target_id),
+    ]
+    if data_cube is not None:
+        argv.extend(("--data-cube", str(data_cube)))
+    if mask_cube is not None:
+        argv.extend(("--mask-cube", str(mask_cube)))
+    if catalog_vsys_optical is not None:
+        argv.extend(("--catalog-vsys-optical", str(catalog_vsys_optical)))
+    imaging_main(argv)
 
 
 def write_nuts_product_plots(

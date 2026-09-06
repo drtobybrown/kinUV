@@ -57,7 +57,7 @@ The Consultant defines and signs the scientific specification and quantitative g
 | Item | Path |
 |---|---|
 | 066 kernel sequence | [`docs/diagnostics/gold-standard-roadmap.md`](diagnostics/gold-standard-roadmap.md) |
-| Official MAP | `/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/kinuv-KGAS066-uvsign-map/` |
+| Production index | `/arc/projects/KILOGAS/analysis/toby_sandbox/results/MANIFEST.md` |
 | S1 artifacts | `docs/reviews/artifacts/2026-08-29-s1-mock/` |
 | S2 artifacts | `docs/reviews/artifacts/2026-08-29-s2/` |
 | **Your review folder** | [`docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/`](reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/) |

@@ -42,7 +42,7 @@ CANFAR_CUBE_10 = Path(
     "KGAS66_clipped_cube.fits"
 )
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
     "kinuv-KGAS066-uvsign-map"
 )
 

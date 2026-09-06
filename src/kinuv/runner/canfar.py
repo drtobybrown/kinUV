@@ -33,8 +33,14 @@ PROJECT_ROOT = Path(
         "/arc/projects/KILOGAS/analysis/toby_sandbox",
     )
 )
-# Durable products live on the project volume, never $HOME. /scratch is ephemeral.
-RUNS_ROOT = Path(os.environ.get("KINUV_RUNS", str(PROJECT_ROOT / "kinuv_runs")))
+# Unreviewed durable output lands under the unified results tree. Promotion moves
+# accepted products into results/production; /scratch remains ephemeral.
+RUNS_ROOT = Path(
+    os.environ.get(
+        "KINUV_RUN_ROOT",
+        os.environ.get("KINUV_RUNS", str(PROJECT_ROOT / "results" / "incoming")),
+    )
+)
 DEFAULT_IMAGE = "skaha/astroml:latest"
 FALLBACK_IMAGE = "skaha/base-notebook:latest"
 REPO = PROJECT_ROOT / "kinUV"
@@ -68,6 +74,7 @@ def headless_job_env(
         "KINUV_GALAXY": str(galaxy),
         "KINUV_KIND": str(kind),
         "KINUV_PROJECT": str(root.parent),
+        "KINUV_RUN_ROOT": str(runs_root or RUNS_ROOT),
         "KINUV_RUNS": str(runs_root or RUNS_ROOT),
         "KINUV_PA_INIT": f"{pa:.10g}",
         "KINUV_ARTIFACT_DIR": str(artifact_dir_for_kind(kind, repo=root)),

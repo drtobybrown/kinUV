@@ -310,7 +310,7 @@ def _rebuild_s3(kin: dict, kin_best: dict, mock: dict) -> None:
     )
     g3_path = REPO / "docs/reviews/artifacts/2026-08-30-g3-nuts/summary.json"
     map_path = Path(
-        "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+        "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
         "kinuv-KGAS066-uvsign-map/stage_a_map.json"
     )
     cmp = json.loads(cmp_path.read_text()) if cmp_path.is_file() else {}

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import shutil
 import sys
 from dataclasses import asdict
@@ -19,8 +20,11 @@ from kinuv.targets import get_target
 
 TARGET = get_target("KGAS007")
 DEST = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007/"
-    "kinuv-KGAS007-stage-a-map"
+    os.environ.get(
+        "KINUV_MAP_DEST",
+        "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/KGAS007/"
+        "kinuv-KGAS007-stage-a-map",
+    )
 )
 ARTIFACT = (
     REPO / "docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map"

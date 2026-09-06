@@ -30,8 +30,8 @@ CUBE = Path(
     "KGAS66_clipped_cube.fits"
 )
 OUT = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/KGAS066/"
+    "kinuv-KGAS066-stage-ab-map"
 )
 IMAGING_RECEDING_DEG = 201.9
 PA_ALIAS_DEG = 21.9

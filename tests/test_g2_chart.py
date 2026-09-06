@@ -26,7 +26,7 @@ from kinuv.xp import is_jax
 REPO = Path(__file__).resolve().parents[1]
 SRC_CHART = REPO / "src/kinuv/infer/chart.py"
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
     "kinuv-KGAS066-uvsign-map"
 )
 CANFAR_NPZ = Path(

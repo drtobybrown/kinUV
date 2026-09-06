@@ -42,8 +42,8 @@ NUTS_MEAN_JSON = (
     REPO / "docs/reviews/artifacts/2026-08-30-g3-nuts/nuts_mean_params.json"
 )
 NUTS_CUBE = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/"
-    "KGAS066-20260831T194009Z-nuts/plots/stage_a_nuts_mean.fits"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
+    "kinuv-KGAS066-3de838-nuts/plots/model_cube.fits"
 )
 CUBE_10 = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/"

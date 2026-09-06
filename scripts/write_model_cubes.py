@@ -25,8 +25,12 @@ CUBE = Path(
     "KGAS66_clipped_cube.fits"
 )
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
     "kinuv-KGAS066-uvsign-map"
+)
+DEFAULT_OUT = Path(
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/KGAS066/"
+    "model-cube-diagnostics"
 )
 
 
@@ -68,8 +72,11 @@ def main(argv=None) -> None:
 
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--map-dir", type=Path, default=MAP_DIR)
+    p.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     args = p.parse_args(argv)
     map_dir = args.map_dir
+    out_dir = args.out_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
     a = json.loads((map_dir / "stage_a_map.json").read_text())
     b = json.loads((map_dir / "stage_b_map.json").read_text())
     data = load_kgas066(NPZ, cube_path=CUBE if CUBE.is_file() else None)
@@ -123,8 +130,8 @@ def main(argv=None) -> None:
         {"V0": (float(a["v0_kms"]), "km/s"), "RT": (float(a["r_t_arcsec"]), "arcsec")},
     )
     hdu_a.header["ORIGIN"] = "kinUV Stage A sky_cube"
-    dest_b = map_dir / "stage_b_model_cube.fits"
-    dest_a = map_dir / "stage_a_model_cube.fits"
+    dest_b = out_dir / "stage_b_model_cube.fits"
+    dest_a = out_dir / "stage_a_model_cube.fits"
     hdu_b.writeto(dest_b, overwrite=True)
     hdu_a.writeto(dest_a, overwrite=True)
     print(f"wrote {dest_b} {hdu_b.data.shape} Jy/pixel native chan", flush=True)

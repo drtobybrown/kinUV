@@ -9,8 +9,8 @@ USER_NAME="${USER:-thbrown}"
 PROJECT="${KINUV_PROJECT:-/arc/projects/KILOGAS/analysis/toby_sandbox}"
 REPO="${KINUV_REPO:-${PROJECT}/kinUV}"
 VENV="${KINUV_VENV:-/arc/home/thbrown/kinuv-venv-recovery}"
-# Default: /arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs
-RUNS_ROOT="${KINUV_RUNS:-${PROJECT}/kinuv_runs}"
+# Unreviewed durable runs stay under the unified results tree until promotion.
+RUNS_ROOT="${KINUV_RUN_ROOT:-${KINUV_RUNS:-${PROJECT}/results/incoming}}"
 RUN_DIR="${RUNS_ROOT}/${RUN_ID}"
 SESSION="${SKAHA_SESSION_ID:-${HOSTNAME:-local}}"
 SCRATCH_JOB="/scratch/kinuv-${USER_NAME}/${SESSION}"
@@ -26,6 +26,7 @@ export JAX_ENABLE_X64=1
 export PYTHONUNBUFFERED=1
 export MPLBACKEND=Agg
 export KINUV_RUNS="${RUNS_ROOT}"
+export KINUV_RUN_ROOT="${RUNS_ROOT}"
 export KINUV_PROJECT="${PROJECT}"
 
 SCRATCH_LOG="${SCRATCH_JOB}/worker.log"

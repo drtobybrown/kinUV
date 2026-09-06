@@ -14,7 +14,7 @@ Canonical 066 NUTS path under `DEC-067-RUNNER`. GPU acceleration was benchmarked
 
 Image: `skaha/astroml:latest`. Venv: `/arc/home/thbrown/kinuv-venv-recovery` (CPU jax 0.11.1 + jax-finufft). `JAX_PLATFORMS=cpu`.
 
-Durable run root: `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/{run_id}/`. Never `$HOME`. JAX cache on `/scratch/kinuv-$USER` (see `scratch.md`).
+Durable unreviewed run root: `${KINUV_RUN_ROOT}/{run_id}/`, defaulting to the workspace `results/incoming/` directory. Promotion moves accepted products into `results/production/`. Never use `$HOME`. JAX cache stays on `/scratch/kinuv-$USER` (see `scratch.md`).
 
 ## Submit: serial receding (landed `sd3ckpf2`)
 
@@ -48,8 +48,8 @@ Mixing gate: `R_hat ≤ 1.01`, `ESS > 400` on six sampled names. Fail → `COMPL
 ```bash
 canfar ps
 canfar info SESSION_ID
-cat kinuv_runs/{run_id}/status.json
-tail kinuv_runs/{run_id}/worker.log
+cat results/incoming/{run_id}/status.json
+tail results/incoming/{run_id}/worker.log
 ```
 
 ## Do not

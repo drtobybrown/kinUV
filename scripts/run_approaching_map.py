@@ -27,7 +27,7 @@ from kinuv.runner.kind import ARTIFACT_PA25  # noqa: E402
 from kinuv.runner.plots import write_leftover_at_params  # noqa: E402
 
 MAP = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
     "kinuv-KGAS066-uvsign-map/stage_a_map.json"
 )
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz")
@@ -39,7 +39,7 @@ CUBE = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"
     "KGAS66_clipped_cube.fits"
 )
-RUNS = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs")
+RUNS = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming")
 RT_CLAMP = 0.5
 OFFICIAL_PA = 199.72980072503037
 RECEDING_DCHI = 35552.65225039818
