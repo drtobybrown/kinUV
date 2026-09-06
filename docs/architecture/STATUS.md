@@ -1,5 +1,5 @@
 ---
-generation: 17
+generation: 18
 phase: s1-continuum-radial-refinement-blocked
 code_freeze: true
 next_role: consultant-astra
@@ -22,16 +22,20 @@ open_questions:
   - s2-start-table-and-optimizer-freeze
   - s2-campaign-config-and-target-bounds
 deadlocks: []
-canon_generation: 17
+canon_generation: 18
 ---
 
 ## Agent Run Status
 
 * **Phase:** The continuum adapter removed the dispersion instability, but S1 remains open after its second bounded iteration failed radial refinement
 * **Last Action:** Sealed the r4 target matrix at `c55c985`; spatial, azimuthal, spectral, phase, flux, PA, and centroid checks pass, while radial quadrature fails both principal thresholds
-* **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
+* **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold. Governance now codifies proportional verification, direct repair authority, and the empirical `<=0.1` refinement priority for the S1-to-S2 workflow.
 * **Blockers / Gates:** radial refinement gives `|Delta chi2|=0.7568/1.0361` and relative L2 `9.27e-4/1.26e-3` for KGAS066/KGAS007; both retained target exports also block real S2 covariance and held-out scoring
 * **Next Step:** Astra selects a better radial integration rule or revises the representation; S2 has not begun
+
+The Field Guide and Review Board charter are synchronized with the active
+S1/S2 transition protocol. This governance update does not close the failed S1
+radial gate, license S2 implementation, or alter any scientific threshold.
 
 ## S1 operator/comparator closure
 

@@ -53,6 +53,21 @@ remains required for scientific-contract changes and production promotion.
 
 Templates: [`_template.md`](_template.md) and [`_review_template.md`](_review_template.md).
 
+## Governance and engineering velocity mandate
+
+Reviewer A and Reviewer B enforce the Field Guide's Governance & Engineering
+Velocity Invariant. They must return `changes-requested` on any architectural
+proposal that mandates redundant test harnesses, unnecessary secondary
+implementations, or excessive paperwork gates for localized mathematical,
+numerical, unit, or interpolation repairs.
+
+For those repairs, reviewers evaluate the implementation against the declared
+empirical refinement gate, mathematical correctness, and focused test passage.
+They must not demand an auxiliary verification engine when the primary method
+achieves empirical closure. A secondary reference engine becomes eligible only
+after the primary numerical implementation demonstrably fails empirical
+refinement closure on target data.
+
 ## Independence
 
 Reviewers receive the frozen proposal, configuration checksums, relevant decisions, and acceptance criteria. They do not read each other's review before committing a verdict. Neither reviewer implements the proposal under review. A generic approval without an attempted falsification, missing-gate check, or residual-risk assessment is invalid.

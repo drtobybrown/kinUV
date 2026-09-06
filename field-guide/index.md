@@ -36,6 +36,12 @@ Any proposed change to the model, prior, covariance, data selection, or gate thr
 
 An Implementer may stop a run immediately for corruption, invalid numerics, resource exhaustion, or a failed gate. Stopping protects the specification; it does not constitute authority to weaken it.
 
+### Governance & Engineering Velocity Invariant
+
+* Proportional Verification: Secondary reference engines (e.g., ungridded slow-DFT direct-cloud calculations) are prohibited unless a primary numerical implementation demonstrably fails empirical refinement closure on target data.
+* Direct Repair Authority: Localized mathematical, numerical, unit, or interpolation repairs do not require formal ADR drafting, immutable dossier serialization, or pre-implementation approval rounds. Implementers proceed directly with code fixes.
+* Bias Toward Velocity: Directives must prioritize empirical numerical closure (refinement gate ≤ 0.1) over asymptotic float64 perfection (1e-6) to maintain engineering momentum and avoid review deadlock.
+
 ## 3. Configuration boundary
 
 Target and campaign state must be external to the operational manual and modeling modules.
