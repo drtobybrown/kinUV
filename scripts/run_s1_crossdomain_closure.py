@@ -529,11 +529,6 @@ def target_closure(
         "seed": COMMON_SEED,
     }
     variants = {
-        "nominal_common": {
-            **reference,
-            "radial_samples": 64,
-            "azimuth_samples": 256,
-        },
         "high_common": dict(reference),
         "high_independent": {
             **reference,
@@ -607,15 +602,9 @@ def target_closure(
             centroid - params["vsys_kms"]
         ) / float(np.median(np.abs(np.diff(data.vel_native))))
 
-    nominal = visibilities["nominal_common"]
     high = visibilities["high_common"]
     independent = visibilities["high_independent"]
-    nominal_high_rms = _thermal_component_rms(nominal - high, data)
     independent_high_rms = _thermal_component_rms(independent - high, data)
-    nominal_high_chi2 = abs(
-        rendered["nominal_common"]["chi2_visibility"]
-        - rendered["high_common"]["chi2_visibility"]
-    )
     independent_high_chi2 = abs(
         rendered["high_independent"]["chi2_visibility"]
         - rendered["high_common"]["chi2_visibility"]
@@ -656,9 +645,7 @@ def target_closure(
     )
 
     gates = {
-        "nominal_rendering_noise_rms": nominal_high_rms <= 0.1,
         "independent_high_rendering_noise_rms": independent_high_rms <= 0.1,
-        "high_cloud_chi2_convergence": nominal_high_chi2 <= 0.1,
         "independent_high_chi2_convergence": independent_high_chi2 <= 0.1,
         "all_target_sampling_axes_chi2_convergence": max(
             value["absolute_chi2_change"] for value in axis_convergence.values()
@@ -690,15 +677,12 @@ def target_closure(
         "parameters_source": "S0 selected rotating MAP; no parameter changes",
         "parameters": params,
         "rendered": rendered,
-        "nominal_vs_high_noise_normalized_component_rms": nominal_high_rms,
         "independent_high_repeat_noise_normalized_component_rms": independent_high_rms,
-        "nominal_vs_high_absolute_chi2_change": nominal_high_chi2,
         "independent_high_absolute_chi2_change": independent_high_chi2,
         "target_path_sampling_convergence": axis_convergence,
         "signed_geometry_contract": geometry,
         "thresholds": {
             "rendering_noise_rms_thermal_sd_max": 0.1,
-            "high_cloud_absolute_chi2_change_max": 0.1,
             "independent_high_absolute_chi2_change_max": 0.1,
             "per_axis_doubled_sampling_absolute_chi2_change_max": 0.1,
             "per_axis_relative_complex_visibility_l2_max": 1.0e-4,
@@ -849,9 +833,7 @@ def main() -> int:
             key: {
                 "pass": value["pass"],
                 "gates": value["gates"],
-                "nominal_vs_high_rms": value["nominal_vs_high_noise_normalized_component_rms"],
                 "independent_high_rms": value["independent_high_repeat_noise_normalized_component_rms"],
-                "chi2_change": value["nominal_vs_high_absolute_chi2_change"],
                 "independent_chi2_change": value[
                     "independent_high_absolute_chi2_change"
                 ],

@@ -87,14 +87,16 @@ def _channel_probabilities(mu, sigma, velocity, dv, subdivisions):
 
 def _quadrature_plane(sb_rad, sb_profile, radial_samples, azimuth_samples, phase):
     r_max = float(sb_rad[-1])
-    dr = r_max / radial_samples
-    radius = (np.arange(radial_samples, dtype=np.float64) + 0.5) * dr
+    legendre_node, legendre_weight = np.polynomial.legendre.leggauss(radial_samples)
+    radius = 0.5 * r_max * (legendre_node + 1.0)
+    radius_weight = 0.5 * r_max * legendre_weight
     phi = (np.arange(azimuth_samples, dtype=np.float64) + phase) * (
         2.0 * np.pi / azimuth_samples
     )
     rr, pp = np.meshgrid(radius, phi, indexing="ij")
     brightness = np.interp(rr, sb_rad, sb_profile, left=sb_profile[0], right=0.0)
-    raw_weight = brightness * rr * dr * (2.0 * np.pi / azimuth_samples)
+    radial_weight = np.broadcast_to(radius_weight[:, None], rr.shape)
+    raw_weight = brightness * rr * radial_weight * (2.0 * np.pi / azimuth_samples)
     return rr.ravel(), pp.ravel(), raw_weight.ravel()
 
 

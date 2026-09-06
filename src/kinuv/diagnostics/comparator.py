@@ -161,5 +161,7 @@ def sample_intrinsic_kinms(path, *, data, grid, eps: float = 1e-8):
         grid=grid,
         velocity_centers_kms=data.vel_native,
     )
-    vis = sample_intrinsic_cube_binned(data, cube, grid, eps=eps)
+    vis = sample_intrinsic_cube_binned(
+        data, cube, grid, eps=eps, spatial_assignment="cubic_b_spline"
+    )
     return vis, cube, metadata
