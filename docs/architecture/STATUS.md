@@ -1,33 +1,32 @@
 ---
-generation: 9
-phase: s0-implementation-review
+generation: 10
+phase: s0-closed-s1-ready
 code_freeze: false
-next_role: independent-code-reviewers
-board: s0-dual-review-pending
+next_role: senior-implementer-s1
+board: s0-accepted-s1-ready
 build_licensed: true
 pending:
-  - s0-independent-code-reviews
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s1-fair-comparator
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md
-last_review: null
-last_review_a: null
-last_review_b: null
+last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md
+last_review_a: docs/reviews/2026-09-06-code-review-a-crossdomain-s0.md
+last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 9
+canon_generation: 10
 ---
 
 ## Agent Run Status
 
-* **Phase:** S0 scientific-accounting implementation is licensed and awaiting dual code review; MILESTONE-001 remains a sealed historical engineering baseline
-* **Last Action:** Implemented explicit blank and fitted non-rotating likelihood paths, prospective rotation-test accounting, and dimensionally correct Stage B omega provenance
+* **Phase:** S0 scientific accounting is closed; S1 fair-comparator implementation is next; MILESTONE-001 remains a sealed historical engineering baseline
+* **Last Action:** Reviewer A and Reviewer B independently accepted exact S0 commit `fb4a14543d579168c9224c8ebca6a7591147f4db`; the durable dossier and all input checksums verified
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
-* **Blockers / Gates:** Reviewer A/B S0 verdicts; at least 199 complete non-rotating null refits for a rotation claim; a newly registered mock-calibrated Stage B criterion; legacy KGAS007 grouping may block valid real holdout; posterior intervals remain uncalibrated
-* **Next Step:** close S0 only after dual review, then execute S1 intrinsic KinMS operator-parity closure before any new campaign
+* **Blockers / Gates:** at least 199 complete non-rotating null refits for a rotation claim; a newly registered mock-calibrated Stage B criterion; legacy KGAS007 grouping may block valid real holdout; posterior intervals remain uncalibrated
+* **Next Step:** execute S1 intrinsic KinMS operator-parity closure before any new campaign
 
 ## Corrected prospective rotation accounting
 
@@ -43,7 +42,8 @@ canon_generation: 9
 
 The S0 MAP-only accounting check used the audited Ico template noise from the
 official propagated error map, unchanged target physical parameters and
-optimizer budgets, the version-2 gate schema, and both PA starts. These values are prospective diagnostics,
+optimizer budgets, the version-2 gate schema, and both PA starts. These values
+are prospective diagnostics,
 not promoted rotation detections:
 
 | Target | `chi2_blank` | fitted `chi2_nonrot` | refitted `chi2_rot` | `delta_chi2_nonrot` | Status |
@@ -53,8 +53,8 @@ not promoted rotation detections:
 
 Both non-rotating fits reached the allowed 50 km/s dispersion ceiling;
 KGAS066 also reached the lower systemic-velocity bound and the +2 arcsec
-declination-offset bound. This boundary
-pressure is retained as diagnostic evidence and does not authorize wider
+declination-offset bound. This boundary pressure is retained as diagnostic
+evidence and does not authorize wider
 bounds. The durable run record and reproducibility manifest are in
 `results/validation/crossdomain-recovery-s0-20260906/`.
 

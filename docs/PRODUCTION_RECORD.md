@@ -1,12 +1,26 @@
 # kinUV production record
 
-## 2026-09-06 scientific-gate audit supersession
+## 2026-09-06 S0 scientific-accounting closure
 
 MILESTONE-001 numerical artifacts remain sealed. Per
 [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md),
-earlier rotation-null and omega interpretations are withdrawn pending S0. Neither
-real target has an established truth-recovery ranking. Archived evidence is
-preserved unchanged.
+earlier rotation-null and omega interpretations are withdrawn. S0 closed at
+commit `fb4a14543d579168c9224c8ebca6a7591147f4db` after independent science and
+software review. Blank visibilities now measure emission only; rotation
+requires a fitted non-rotating emitting disk and a complete-refit bootstrap.
+Stage B omega is dimensionless and no new smoothness criterion is registered.
+Neither real target has an established truth-recovery ranking. Archived
+evidence is preserved unchanged.
+
+The durable S0 dossier is
+`results/validation/crossdomain-recovery-s0-20260906/`. It contains two MAP
+starts per target, resolved bounds, software and input hashes, Ico uncertainty
+and Wiener metadata, and exact null-likelihood replay. KGAS066 has
+`(chi2_blank, chi2_nonrot, chi2_rot)=(204228.248, 200023.444, 168526.073)`;
+KGAS007 has `(128282.392, 126567.540, 122144.496)`. Their respective
+`delta_chi2_nonrot` values are 31497.371 and 4423.045, but both remain
+`pending_bootstrap`. Both null fits reach the dispersion ceiling; KGAS066 also
+reaches the systemic-velocity and declination-offset bounds.
 
 This document is the durable synthesis of completed review cards, architecture notes, and superseded diagnostic artifacts through 2026-09-06. It records conclusions needed to interpret or reproduce the current KGAS066 and KGAS007 products. Active coordination belongs in [`reviews/BOARD.md`](reviews/BOARD.md); binding model choices remain in [`decisions/`](decisions/).
 
@@ -14,14 +28,14 @@ This document is the durable synthesis of completed review cards, architecture n
 
 | Target | Product | Result | Interpretation |
 |---|---|---|---|
-| KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Selected Stage B chi2 167302.366; Stage A PA 199.729 deg, V0 267.670 km/s, rt 0.500 arcsec, delta chi2 versus V=0 35552.645; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable baseline. Stage B passes AIC, bound-pressure, and oscillation gates. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
+| KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Selected Stage B chi2 167302.366; Stage A PA 199.729 deg, V0 267.670 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 35552.645; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable historical baseline. Its former Stage B oscillation gate is invalidated by S0's unit/provenance audit. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
 | KGAS007 | MILESTONE-001, `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s. Historical `max_omega=76.329` is dimensionless; its old km/s threshold label was invalid. Posterior intervals remain uncalibrated. |
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 
 The independent KGAS007 fit assessment is recorded in
 [`diagnostics/kgas007-fit-assessment.md`](diagnostics/kgas007-fit-assessment.md).
-It finds a robust visibility-domain rotation detection and PA, but no current
+It finds a strong visibility-domain rotation candidate and constrained PA, but no current
 evidence that kinUV outperforms KinMS for this target. The dominant mismatch is
 the fixed-geometry, frozen-brightness model at 1--3 arcsec and in asymmetric
 spectral channels; an equal visibility-likelihood comparison has not yet been run.
@@ -71,6 +85,9 @@ MILESTONE-001 fixed an inclination propagation defect in Stage B and model-cube 
 | `docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/` | KGAS007 MAP initialization and diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas007-nuts/` | Merged KGAS007 NUTS product and mixing diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/` | KinMS live and controlled-mock comparator, excluding retired exploratory figures. |
+| `docs/reviews/2026-09-06-code-review-a-crossdomain-s0.md` | Independent science/numerics acceptance of S0 commit `fb4a145`. |
+| `docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md` | Independent software/reproducibility acceptance of S0 commit `fb4a145`. |
+| `../../results/validation/crossdomain-recovery-s0-20260906/` | Durable S0 two-target accounting metrics and checksum manifest. |
 | `MILESTONE-001.md` | Compact milestone receipt and acceptance summary. |
 | `../../results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Accepted KGAS066 visibility, imaging, benchmark, and posterior bundle. |
 | `../../results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted KGAS007 visibility, imaging, benchmark, and posterior bundle. |
@@ -79,8 +96,8 @@ The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_
 
 ## Remaining work
 
-1. Calibrate the exact NUTS workflow with simulation-based calibration before publishing credible intervals.
-2. Re-export the historical KGAS007 wavelength-coordinate NPZ with `ms2kinuv` when its source Measurement Set becomes available.
-3. Investigate the KGAS066 velocity-structured residual and define an outer-ring support criterion before another Stage B campaign.
-4. Define a target-selection contract before adding a multi-galaxy runner or hierarchical model.
-5. Test richer surface-brightness models only when they preserve the visibility-plane likelihood and have an explicit comparison criterion.
+1. Execute S1 with an intrinsic pre-restoration KinMS adapter and the shared visibility/channel operator, then satisfy the frozen closure gates.
+2. Calibrate the exact NUTS workflow with simulation-based calibration before publishing credible intervals.
+3. Re-export the historical KGAS007 wavelength-coordinate NPZ with `ms2kinuv` when its source Measurement Set becomes available.
+4. Investigate the KGAS066 velocity-structured residual and define an outer-ring support criterion before another Stage B campaign.
+5. Define a target-selection contract before adding a multi-galaxy runner or hierarchical model.
