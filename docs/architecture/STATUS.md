@@ -1,33 +1,34 @@
 ---
-generation: 11
-phase: s1-awaiting-dual-code-review
+generation: 12
+phase: s1-required-changes
 code_freeze: false
-next_role: reviewers-a-b-s1
-board: s1-code-review-active
+next_role: implementer-s1-repair
+board: s1-code-review-required-changes
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s1-dual-code-review
+  - s1-pa-contract-and-convergence-repair
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md
-last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md
-last_review_a: docs/reviews/2026-09-06-code-review-a-crossdomain-s0.md
-last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md
+last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
+last_review_a: docs/reviews/2026-09-06-code-review-a-crossdomain-s1.md
+last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 11
+canon_generation: 12
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 intrinsic-comparator and operator-parity implementation passes its principal numerical gates and awaits exact-commit Reviewer A/B verification
-* **Last Action:** Generated beam-free KinMS 3.0.13 cubes for KGAS066 and KGAS007 through the isolated `cleanOut=True` worker; both comparator branches use kinUV's shared PB, NUFFT, and Hann/bin operator exactly once
+* **Phase:** S1 exact commit `1b629a1` received dual `accept-with-required-changes`; bounded repairs are active and S2 has not begun
+* **Last Action:** Reviewer A falsified the KinMS/kinUV PA convention and convergence coverage; Reviewer B falsified the fail-closed metadata and dossier-publication contracts
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
 * **Blockers / Gates:** at least 199 complete non-rotating null refits for a rotation claim; a newly registered mock-calibrated Stage B criterion; legacy KGAS007 grouping may block valid real holdout; posterior intervals remain uncalibrated
-* **Next Step:** independent Reviewer A science/numerics and Reviewer B software/reproducibility checks of the frozen S1 implementation commit
+* **Next Step:** repair all seven required findings, regenerate the S1 dossier under unchanged thresholds, and obtain two fresh exact-commit verdicts
 
 ## S1 operator/comparator closure
 

@@ -10,7 +10,7 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Close S1 review.** Obtain independent science/numerics and software/reproducibility code verdicts on the exact intrinsic-comparator implementation and durable closure dossier.
+1. **Repair and close S1 review.** Resolve both independent reviewers' required PA, convergence, contract, publication, lock, and provenance findings; regenerate the durable dossier and obtain two accepts on one exact commit.
 2. **Execute S2 geometry/covariance.** Run the frozen turnover grid, twelve-start basin audit, and line-free covariance/whitening report without changing target priors or visibility selection.
 3. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
 4. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.

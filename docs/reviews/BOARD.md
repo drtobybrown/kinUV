@@ -9,9 +9,13 @@ The board tracks one active proposal and its independent reviews. Scientific val
 and licensed S0/S1 on 2026-09-06. S0 closed after independent Reviewer A and
 Reviewer B accepted exact commit
 `fb4a14543d579168c9224c8ebca6a7591147f4db`. The S1 intrinsic KinMS adapter
-and operator-parity implementation now passes its implementation gates. The
-active card is independent S1 code review; both reviewers must name the exact
-frozen implementation commit before S2 begins.
+and operator-parity implementation reached its first frozen review. Both
+independent reviewers returned `accept-with-required-changes` on exact commit
+`1b629a1fab9c64a25cb870d8f5ad43102b55cb0b`. Required repairs cover the KinMS
+PA boundary, target-path convergence axes and independent-repeat chi-square,
+fail-closed metadata and cube-derived flux, atomic dossier publication,
+executable environment/input locks, and complete runtime provenance. S1 stays
+open until both reviewers accept one revised exact commit; S2 has not begun.
 
 ## Roles and files
 
