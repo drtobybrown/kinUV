@@ -101,7 +101,21 @@ def main() -> int:
     output_path = Path(config["output_npz"]).resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    velocity, dv, reverse_spectral = _velocity_contract(config["velocity_centers_kms"])
+    velocity, native_dv, reverse_spectral = _velocity_contract(
+        config["velocity_centers_kms"]
+    )
+    spectral_oversample = int(config.get("spectral_oversample", 1))
+    if spectral_oversample < 1:
+        raise ValueError("spectral_oversample must be >=1")
+    ascending_velocity = velocity[::-1] if reverse_spectral else velocity
+    render_dv = native_dv / spectral_oversample
+    render_velocity = (
+        ascending_velocity[0]
+        - 0.5 * native_dv
+        + 0.5 * render_dv
+        + np.arange(velocity.size * spectral_oversample, dtype=np.float64)
+        * render_dv
+    )
     grid = config["grid"]
     params = config["parameters"]
     sb = config["surface_brightness"]
@@ -150,9 +164,13 @@ def main() -> int:
             raise ValueError("n_clouds must be >=1000 for a scientific render")
     else:
         raise ValueError(f"unsupported render_mode {render_mode!r}")
-    centre_index = velocity.size // 2
-    centre_velocity = float(velocity[centre_index])
+    centre_index = render_velocity.size // 2
+    centre_velocity = float(render_velocity[centre_index])
     v_offset = float(params["vsys_kms"]) - centre_velocity
+    # KinMS measures PA in the reflected image-x convention. Convert the
+    # astronomical kinUV PA (east of north, receding side) at the call boundary
+    # so the returned array remains north/east without post-render reflection.
+    kinms_pa_deg = (360.0 - float(params["pa_deg"])) % 360.0
     phase_offsets = (
         [None]
         if render_mode == "stochastic"
@@ -169,9 +187,9 @@ def main() -> int:
         model = KinMS(
             xs=nx * cell,
             ys=ny * cell,
-            vs=velocity.size * dv,
+            vs=render_velocity.size * render_dv,
             cellSize=cell,
-            dv=dv,
+            dv=render_dv,
             beamSize=[cell, cell, 0.0],
             nSamps=int(inclouds.shape[0]) if inclouds is not None else n_clouds,
             seed=seed,
@@ -188,7 +206,7 @@ def main() -> int:
             model.randompick_vdisp = dispersion_draws
         phase_cube = model.model_cube(
             inc=float(params["inclination_deg"]),
-            posAng=float(params["pa_deg"]),
+            posAng=kinms_pa_deg,
             gasSigma=float(params["gas_sigma_kms"]),
             diskThick=0.0,
             inClouds=[] if inclouds is None else inclouds,
@@ -209,35 +227,22 @@ def main() -> int:
             cube_xyv += np.asarray(phase_cube, dtype=np.float64)
     cube_xyv /= float(len(phase_offsets))
     # KinMS returns channel density in (x,y,v); kinUV consumes channel-integrated
-    # flux in (north,east,v). Reverse v when the exact frequency-derived velocity
-    # axis is descending.
-    cube_yxv = np.transpose(np.asarray(cube_xyv, dtype=np.float64), (1, 0, 2)) * dv
+    # flux in (north,east,v). Integrate optional subchannels before restoring the
+    # requested native velocity order. No post-render spectral shift is applied.
+    cube_yxv = (
+        np.transpose(np.asarray(cube_xyv, dtype=np.float64), (1, 0, 2))
+        * render_dv
+    )
+    if spectral_oversample > 1:
+        cube_yxv = cube_yxv.reshape(
+            ny, nx, velocity.size, spectral_oversample
+        ).sum(axis=3)
     if reverse_spectral:
         cube_yxv = cube_yxv[:, :, ::-1]
     cube_yxv = np.ascontiguousarray(cube_yxv, dtype=np.float64)
 
-    # KinMS deposits clouds at nearest channel centres. Register its finite-grid
-    # centroid to the exact frequency-derived systemic velocity with a linear,
-    # flux-conserving subchannel shift before kinUV applies the spectral response.
     spectral_flux = cube_yxv.sum(axis=(0, 1))
-    centroid_before = float(np.sum(velocity * spectral_flux) / np.sum(spectral_flux))
-    shift_channels = (float(params["vsys_kms"]) - centroid_before) / dv
-    if abs(shift_channels) >= 1.0:
-        raise ValueError(f"unexpected KinMS spectral registration error: {shift_channels} channels")
-    if shift_channels != 0.0:
-        original = cube_yxv
-        shifted = np.zeros_like(original)
-        fraction = abs(shift_channels)
-        shifted += (1.0 - fraction) * original
-        if shift_channels > 0.0:
-            shifted[:, :, 1:] += fraction * original[:, :, :-1]
-        else:
-            shifted[:, :, :-1] += fraction * original[:, :, 1:]
-        before_flux = float(original.sum())
-        shifted *= before_flux / float(shifted.sum())
-        cube_yxv = shifted
-    spectral_flux = cube_yxv.sum(axis=(0, 1))
-    centroid_after = float(np.sum(velocity * spectral_flux) / np.sum(spectral_flux))
+    centroid = float(np.sum(velocity * spectral_flux) / np.sum(spectral_flux))
 
     kinms_path = Path(sys.modules["kinms"].__file__).resolve()
     metadata = {
@@ -254,18 +259,30 @@ def main() -> int:
         "spectral_response_applied": False,
         "axis_order": "north,east,velocity",
         "cube_units": "Jy_per_native_channel",
+        "output_grid": {"ny": ny, "nx": nx, "cell_arcsec": cell},
         "velocity_convention": "radio_kms_from_exact_kinuv_frequency_axis",
         "velocity_descending": reverse_spectral,
-        "native_channel_width_kms": dv,
+        "native_channel_width_kms": native_dv,
+        "spectral_oversample": spectral_oversample,
+        "render_channel_width_kms": render_dv,
         "n_clouds": n_clouds,
         "seed": seed,
         "render_mode": render_mode,
         "quadrature": quadrature_metadata,
+        "coordinate_conversion": {
+            "kinuv_pa_deg_east_of_north_receding": float(params["pa_deg"]),
+            "kinms_posang_deg": kinms_pa_deg,
+            "formula": "kinms_posang=(360-kinuv_pa)%360",
+            "post_render_spatial_reflection": False,
+        },
         "spectral_registration": {
-            "centroid_before_kms": centroid_before,
-            "centroid_after_kms": centroid_after,
-            "linear_shift_native_channels": shift_channels,
-            "flux_conserving": True,
+            "method": "analytic channel-centre construction",
+            "post_render_interpolation": False,
+            "centroid_kms": centroid,
+            "centroid_error_native_channels": abs(
+                centroid - float(params["vsys_kms"])
+            )
+            / native_dv,
         },
         "integrated_flux_jy_kms_requested": float(params["flux_jy_kms"]),
         "integrated_flux_jy_kms_rendered": float(cube_yxv.sum()),
@@ -277,7 +294,7 @@ def main() -> int:
         velocity_centers_kms=velocity,
         metadata_json=np.asarray(metadata_text),
     )
-    metadata["output_npz"] = str(output_path)
+    metadata["output_npz"] = str(config.get("artifact_id", output_path))
     metadata["output_npz_sha256"] = _sha256(output_path)
     sidecar = output_path.with_suffix(".json")
     sidecar.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
