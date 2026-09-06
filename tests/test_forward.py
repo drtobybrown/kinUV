@@ -112,6 +112,37 @@ def test_receding_major_axis_is_redshifted():
     assert los_velocity._kinuv_requires == ("DEC-066-PA", "DEC-066-INC", "DEC-066-VC")
 
 
+def test_forward_accepts_science_agnostic_velocity_profile():
+    radius_speed = 73.0
+
+    def flat_profile(radius_arcsec):
+        return np.zeros_like(radius_arcsec) + radius_speed
+
+    pa = 0.0
+    inc = np.radians(60.0)
+    # PA=0 places the receding major axis on +north.
+    got = los_velocity(
+        0.0,
+        2.0,
+        pa,
+        inc,
+        1000.0,
+        velocity_profile=flat_profile,
+    )
+    assert got == pytest.approx(1000.0 + radius_speed * np.sin(inc))
+    with pytest.raises(ValueError, match="cannot be combined"):
+        los_velocity(
+            0.0,
+            2.0,
+            pa,
+            inc,
+            1000.0,
+            r_knots_arcsec=np.arange(1.0, 7.0),
+            v_knots_kms=np.arange(6.0),
+            velocity_profile=flat_profile,
+        )
+
+
 def test_vis_grid_is_not_ico_cdelt():
     grid = image_grid_from_uv(305e3, fov_co_plus_pb_arcsec())
     assert grid.cell_arcsec != pytest.approx(0.4)

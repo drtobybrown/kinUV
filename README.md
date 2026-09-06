@@ -1,10 +1,12 @@
 # kinUV
 
-Visibility-plane kinematic fitter for KILOGAS. Current production targets: **KGAS066 and KGAS007**.
+High-throughput visibility-plane molecular-gas kinematic fitter. Current canonical targets: **KGAS066 and KGAS007**.
 
 **Start here (human):** [`../results/MANIFEST.md`](../results/MANIFEST.md) identifies accepted products and archived runs. Scientific interpretation and closed experiments: [`docs/PRODUCTION_RECORD.md`](docs/PRODUCTION_RECORD.md) and [`docs/methodology.md`](docs/methodology.md). Agents: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md) → [`docs/reviews/BOARD.md`](docs/reviews/BOARD.md). Physics: [`docs/decisions/`](docs/decisions/). Data extraction boundary: [`docs/diagnostics/data-preparation.md`](docs/diagnostics/data-preparation.md). Image-plane check: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md). Figure style: [`docs/diagnostics/plotting.md`](docs/diagnostics/plotting.md).
 
 kinUV has no CASA or legacy-package dependency. Calibrated Measurement Sets are exported by the separately installed [`ms2kinuv`](../ms2kinuv/) companion; kinUV ingests its versioned NPZ tables.
+
+The production objective is visibility-domain `chi2`. Kinematic velocity profiles are fitted directly in angular coordinates; cosmology and any baryonic/halo mass interpretation are downstream postprocessing and are absent from the forward-model, likelihood, and sampler dependency graph.
 
 ## Status (066)
 
@@ -21,3 +23,12 @@ pytest
 ```
 
 NUFFT extras: `pip install -e ".[nufft]"`. Diagnostic figures need matplotlib (`pip install matplotlib`) and the CANFAR `/arc` paths in the diagnostic note. Standard leftover `chi2` (+ optional moments): `python scripts/plot_fit_diagnostics.py`. Do not use `native_diagonal`; the operator is `kinuv.response.spectral.hann_then_bin`.
+
+The canonical downstream KinMS comparison selects KGAS066 and KGAS007 by default and never launches kinUV inference:
+
+```bash
+KINUV_KINMS_PYTHON=/path/to/kinms-env/bin/python \
+  python scripts/run_canonical_kinms_benchmark.py
+```
+
+See [`docs/diagnostics/kinms-benchmark.md`](docs/diagnostics/kinms-benchmark.md).

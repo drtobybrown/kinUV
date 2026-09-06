@@ -1,9 +1,14 @@
-"""Circular thin-disk native-channel visibilities (066-7).
+"""Circular thin-disk native-channel visibility model.
 
 ``I_sky(x,y,ν) = flux × I_template(x−dx, y−dy) × Gaussian(v(ν)−v_los; σ)``
-with Stage A arctan ``V_c`` or Stage B ``ring_vc`` (DEC-066-VC). Then
+with a caller-supplied kinematic velocity profile, Stage A arctan ``V_c``, or
+Stage B ``ring_vc`` (DEC-066-VC). Then
 Fourier-shift the template, ``A`` at the **phase centre** (DEC-066-PB / SHIFT),
 FINUFFT T2 (DEC-066-GRID). Do not apply a visibility phase ramp after PB.
+
+Velocity profiles describe kinematics directly in angular coordinates. This
+module contains no gravitational potential or baryonic/halo decomposition;
+those interpretations belong downstream of inference.
 """
 
 from __future__ import annotations
@@ -53,18 +58,26 @@ def los_velocity(
     r_t_arcsec: float = CALIBRATION_RT_ARCSEC,
     r_knots_arcsec=None,
     v_knots_kms=None,
+    velocity_profile=None,
 ):
     """``v_los = vsys + V_c(R) sin(i) cos(θ)``; +x is receding (DEC-066-PA).
 
     Default ``V_c`` is Stage A arctan. Pass both knot arrays for Stage B
-    ``ring_vc`` (solid-body inner, flat outer).
+    ``ring_vc`` (solid-body inner, flat outer), or pass ``velocity_profile`` as
+    a callable from angular radius to circular speed. The callable is treated
+    as a static model choice by JAX and must use NumPy/JAX-compatible array
+    operations.
     """
     xg, yg = sky_to_galaxy(x_east_arcsec, y_north_arcsec, pa_rad, i_rad)
     from kinuv.xp import numpy_or_jax
 
     xp = numpy_or_jax(xg, yg, vsys_kms, v0_kms, r_t_arcsec)
     radius = xp.hypot(xg, yg)
-    if r_knots_arcsec is None and v_knots_kms is None:
+    if velocity_profile is not None:
+        if r_knots_arcsec is not None or v_knots_kms is not None:
+            raise ValueError("velocity_profile cannot be combined with ring knots")
+        vc = velocity_profile(radius)
+    elif r_knots_arcsec is None and v_knots_kms is None:
         vc = arctan_vc(radius, v0_kms, r_t_arcsec)
     elif r_knots_arcsec is None or v_knots_kms is None:
         raise ValueError("r_knots_arcsec and v_knots_kms must be provided together")
@@ -101,6 +114,7 @@ def sky_cube(
     i_rad=None,
     r_knots_arcsec=None,
     v_knots_kms=None,
+    velocity_profile=None,
 ):
     """Attenuated sky cube ``(ny, nx, n_chan)`` in Jy/pixel (native channels).
 
@@ -138,6 +152,7 @@ def sky_cube(
         r_t_arcsec,
         r_knots_arcsec=r_knots_arcsec,
         v_knots_kms=v_knots_kms,
+        velocity_profile=velocity_profile,
     )
     phi = _gaussian_pdf(vel[None, None, :], v_los[:, :, None], gas_sigma_kms)
     d_omega = grid.cell_arcsec**2
@@ -175,6 +190,7 @@ def predict_vis(
     eps: float = 1e-8,
     r_knots_arcsec=None,
     v_knots_kms=None,
+    velocity_profile=None,
 ):
     """Native-channel model visibilities ``(n_row, n_chan)`` complex128.
 
@@ -195,5 +211,6 @@ def predict_vis(
         i_rad=i_rad,
         r_knots_arcsec=r_knots_arcsec,
         v_knots_kms=v_knots_kms,
+        velocity_profile=velocity_profile,
     )
     return nufft2_degrid(grid, cube, u_m, v_m, freqs_hz, eps=eps)

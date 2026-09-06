@@ -20,7 +20,7 @@ from astropy.io import fits
 from matplotlib.gridspec import GridSpec
 from matplotlib.ticker import AutoMinorLocator
 
-from kinuv.constants import ARCSEC_TO_RAD, C_LIGHT_KM_S, Distance, F_REST_CO21_HZ
+from kinuv.constants import ARCSEC_TO_RAD, C_LIGHT_KM_S, F_REST_CO21_HZ
 from kinuv.diagnostics.imaging import masked_moments, pv_diagram, spectral_axis_kms
 from kinuv.diagnostics.s1 import (
     CANFAR_CUBE_10,
@@ -50,6 +50,7 @@ from kinuv.forward.sb import load_sb_template
 from kinuv.geometry import inclination_rad, sky_to_galaxy
 from kinuv.infer.map import image_grid_for_vis, predict_binned
 from kinuv.io.vis import load_kgas066, radio_to_optical_kms
+from kinuv.postprocess import Distance
 from kinuv.likelihood.chi2 import chi2
 from kinuv.template.wiener import k_to_jy_per_beam
 from kinuv.transforms.dft import vis_uv_wavelengths

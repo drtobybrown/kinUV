@@ -77,6 +77,8 @@ These are production invariants. Violating one requires an architectural decisio
 4. Image-plane cubes, moments, spectra, and position-velocity diagrams are diagnostics unless an accepted specification explicitly defines an image-domain likelihood.
 5. Parameter bounds are computational constraints only when declared as such. A posterior or optimizer pressing a bound is a failed identifiability or prior-pressure diagnostic, not a measurement.
 6. Sampler labels describe the algorithm actually run. Approximate, Laplace, importance, or Metropolis results are not relabeled as HMC or NUTS.
+7. The scientific likelihood is evaluated from visibility residuals. Dark-matter profiles, baryonic mass models, cosmology, physical-radius grids, and mass decomposition are excluded from the forward-model and sampler dependency graph.
+8. A fitted rotation profile is a kinematic representation. Gravitational interpretation is a versioned downstream analysis that consumes an immutable posterior product and cannot feed values back into the visibility likelihood.
 
 ### Product integrity
 

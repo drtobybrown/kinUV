@@ -12,6 +12,12 @@ from .imaging import (
     restoring_beam_kernel,
     spectral_axis_kms,
 )
+from .kinms_benchmark import (
+    aperture_spectrum,
+    cube_metrics,
+    major_axis_rotation_profile,
+    write_cube_benchmark,
+)
 
 __all__ = [
     "map_quality_flags",
@@ -21,6 +27,10 @@ __all__ = [
     "offset_world",
     "pv_diagram",
     "radio_header_velocity_kms",
+    "aperture_spectrum",
+    "cube_metrics",
+    "major_axis_rotation_profile",
+    "write_cube_benchmark",
     "rebin_spectrum",
     "restoring_beam_kernel",
     "spectral_axis_kms",

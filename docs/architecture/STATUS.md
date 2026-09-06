@@ -1,6 +1,6 @@
 ---
-generation: 5
-phase: operational-generalization
+generation: 6
+phase: visibility-hot-path-decoupling
 code_freeze: false
 next_role: senior-registrar
 board: idle
@@ -8,7 +8,6 @@ build_licensed: false
 pending:
   - target-config-migration
   - campaign-config-validation
-  - runner-path-decoupling
 last_propose: null
 last_review: null
 last_review_a: null
@@ -16,16 +15,16 @@ last_review_b: null
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 5
+canon_generation: 6
 ---
 
 ## Agent Run Status
 
-* **Phase:** Data-agnostic production governance and configuration migration
-* **Last Action:** Curated all legacy result and run directories into the indexed `results/production/` and `results/archive/` layout; removed the separate `kinuv_runs/` tree
-* **Decisions Made:** kinUV is the sole production fitter; `ms2kinuv` is the separate CASA ETL companion; KGAS066 official MAP remains read-only; 30 km/s Ico remains locked; receding NUTS is the sole KGAS066 posterior; approaching mode is terminated; G4 is not licensed
+* **Phase:** Visibility-likelihood hot-path decoupling and downstream comparator automation
+* **Last Action:** Removed physical-scale conversion from core constants, opened the forward model to caller-supplied kinematic profiles, added mass-decomposition dependency guards, and implemented the two-target downstream KinMS benchmark
+* **Decisions Made:** visibility chi2 is the sole scientific likelihood; baryonic/halo decomposition and cosmology are downstream-only; kinUV is the sole production fitter; `ms2kinuv` is the separate CASA ETL companion; KGAS066 official MAP remains read-only; G4 is not licensed
 * **Blockers / Gates:** posterior intervals are not calibrated; no real-data inner slope may be quoted; another production campaign is not licensed until target metadata and site paths leave Python entry points and validated configuration is recorded in run manifests
-* **Next Step:** migrate remaining target metadata and site paths from Python entry points into validated `configs/targets/` and `configs/campaigns/` records before licensing another production campaign
+* **Next Step:** validate the canonical KinMS comparison in an environment containing KinMS, then migrate remaining inference target metadata into validated configuration before licensing another production campaign
 
 ## Current products
 

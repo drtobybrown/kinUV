@@ -34,6 +34,8 @@ The JAX likelihood reproduced the official KGAS066 MAP chi2 and ran at 3.01 eval
 
 The retained S3 comparison uses KinMS only as an image-plane comparator. Its corrected wrapper passes face-on disk coordinates to KinMS, lets KinMS project inclination and PA, writes cubes with transpose `(2, 1, 0)`, and applies systemic velocity through `vOffset`. The best real-data KinMS comparator found PA 198.70 deg, V0 266.92 km/s, rt 0.465 arcsec, inclination 48.41 deg, and gas dispersion 12.83 km/s. These cube-fit parameters do not replace the visibility likelihood or official kinUV parameters. On the controlled mock, KinMS returned `rt=0.395 arcsec` for truth 0.25 arcsec, while kinUV returned 0.253 arcsec.
 
+The 2026-09-06 canonical downstream runner extended the same comparison contract to KGAS007 and regenerated a homogeneous diagnostic suite for both targets. The independent KGAS007 KinMS cube fit completed after 475 evaluations with PA 152.72 deg, V0 285.25 km/s, rt 1.095 arcsec, inclination 25.26 deg, systemic optical velocity 14203.71 km/s, and gas dispersion 15.56 km/s. KinMS has lower residual RMS on the masked CLEAN cube for both targets, as expected for a model optimized in that image domain. That metric is not a visibility likelihood comparison. The retained controlled KGAS066 mock remains the evidence that kinUV recovers injected sub-beam kinematics more accurately than the restored-cube fit.
+
 ## Closed alternatives
 
 - The pre-sign PA 21.9 deg solution and the 2026-08-27 image products are superseded. Correcting the stored uv sign yielded the official PA 199.73 deg solution.
@@ -55,6 +57,7 @@ The retained S3 comparison uses KinMS only as an image-plane comparator. Its cor
 | `docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/` | KGAS007 MAP initialization and diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas007-nuts/` | Merged KGAS007 NUTS product and mixing diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/` | KinMS live and controlled-mock comparator, excluding retired exploratory figures. |
+| `../../results/incoming/benchmarks/kinms-canonical/` | Generated two-target downstream KinMS comparison; unpromoted diagnostic output with checksums. |
 
 The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_20260906.tar.gz`](../../archives/kinuv_docs_legacy_20260906.tar.gz). It contains the closed review cards and removed artifacts exactly as they existed before cleanup.
 

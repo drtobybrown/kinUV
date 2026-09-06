@@ -1,0 +1,60 @@
+{
+  "schema_version": "kinuv-canonical-kinms-config-v1",
+  "output_root": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/benchmarks/kinms-canonical",
+  "targets": [
+    {
+      "target_id": "KGAS066",
+      "data_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
+      "mask_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
+      "kinuv_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-uvsign-map/plots/stage_b_model_on_10kms.fits",
+      "kinuv_summary": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-uvsign-map/summary.json",
+      "kinms_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms_best/model_cube.fits",
+      "kinms_result": "/arc/projects/KILOGAS/analysis/toby_sandbox/kinUV/docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/live_fitters/kinms_best/kinms_fit_result.json",
+      "pa_deg": 199.72980072503037,
+      "inclination_deg": 43.85986559577437,
+      "vsys_optical_kms": 8323.6,
+      "dx_arcsec": 0.09104737371760792,
+      "dy_arcsec": 0.018566961155444102,
+      "fit": null
+    },
+    {
+      "target_id": "KGAS007",
+      "data_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_clipped_cube.fits",
+      "mask_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_mask_cube.fits",
+      "kinuv_cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-stage-a-map/plots/model_on_10kms.fits",
+      "kinuv_summary": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-stage-a-map/summary.json",
+      "kinms_cube": null,
+      "kinms_result": null,
+      "pa_deg": 151.60246996291383,
+      "inclination_deg": 28.9,
+      "vsys_optical_kms": 14229.0,
+      "dx_arcsec": -0.018618208613728593,
+      "dy_arcsec": -0.09096900872440915,
+      "fit": {
+        "init": {
+          "v0_kms": 195.98447930318733,
+          "r_t_arcsec": 0.5,
+          "pa_deg": 151.60246996291383,
+          "i_deg": 28.9,
+          "vsys_optical_kms": 14229.0,
+          "gas_sigma_kms": 11.254317000289888,
+          "dx_arcsec": -0.018618208613728593,
+          "dy_arcsec": -0.09096900872440915
+        },
+        "bounds": {
+          "v0_kms": [100.0, 320.0],
+          "r_t_arcsec": [0.05, 4.0],
+          "pa_deg": [120.0, 240.0],
+          "i_deg": [20.0, 45.0],
+          "vsys_optical_kms": [14000.0, 14450.0],
+          "gas_sigma_kms": [3.0, 40.0]
+        },
+        "n_clouds": 100000,
+        "n_clouds_de": 50000,
+        "phase_center": [-0.018618208613728593, -0.09096900872440915],
+        "sb_pa_deg": 151.60246996291383,
+        "sb_inc_deg": 28.9
+      }
+    }
+  ]
+}

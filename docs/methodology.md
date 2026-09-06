@@ -16,6 +16,8 @@ on the XX fit array (066: 881 rows by 95 channels, `N=4`, `dv = 5.080` km/s, `s 
 
 The spectral operator is **Hann then bin** on native channels with guards (`kinuv.response.spectral.hann_then_bin`). Hann on already-binned channels is invalid.
 
+The forward model maps an angular kinematic velocity profile to line emission and sampled complex visibilities. It does not evaluate NFW, Burkert, cusp/core, stellar, gas, or other baryonic/halo mass components. Cosmological distances and physical-radius conversion live in `kinuv.postprocess` and are used only after a kinematic result exists. The core model accepts a caller-supplied array-compatible velocity profile, while the retained Stage A and Stage B parameterizations remain reproducible built-ins.
+
 ## Geometry we do not argue with (yet)
 
 - Inclination frozen at the catalogue 43.86 deg. No disk thickness `h_z`.
@@ -45,8 +47,11 @@ Style: [`docs/diagnostics/plotting.md`](diagnostics/plotting.md) (`kinuv.diagnos
 1. Leftover `chi2` vs baseline and vs velocity (SB leftover vs a missing-flux bowl).
 2. `chi2` slices on coupled parameters when affordable (PA–`gas_sigma`, `gas_sigma`–`i` scan, PA–`r_t`).
 3. Moments / spectra / PV Data | Model | Residual.
+4. Canonical image-plane benchmark against an independently generated KinMS cube, including moments 0/1/2, aperture spectra, major-axis PVD, rotation-profile comparison, and channel maps.
 
 Runner: `scripts/plot_fit_diagnostics.py`.
+
+Canonical KinMS runner: `scripts/run_canonical_kinms_benchmark.py`. It defaults to KGAS066 and KGAS007, writes only under `results/incoming/benchmarks/`, and cannot call a kinUV optimizer or sampler.
 
 ## How production work is governed
 

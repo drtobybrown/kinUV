@@ -27,6 +27,8 @@ The `DEC-066-*` series originated in one campaign. Numeric priors, coordinates, 
 
 Cross-target rules must be stated as architectural invariants or generalized decisions and tested independently of campaign data. Current target state belongs in configuration, run manifests, `STATUS.md`, methodology, and production history.
 
+The current generalized inference boundary is [`DEC-KINUV-VISLIK`](DEC-KINUV-VISLIK.md): visibility chi-square is the scientific likelihood, while cosmology and mass decomposition are downstream-only.
+
 ## Change rule
 
 - The Consultant owns proposed changes to scientific models, priors, covariance, parameterization, and gates.
