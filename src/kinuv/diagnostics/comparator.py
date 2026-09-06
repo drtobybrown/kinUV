@@ -10,7 +10,7 @@ import numpy as np
 
 from kinuv.forward.operators import sample_intrinsic_cube_binned
 
-INTRINSIC_SCHEMA_VERSION = "kinms-intrinsic-cube-v1"
+INTRINSIC_SCHEMA_VERSION = "kinms-continuum-cube-v2"
 
 _SIDECAR_ONLY_FIELDS = frozenset({"output_npz", "output_npz_sha256"})
 _CONTRACT_FIELDS = (
@@ -19,12 +19,14 @@ _CONTRACT_FIELDS = (
     "restoring_beam_applied",
     "primary_beam_applied",
     "spectral_response_applied",
+    "post_crop_renormalization",
     "cube_units",
+    "channel_value_semantics",
     "axis_order",
     "output_grid",
     "config_sha256",
-    "integrated_flux_jy_kms_requested",
-    "integrated_flux_jy_kms_rendered",
+    "spatial_kernel",
+    "flux_ledger_jy_kms",
 )
 
 
@@ -71,8 +73,14 @@ def load_intrinsic_kinms_cube(path, *, grid, velocity_centers_kms):
             raise ValueError(f"intrinsic comparator has {forbidden}=true or missing")
     if embedded["clean_out"] is not True:
         raise ValueError("KinMS comparator was not rendered with cleanOut=True")
-    if embedded["cube_units"] != "Jy_per_native_channel":
+    if embedded["post_crop_renormalization"] is not False:
+        raise ValueError("continuum comparator applied forbidden post-crop normalization")
+    if embedded["cube_units"] != "Jy":
         raise ValueError("KinMS intrinsic cube has incompatible units")
+    if embedded["channel_value_semantics"] != "channel-average flux density per sky pixel":
+        raise ValueError("KinMS intrinsic cube does not contain channel flux density")
+    if embedded["spatial_kernel"] != "separable cardinal cubic B-spline B3":
+        raise ValueError("KinMS intrinsic cube has an unapproved deposition kernel")
     if embedded["axis_order"] != "north,east,velocity":
         raise ValueError("KinMS intrinsic cube has incompatible axis order")
     expected_shape = (int(grid.ny), int(grid.nx), velocity.size)
@@ -96,14 +104,49 @@ def load_intrinsic_kinms_cube(path, *, grid, velocity_centers_kms):
         raise ValueError("KinMS cube velocity axis differs from kinUV native axis")
     if not np.all(np.isfinite(cube)) or np.any(cube < 0.0):
         raise ValueError("KinMS intrinsic cube contains invalid emission")
-    computed_flux = float(np.sum(cube, dtype=np.float64))
-    claimed_flux = float(embedded["integrated_flux_jy_kms_rendered"])
-    requested_flux = float(embedded["integrated_flux_jy_kms_requested"])
-    if not np.isfinite(claimed_flux) or not np.isfinite(requested_flux):
+    dv = float(np.median(np.abs(np.diff(velocity))))
+    computed_flux = float(np.sum(cube, dtype=np.float64) * dv)
+    ledger = embedded["flux_ledger_jy_kms"]
+    required_ledger = {
+        "requested_full_support",
+        "quadrature_input",
+        "spatially_retained",
+        "spectrally_retained",
+        "jointly_retained",
+        "cube_integral",
+        "spatially_excluded",
+        "spectrally_excluded",
+        "jointly_excluded",
+    }
+    missing_ledger = sorted(required_ledger.difference(ledger))
+    if missing_ledger:
+        raise ValueError(f"KinMS flux ledger missing fields {missing_ledger}")
+    ledger = {key: float(value) for key, value in ledger.items()}
+    if not all(np.isfinite(value) for value in ledger.values()):
         raise ValueError("KinMS intrinsic metadata contains nonfinite flux")
+    claimed_flux = ledger["cube_integral"]
+    requested_flux = ledger["requested_full_support"]
     flux_atol = max(abs(computed_flux), 1.0) * 1.0e-12
     if not np.isclose(computed_flux, claimed_flux, rtol=1.0e-12, atol=flux_atol):
         raise ValueError("KinMS claimed rendered flux differs from cube-derived flux")
+    if not np.isclose(claimed_flux, ledger["jointly_retained"], rtol=2.0e-11, atol=flux_atol):
+        raise ValueError("KinMS cube and joint-retained flux ledger disagree")
+    if not np.isclose(
+        ledger["quadrature_input"], requested_flux, rtol=1.0e-12, atol=flux_atol
+    ):
+        raise ValueError("KinMS quadrature input does not conserve requested flux")
+    for retained, excluded in (
+        ("spatially_retained", "spatially_excluded"),
+        ("spectrally_retained", "spectrally_excluded"),
+        ("jointly_retained", "jointly_excluded"),
+    ):
+        if not np.isclose(
+            ledger[retained] + ledger[excluded],
+            requested_flux,
+            rtol=2.0e-11,
+            atol=flux_atol,
+        ):
+            raise ValueError(f"KinMS flux ledger identity fails for {retained}")
     validated = dict(embedded)
     validated["output_npz"] = sidecar.get("output_npz")
     validated["output_npz_sha256"] = sidecar["output_npz_sha256"]

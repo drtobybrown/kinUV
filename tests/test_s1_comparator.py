@@ -88,15 +88,27 @@ def _write_contract(
         "restoring_beam_applied": restored,
         "primary_beam_applied": False,
         "spectral_response_applied": False,
-        "cube_units": "Jy_per_native_channel",
+        "post_crop_renormalization": False,
+        "cube_units": "Jy",
+        "channel_value_semantics": "channel-average flux density per sky pixel",
+        "spatial_kernel": "separable cardinal cubic B-spline B3",
         "axis_order": "north,east,velocity",
         "output_grid": {
             "ny": grid.ny,
             "nx": grid.nx,
             "cell_arcsec": grid.cell_arcsec,
         },
-        "integrated_flux_jy_kms_requested": float(cube.sum()),
-        "integrated_flux_jy_kms_rendered": float(cube.sum()),
+        "flux_ledger_jy_kms": {
+            "requested_full_support": float(cube.sum()),
+            "quadrature_input": float(cube.sum()),
+            "spatially_retained": float(cube.sum()),
+            "spectrally_retained": float(cube.sum()),
+            "jointly_retained": float(cube.sum()),
+            "cube_integral": float(cube.sum()),
+            "spatially_excluded": 0.0,
+            "spectrally_excluded": 0.0,
+            "jointly_excluded": 0.0,
+        },
     }
     embedded.update(embedded_updates or {})
     for field in embedded_removals:
@@ -146,6 +158,7 @@ def test_intrinsic_contract_rejects_restored_cube(tmp_path):
         ("primary_beam_applied", True),
         ("spectral_response_applied", True),
         ("clean_out", False),
+        ("post_crop_renormalization", True),
         ("cube_units", "Jy_per_beam"),
         ("axis_order", "east,north,velocity"),
     ],
@@ -184,7 +197,19 @@ def test_intrinsic_contract_rejects_claimed_flux_disagreement(tmp_path):
         path,
         grid,
         velocity,
-        embedded_updates={"integrated_flux_jy_kms_rendered": 999.0},
+        embedded_updates={
+            "flux_ledger_jy_kms": {
+                "requested_full_support": 320.0,
+                "quadrature_input": 320.0,
+                "spatially_retained": 320.0,
+                "spectrally_retained": 320.0,
+                "jointly_retained": 999.0,
+                "cube_integral": 999.0,
+                "spatially_excluded": 0.0,
+                "spectrally_excluded": 0.0,
+                "jointly_excluded": -679.0,
+            }
+        },
     )
     with pytest.raises(ValueError, match="cube-derived flux"):
         load_intrinsic_kinms_cube(path, grid=grid, velocity_centers_kms=velocity)
@@ -212,8 +237,11 @@ def test_intrinsic_contract_rejects_nonfinite_velocity_axis(tmp_path):
 def test_external_worker_is_intrinsic_and_isolated():
     repo = Path(__file__).resolve().parents[1]
     source = (repo / "external" / "_kinms_intrinsic_worker.py").read_text()
-    assert "cleanOut=True" in source
-    assert "spectral_resolution=0.0" in source
+    assert "_stable_normal_interval" in source
+    assert "_b3" in source
+    assert "post_crop_renormalization\": False" in source
+    assert "model_cube(" not in source
+    assert "randompick_vdisp" not in source
     assert "(360.0 - float(params[\"pa_deg\"])) % 360.0" in source
     assert "from kinuv" not in source
     assert "import kinuv" not in source

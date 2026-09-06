@@ -183,9 +183,9 @@ def test_chart_and_nuts_source_gates():
     arctan = SRC_ROT.read_text().split("def rings_from_arctan", 1)[0]
     assert "def arctan_vc" in arctan
     assert "float(" not in arctan.split("def arctan_vc", 1)[1]
-    los = SRC_MODEL.read_text().split("def _gaussian_pdf", 1)[0]
+    los = SRC_MODEL.read_text().split("def _gaussian_channel_average", 1)[0]
     assert "float(vsys" not in los
-    gauss = SRC_MODEL.read_text().split("def _gaussian_pdf", 1)[1].split(
+    gauss = SRC_MODEL.read_text().split("def _gaussian_channel_average", 1)[1].split(
         "def intrinsic_sky_cube", 1
     )[0]
     assert "float(" not in gauss
@@ -314,7 +314,7 @@ def test_official_chi2_after_chart_xla():
     back = {n: float(v) for n, v in zip(PARAM_NAMES, np.asarray(unconstrained_to_physical(z8)))}
     vis = predict_binned(data, back, tmpl, grid, xla=True)
     c = chi2(data.vis, vis, data.weights, data.s)
-    assert abs(float(c) - 168675.596) < 0.05
+    assert abs(float(c) - 170284.56745) < 0.05
     assert abs(float(data.s) - 0.5136098555284736) < 1e-6
 
 

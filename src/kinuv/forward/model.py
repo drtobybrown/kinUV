@@ -1,6 +1,6 @@
 """Circular thin-disk native-channel visibility model.
 
-``I_sky(x,y,ν) = flux × I_template(x−dx, y−dy) × Gaussian(v(ν)−v_los; σ)``
+``I_sky(x,y,k) = F_line × I_template(x−dx,y−dy) × P_k / Δv_k``
 with a caller-supplied kinematic velocity profile, Stage A arctan ``V_c``, or
 Stage B ``ring_vc`` (DEC-066-VC). Then
 Fourier-shift the template, ``A`` at the **phase centre** (DEC-066-PB / SHIFT),
@@ -87,13 +87,25 @@ def los_velocity(
     return xp.asarray(vsys_kms) + vc * sini * cos_th
 
 
-def _gaussian_pdf(v_kms, v_los, sigma_kms):
-    from kinuv.xp import numpy_or_jax
+def _gaussian_channel_average(v_kms, v_los, sigma_kms, channel_width_kms):
+    """Gaussian line probability integrated over each channel, returned per km/s."""
+    from kinuv.xp import is_jax, numpy_or_jax
 
     xp = numpy_or_jax(v_kms, v_los, sigma_kms)
     sig = xp.asarray(sigma_kms)
-    delta = (xp.asarray(v_kms) - xp.asarray(v_los)) / sig
-    return xp.exp(-0.5 * delta**2) / (sig * xp.sqrt(2.0 * xp.pi))
+    centers = xp.asarray(v_kms)
+    means = xp.asarray(v_los)
+    width = xp.asarray(channel_width_kms)
+    z_lo = (centers - 0.5 * width - means) / sig
+    z_hi = (centers + 0.5 * width - means) / sig
+    if is_jax(z_lo):
+        from jax.scipy.special import ndtr
+    else:
+        from scipy.special import ndtr
+    direct = ndtr(z_hi) - ndtr(z_lo)
+    survival = ndtr(-z_lo) - ndtr(-z_hi)
+    probability = xp.maximum(xp.where(z_lo > 0.0, survival, direct), 0.0)
+    return probability / width
 
 
 @requires("DEC-066-SHIFT", "DEC-066-VC", "DEC-066-PA", "DEC-066-INC")
@@ -115,7 +127,11 @@ def intrinsic_sky_cube(
     v_knots_kms=None,
     velocity_profile=None,
 ):
-    """Intrinsic pre-PB cube ``(ny, nx, n_chan)`` in Jy/pixel.
+    """Intrinsic pre-PB flux-density cube ``(ny, nx, n_chan)`` in Jy/pixel.
+
+    ``flux`` is the full-support integrated line flux in Jy km/s. The Gaussian
+    LOSVD is integrated analytically over each native channel and divided by
+    the channel width so the returned cube contains channel-average Jy.
 
     Spatial interpolator is :func:`fourier_shift` on the template. ``A`` is
     evaluated at the phase centre, not ``(dx, dy)``. Kinematics follow the
@@ -152,9 +168,11 @@ def intrinsic_sky_cube(
         v_knots_kms=v_knots_kms,
         velocity_profile=velocity_profile,
     )
-    phi = _gaussian_pdf(vel[None, None, :], v_los[:, :, None], gas_sigma_kms)
+    phi = _gaussian_channel_average(
+        vel[None, None, :], v_los[:, :, None], gas_sigma_kms, dv
+    )
     d_omega = grid.cell_arcsec**2
-    return flux * shifted[:, :, None] * d_omega * phi * dv
+    return flux * shifted[:, :, None] * d_omega * phi
 
 
 @requires("DEC-066-PB", "DEC-066-SHIFT", "DEC-066-VC", "DEC-066-PA", "DEC-066-INC")

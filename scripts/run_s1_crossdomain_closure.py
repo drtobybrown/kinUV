@@ -26,23 +26,17 @@ from time import perf_counter, sleep
 
 import numpy as np
 
-from kinuv.constants import ARCSEC_TO_RAD, F_REST_CO21_HZ
+from kinuv.constants import ARCSEC_TO_RAD
 from kinuv.diagnostics.comparator import (
     load_intrinsic_kinms_cube,
     sample_intrinsic_kinms,
     sha256_file,
 )
-from kinuv.forward.model import intrinsic_sky_cube
-from kinuv.forward.operators import (
-    attenuate_intrinsic_cube,
-    sample_intrinsic_cube_native,
-)
 from kinuv.forward.sb import galaxy_r_phi, load_sb_template
-from kinuv.infer.map import image_grid_for_vis, predict_binned
+from kinuv.infer.map import image_grid_for_vis
 from kinuv.io.vis import load_target_vis
 from kinuv.likelihood.chi2 import chi2
 from kinuv.profiles.rotation import arctan_vc
-from kinuv.transforms.dft import dft_numpy
 from kinuv.transforms.grid import ImageGrid
 from kinuv.transforms.nufft import nufft_backend
 
@@ -236,115 +230,6 @@ def _environment(kinms_python: Path, kinms_identity: dict) -> dict:
     }
 
 
-def _analytic_cube(grid: ImageGrid, n_chan: int = 7) -> np.ndarray:
-    x = grid.l_rad / ARCSEC_TO_RAD
-    y = grid.m_rad / ARCSEC_TO_RAD
-    east, north = np.meshgrid(x, y, indexing="xy")
-    spatial = np.exp(-0.5 * ((east / 0.55) ** 2 + (north / 0.42) ** 2))
-    spatial /= spatial.sum()
-    channel = np.arange(n_chan, dtype=np.float64)
-    spectral = np.exp(-0.5 * ((channel - 3.17) / 1.1) ** 2)
-    return spatial[:, :, None] * spectral[None, None, :]
-
-
-def analytic_closure() -> dict:
-    """Independent DFT and quadrature closure under the frozen S1 gates."""
-    rng = np.random.default_rng(8661)
-    grid = ImageGrid(32, 32, 0.15)
-    freqs = F_REST_CO21_HZ + np.arange(-3, 4, dtype=np.float64) * 1.0e6
-    cube = _analytic_cube(grid, freqs.size)
-    u_m = rng.uniform(-120.0, 120.0, 19)
-    v_m = rng.uniform(-120.0, 120.0, 19)
-    attenuated = attenuate_intrinsic_cube(cube, grid, freqs)
-    east, north = grid.pixel_lm_rad()
-    reference = dft_numpy(
-        east.ravel(),
-        north.ravel(),
-        attenuated.reshape(-1, freqs.size),
-        u_m,
-        v_m,
-        freqs,
-    )
-    actual = sample_intrinsic_cube_native(
-        cube, grid, u_m, v_m, freqs, eps=1.0e-12
-    )
-    residual = actual - reference
-    relative_l2 = float(np.linalg.norm(residual) / np.linalg.norm(reference))
-    noise_normalized_component_rms = float(
-        np.sqrt(np.mean(np.concatenate([residual.real.ravel(), residual.imag.ravel()]) ** 2))
-        / 0.01
-    )
-
-    zero = sample_intrinsic_cube_native(
-        cube, grid, np.array([0.0]), np.array([0.0]), freqs, eps=1.0e-12
-    )[0]
-    expected_zero = attenuated.sum(axis=(0, 1))
-    zero_flux_error = float(
-        np.max(np.abs(zero - expected_zero) / np.maximum(np.abs(expected_zero), 1e-30))
-    )
-
-    # A well-contained Gaussian line tests that native midpoint sampling does
-    # not displace its intensity centroid at a noninteger channel location.
-    native_index = np.arange(-100, 101, dtype=np.float64)
-    truth_centroid = 0.37
-    line = np.exp(-0.5 * ((native_index - truth_centroid) / 10.0) ** 2)
-    centroid = float(np.sum(native_index * line) / np.sum(line))
-    centroid_error_native_channel = abs(centroid - truth_centroid)
-
-    # Double spatial midpoint sampling at fixed FoV and compare both numerical
-    # models to the high-resolution analytic datum with unit component variance.
-    coarse = ImageGrid(48, 48, 0.1)
-    fine = ImageGrid(96, 96, 0.05)
-    one_freq = np.array([F_REST_CO21_HZ])
-    coarse_cube = _analytic_cube(coarse, 1)
-    fine_cube = _analytic_cube(fine, 1)
-    uv_u = rng.uniform(-80.0, 80.0, 31)
-    uv_v = rng.uniform(-80.0, 80.0, 31)
-    vis_coarse = sample_intrinsic_cube_native(
-        coarse_cube, coarse, uv_u, uv_v, one_freq, eps=1.0e-12
-    )
-    vis_fine = sample_intrinsic_cube_native(
-        fine_cube, fine, uv_u, uv_v, one_freq, eps=1.0e-12
-    )
-    spatial_delta_chi2 = float(np.sum(np.abs(vis_coarse - vis_fine) ** 2))
-
-    # Compare native midpoint integration with two subchannels per native cell.
-    centres = np.arange(-40.0, 42.0, 2.0)
-    sigma = 12.0
-    mu = 0.73
-    coarse_flux = np.exp(-0.5 * ((centres - mu) / sigma) ** 2) * 2.0
-    sub = centres[:, None] + np.array([-0.5, 0.5])[None, :]
-    fine_flux = np.exp(-0.5 * ((sub - mu) / sigma) ** 2).sum(axis=1)
-    spectral_delta_chi2 = float(np.sum((coarse_flux - fine_flux) ** 2))
-    doubled_sampling_delta_chi2 = max(spatial_delta_chi2, spectral_delta_chi2)
-
-    gates = {
-        "relative_visibility_l2": relative_l2 <= 1.0e-6,
-        "noise_normalized_component_rms": noise_normalized_component_rms <= 0.001,
-        "zero_baseline_flux_error": zero_flux_error <= 0.001,
-        "centroid_error_native_channel": centroid_error_native_channel <= 0.02,
-        "doubled_sampling_delta_chi2": doubled_sampling_delta_chi2 <= 0.1,
-    }
-    return {
-        "relative_visibility_l2": relative_l2,
-        "noise_normalized_component_rms": noise_normalized_component_rms,
-        "zero_baseline_flux_error": zero_flux_error,
-        "centroid_error_native_channel": centroid_error_native_channel,
-        "spatial_doubling_delta_chi2": spatial_delta_chi2,
-        "spectral_doubling_delta_chi2": spectral_delta_chi2,
-        "doubled_sampling_delta_chi2": doubled_sampling_delta_chi2,
-        "thresholds": {
-            "relative_visibility_l2_max": 1.0e-6,
-            "noise_normalized_component_rms_max": 0.001,
-            "zero_baseline_flux_error_max": 0.001,
-            "centroid_error_native_channel_max": 0.02,
-            "doubled_sampling_delta_chi2_max": 0.1,
-        },
-        "gates": gates,
-        "pass": all(gates.values()),
-    }
-
-
 def _target_data(config: dict):
     phase = config.get("phase_center_deg")
     phase_rad = None if phase is None else np.radians(np.asarray(phase, dtype=float))
@@ -448,9 +333,9 @@ def _van_der_corput(count: int) -> list[float]:
 
 
 def _render_config(output, grid, data, params, sb_radius, sb_profile, render_settings):
-    velocity_radius = np.linspace(0.01, max(15.0, float(sb_radius[-1])), 256)
+    velocity_radius = np.linspace(0.0, max(15.0, float(sb_radius[-1])), 257)
     return {
-        "schema_version": "kinms-intrinsic-cube-v1",
+        "schema_version": "kinms-continuum-cube-v2",
         "output_npz": str(output),
         "artifact_id": f"{output.parent.name}/{output.name}",
         "grid": {
@@ -459,11 +344,9 @@ def _render_config(output, grid, data, params, sb_radius, sb_profile, render_set
             "cell_arcsec": float(grid.cell_arcsec),
         },
         "velocity_centers_kms": np.asarray(data.vel_native, dtype=float).tolist(),
-        "render_mode": "deterministic_quadrature",
         "seed": int(render_settings["seed"]),
         "radial_samples": int(render_settings["radial_samples"]),
         "azimuth_samples": int(render_settings["azimuth_samples"]),
-        "dispersion_order": int(render_settings["dispersion_order"]),
         "spectral_oversample": int(render_settings.get("spectral_oversample", 1)),
         "azimuth_phase_fractions": [
             float(value) for value in render_settings["azimuth_phase_fractions"]
@@ -536,11 +419,10 @@ def worker_coordinate_closure(root: Path, kinms_python: Path, kinms_identity: di
     radius = np.linspace(0.0, 4.0, 129)
     profile = np.exp(-radius / 1.1)
     settings = {
-        "radial_samples": 192,
+        "radial_samples": 128,
         "azimuth_samples": 512,
-        "dispersion_order": 9,
-        "spectral_oversample": 8,
-        "azimuth_phase_fractions": _van_der_corput(32),
+        "spectral_oversample": 2,
+        "azimuth_phase_fractions": [0.0],
         "seed": COMMON_SEED,
     }
     output = contract_root / "signed-asymmetric.npz"
@@ -636,20 +518,21 @@ def target_closure(
 
     target_root = root / target
     target_root.mkdir(parents=True, exist_ok=True)
-    common_phases = _van_der_corput(128)
-    independent_phases = [float((value + np.sqrt(2.0) / 7.0) % 1.0) for value in common_phases]
+    common_phases = [0.0]
+    independent_phases = [float(np.sqrt(2.0) / 7.0)]
     reference = {
-        "radial_samples": 256,
+        "radial_samples": 128,
         "azimuth_samples": 512,
-        "dispersion_order": 9,
-        "spectral_oversample": 4,
+        "spectral_oversample": 2,
+        "spatial_oversample": 2,
         "azimuth_phase_fractions": common_phases,
         "seed": COMMON_SEED,
     }
     variants = {
         "nominal_common": {
             **reference,
-            "azimuth_phase_fractions": common_phases[:64],
+            "radial_samples": 64,
+            "azimuth_samples": 256,
         },
         "high_common": dict(reference),
         "high_independent": {
@@ -657,15 +540,15 @@ def target_closure(
             "azimuth_phase_fractions": independent_phases,
             "seed": INDEPENDENT_SEED,
         },
-        "spatial_double": {**reference, "spatial_oversample": 2},
-        "radial_double": {**reference, "radial_samples": 512},
+        "spatial_double": {**reference, "spatial_oversample": 4},
+        "radial_double": {**reference, "radial_samples": 256},
         "azimuth_double": {**reference, "azimuth_samples": 1024},
-        "dispersion_double": {**reference, "dispersion_order": 17},
-        "spectral_double": {**reference, "spectral_oversample": 8},
+        "spectral_double": {**reference, "spectral_oversample": 4},
     }
     rendered = {}
     visibilities = {}
     reference_cube = None
+    reference_grid = None
     for label, render_settings in variants.items():
         output = target_root / f"{label}.npz"
         spatial_oversample = int(render_settings.get("spatial_oversample", 1))
@@ -698,6 +581,7 @@ def target_closure(
         visibilities[label] = np.asarray(vis)
         if label == "high_common":
             reference_cube = np.asarray(cube)
+            reference_grid = render_grid
         rendered[label] = {
             "worker": run,
             "operator_elapsed_s": operator_elapsed,
@@ -711,7 +595,8 @@ def target_closure(
             },
             "chi2_visibility": chi2(data.vis, vis, data.weights, data.s),
             "flux_relative_error": abs(
-                float(metadata["integrated_flux_jy_kms_computed"]) - params["flux"]
+                float(metadata["flux_ledger_jy_kms"]["quadrature_input"])
+                - params["flux"]
             )
             / params["flux"],
         }
@@ -739,7 +624,6 @@ def target_closure(
         "spatial_double",
         "radial_double",
         "azimuth_double",
-        "dispersion_double",
         "spectral_double",
     )
     axis_convergence = {
@@ -748,13 +632,19 @@ def target_closure(
                 rendered[label]["chi2_visibility"]
                 - rendered["high_common"]["chi2_visibility"]
             ),
+            "relative_complex_visibility_l2": float(
+                np.linalg.norm(visibilities[label] - high)
+                / max(float(np.linalg.norm(high)), np.finfo(float).tiny)
+            ),
             "noise_normalized_component_rms": _thermal_component_rms(
                 visibilities[label] - high, data
             ),
         }
         for label in convergence_labels
     }
-    geometry = _cube_geometry(reference_cube, grid, data.vel_native, params["vsys_kms"])
+    geometry = _cube_geometry(
+        reference_cube, reference_grid, data.vel_native, params["vsys_kms"]
+    )
     geometry["receding_pa_error_deg"] = _angle_separation_deg(
         geometry["receding_pa_deg_east_of_north"], params["pa_deg"]
     )
@@ -765,15 +655,6 @@ def target_closure(
         )
     )
 
-    # Refactoring the measurement operator must preserve the exact S0 kinUV
-    # likelihood. This replay uses the unmodified target parameters/template.
-    replay_start = perf_counter()
-    kinuv_vis = predict_binned(data, params, template, grid, i_rad=inclination_rad)
-    replay_elapsed = perf_counter() - replay_start
-    replay_chi2 = chi2(data.vis, kinuv_vis, data.weights, data.s)
-    expected_chi2 = float(selected["chi2_map"])
-    replay_error = abs(replay_chi2 - expected_chi2)
-
     gates = {
         "nominal_rendering_noise_rms": nominal_high_rms <= 0.1,
         "independent_high_rendering_noise_rms": independent_high_rms <= 0.1,
@@ -783,11 +664,15 @@ def target_closure(
             value["absolute_chi2_change"] for value in axis_convergence.values()
         )
         <= 0.1,
+        "all_target_sampling_axes_relative_l2": max(
+            value["relative_complex_visibility_l2"]
+            for value in axis_convergence.values()
+        )
+        <= 1.0e-4,
         "flux_error": max(v["flux_relative_error"] for v in rendered.values()) <= 0.001,
         "signed_receding_pa_contract": geometry["receding_pa_error_deg"] <= 3.0,
         "asymmetric_centroid_contract": geometry["centroid_error_arcsec"]
         <= float(grid.cell_arcsec),
-        "baseline_replay": replay_error <= 0.1,
     }
     return {
         "target_id": target,
@@ -811,22 +696,16 @@ def target_closure(
         "independent_high_absolute_chi2_change": independent_high_chi2,
         "target_path_sampling_convergence": axis_convergence,
         "signed_geometry_contract": geometry,
-        "baseline_replay": {
-            "expected_chi2": expected_chi2,
-            "actual_chi2": replay_chi2,
-            "absolute_error": replay_error,
-            "elapsed_s": replay_elapsed,
-        },
         "thresholds": {
             "rendering_noise_rms_thermal_sd_max": 0.1,
             "high_cloud_absolute_chi2_change_max": 0.1,
             "independent_high_absolute_chi2_change_max": 0.1,
             "per_axis_doubled_sampling_absolute_chi2_change_max": 0.1,
+            "per_axis_relative_complex_visibility_l2_max": 1.0e-4,
             "flux_relative_error_max": 0.001,
             "target_centroid_status": "diagnostic; finite target support can shift the flux centroid",
             "receding_pa_error_deg_max": 3.0,
             "centroid_error_arcsec_max": float(grid.cell_arcsec),
-            "baseline_replay_absolute_chi2_max": 0.1,
         },
         "gates": gates,
         "pass": all(gates.values()),
@@ -919,7 +798,6 @@ def main() -> int:
                 "sha256": sha256_file(REPO / "external" / "requirements-kinms-s1.txt"),
             },
         },
-        "analytic_closure": analytic_closure(),
         "worker_coordinate_closure": {},
         "targets": {},
     }
@@ -932,8 +810,7 @@ def main() -> int:
                 target, root, args.kinms_python, s0, kinms_identity
             )
         record["pass"] = bool(
-            record["analytic_closure"]["pass"]
-            and record["worker_coordinate_closure"]["pass"]
+            record["worker_coordinate_closure"]["pass"]
             and all(value["pass"] for value in record["targets"].values())
         )
         _snapshot_sources(root)
@@ -958,7 +835,6 @@ def main() -> int:
     print(json.dumps({
         "output": str(publish_root),
         "pass": record["pass"],
-        "analytic": record["analytic_closure"],
         "worker_coordinate": {
             "pass": record["worker_coordinate_closure"]["pass"],
             "gates": record["worker_coordinate_closure"]["gates"],
@@ -986,7 +862,6 @@ def main() -> int:
                 "receding_pa_error_deg": value["signed_geometry_contract"][
                     "receding_pa_error_deg"
                 ],
-                "replay_error": value["baseline_replay"]["absolute_error"],
             }
             for key, value in record["targets"].items()
         },

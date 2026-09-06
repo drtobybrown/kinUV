@@ -169,8 +169,9 @@ def test_official_066_chi2_identity():
     }
     vis_np = predict_binned(data, params, tmpl, grid, xla=False)
     vis_j = predict_binned(data, params, tmpl, grid, xla=True)
-    assert abs(float(chi2(data.vis, vis_np, data.weights, data.s)) - 168675.596) < 0.05
+    # Continuum-v2 uses channel-average Jy from analytic channel integrals.
+    assert abs(float(chi2(data.vis, vis_np, data.weights, data.s)) - 170284.56745) < 0.05
     assert float(np.max(np.abs(np.asarray(vis_j) - vis_np))) < 1e-6
     c_j = chi2(data.vis, vis_j, data.weights, data.s)
-    assert abs(float(c_j) - 168675.596) < 0.05
+    assert abs(float(c_j) - 170284.56745) < 0.05
     assert abs(float(data.s) - 0.5136098555284736) < 1e-6
