@@ -16,6 +16,12 @@ PA boundary, target-path convergence axes and independent-repeat chi-square,
 fail-closed metadata and cube-derived flux, atomic dossier publication,
 executable environment/input locks, and complete runtime provenance. S1 stays
 open until both reviewers accept one revised exact commit; S2 has not begun.
+Commit `0c95240b2f7e238ba6c0666f61871c65558494b0` resolves the bounded review
+findings, but the newly complete target-path matrix fails the frozen resolution
+gate. The active card is escalated through
+[`ESC-KINUV-S1-RENDERER-CONVERGENCE`](../decisions/ESC-KINUV-S1-RENDERER-CONVERGENCE.md).
+No fresh code verdict is requested until Astra freezes the eligible intrinsic
+KinMS deposition/LOSVD transform.
 
 ## Roles and files
 

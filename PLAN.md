@@ -10,15 +10,15 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Repair and close S1 review.** Resolve both independent reviewers' required PA, convergence, contract, publication, lock, and provenance findings; regenerate the durable dossier and obtain two accepts on one exact commit.
-2. **Execute S2 geometry/covariance.** Run the frozen turnover grid, twelve-start basin audit, and line-free covariance/whitening report without changing target priors or visibility selection.
+1. **Resolve the S1 renderer escalation.** Astra must freeze an eligible anti-aliased KinMS deposition/LOSVD contract after the complete target-path matrix failed the unchanged `|Delta chi2| <= 0.1` gate. Then obtain two fresh proposal reviews before implementation resumes.
+2. **Freeze S2 missing inputs.** Register the independently sourced inclination prior uncertainty/source, BMAJ definition, LOS bounds, covariance candidates/selection, and gradient convention; re-export KGAS007 grouping metadata before any real held-out claim.
 3. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
 4. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
 5. **Re-export KGAS007 through `ms2kinuv`.** Replace the historical export when its source Measurement Set becomes available; until then real grouped holdout remains blocked rather than approximated.
 
 ## Exit criteria for the next production increment
 
-- S0--S5 MAP/recovery gates pass with dual review and Consultant sign-off.
+- S0--S5 MAP/recovery gates pass with dual review and Consultant sign-off; S1 is currently blocked by the recorded renderer-convergence escalation.
 - Exact-workflow SBC meets a separately declared coverage criterion only for a calibrated-interval claim.
 - MILESTONE-001 remains reproducible from the frozen target configurations and run manifests.
 - A clean checkout reproduces MAP identity chi2 and validates retained NUTS summaries from manifests.

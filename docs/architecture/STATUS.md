@@ -1,15 +1,15 @@
 ---
-generation: 12
-phase: s1-required-changes
-code_freeze: false
-next_role: implementer-s1-repair
-board: s1-code-review-required-changes
-build_licensed: true
+generation: 13
+phase: s1-blocked-consultant-decision
+code_freeze: true
+next_role: consultant-astra
+board: s1-renderer-convergence-escalated
+build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s1-dual-code-review
-  - s1-pa-contract-and-convergence-repair
+  - s1-renderer-convergence-decision
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md
@@ -17,26 +17,30 @@ last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
 last_review_a: docs/reviews/2026-09-06-code-review-a-crossdomain-s1.md
 last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
-open_questions: []
-deadlocks: []
-canon_generation: 12
+open_questions:
+  - s1-kinms-antialias-deposition-contract
+  - s2-inclination-prior-provenance
+  - s2-covariance-bmaj-and-bound-freeze
+deadlocks:
+  - s1-target-path-resolution-gate
+canon_generation: 13
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 exact commit `1b629a1` received dual `accept-with-required-changes`; bounded repairs are active and S2 has not begun
-* **Last Action:** Reviewer A falsified the KinMS/kinUV PA convention and convergence coverage; Reviewer B falsified the fail-closed metadata and dossier-publication contracts
+* **Phase:** S1 bounded review repairs are complete at `0c95240`, but full target-path resolution convergence failed and requires an Astra renderer decision
+* **Last Action:** Published a sealed failed-gate dossier after independently doubling the image, radial, azimuthal, dispersion, and spectral integration axes
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
-* **Blockers / Gates:** at least 199 complete non-rotating null refits for a rotation claim; a newly registered mock-calibrated Stage B criterion; legacy KGAS007 grouping may block valid real holdout; posterior intervals remain uncalibrated
-* **Next Step:** repair all seven required findings, regenerate the S1 dossier under unchanged thresholds, and obtain two fresh exact-commit verdicts
+* **Blockers / Gates:** KinMS nearest-cell/Gauss-Hermite rendering is not converged at `|Delta chi2| <= 0.1`; S2 also lacks an approved inclination-prior uncertainty/source and KGAS007 grouping metadata
+* **Next Step:** Astra resolves [`ESC-KINUV-S1-RENDERER-CONVERGENCE`](../decisions/ESC-KINUV-S1-RENDERER-CONVERGENCE.md); a revised transform specification requires two fresh reviews before implementation resumes
 
 ## S1 operator/comparator closure
 
-The durable dossier is
-`results/validation/crossdomain-recovery-s1-20260906/`. No fit, bootstrap,
-posterior, NUTS, or G4 campaign was run. The external KinMS process emitted
-intrinsic native-channel cubes with no restoring beam, primary beam, or
-spectral response. kinUV then applied its production measurement operator.
+The first dossier at `results/validation/crossdomain-recovery-s1-20260906/`
+is retained as pre-review evidence. The revised read-only dossier is
+`results/validation/crossdomain-recovery-s1-20260906-r2/`; it is a failed-gate
+record and is not promoted. No fit, bootstrap, posterior, NUTS, or G4 campaign
+was run.
 
 | Gate | KGAS066 | KGAS007 | Limit |
 |---|---:|---:|---:|
@@ -45,9 +49,12 @@ spectral response. kinUV then applied its production measurement operator.
 | Zero-baseline flux relative error | 3.70e-15 | 3.70e-15 | <=0.1% |
 | Native centroid error (channel) | <1e-9 | <1e-9 | <=0.02 |
 | Doubled-sampling delta chi2 | 2.40e-5 | 2.40e-5 | <=0.1 |
-| Nominal/high render RMS (thermal SD) | 1.34e-4 | 3.35e-5 | <=0.1 |
-| Independent high-repeat RMS (thermal SD) | 6.76e-5 | 1.63e-5 | <=0.1 |
-| High-cloud absolute chi2 change | 0.04294 | 0.02802 | <=0.1 |
+| Nominal/high render RMS (thermal SD) | 6.73e-5 | 1.58e-5 | <=0.1 |
+| Independent high-repeat RMS (thermal SD) | 4.58e-5 | 1.13e-5 | <=0.1 |
+| Nominal/high absolute chi2 change | 0.01901 | 0.003332 | <=0.1 |
+| Independent/high absolute chi2 change | 0.02640 | 0.000458 | <=0.1 |
+| Maximum per-axis doubled-sampling absolute chi2 change | **896.724** | **143.100** | <=0.1; **FAIL** |
+| Signed worker PA error | 0.001397 deg | 0.001397 deg | <=3 deg |
 | S0 baseline replay absolute chi2 error | 0.0 | 0.0 | <=0.1 |
 
 ## Corrected prospective rotation accounting

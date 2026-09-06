@@ -4,6 +4,9 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-06 — production closeout and documentation cleanup
 
+- Closed S0 scientific accounting at `fb4a145`, distinguishing blank from fitted non-rotating emission and blocking universal use of the historical dimensionless omega threshold.
+- Added the S1 intrinsic KinMS adapter and shared PB/NUFFT/Hann-bin operator, then repaired the independently discovered PA, fail-closed metadata, atomic-publication, input-lock, and provenance defects at `0c95240`.
+- Sealed the revised S1 dossier as failed evidence after the newly complete per-axis target matrix exposed unconverged KinMS cloud deposition; no S2 work or scientific promotion followed.
 - Promoted MILESTONE-001 as exactly one immutable production bundle for KGAS066 and KGAS007, each containing fresh visibility MAP fits, cubes, moments, spectra, PVDs, rotation curves, visibility residuals, a KinMS comparison, checksums, and retained mixed posterior draws.
 - Fixed target inclination propagation through Stage B and model-cube export; KGAS007 now uses 28.9 degrees throughout its forward model and diagnostics.
 - Added versioned target configurations and a clean-checkout production runner with two PA starts, likelihood-identity verification, environment and input hashes, bounded output, and immutable promotion receipts.
