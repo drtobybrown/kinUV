@@ -8,6 +8,8 @@ kinUV is the standalone modeling and inference repository. It reads NPZ visibili
 ms2kinuv convert /path/to/calibrated.ms -o KILOGAS066.npz
 ```
 
+The default casacore backend selects `CORRECTED_DATA` when present, otherwise `DATA`, and preserves `WEIGHT_SPECTRUM` or broadcast `WEIGHT`. Use `--data-column` to pin the calibrated column. pyuvdata remains an optional alternate backend.
+
 ## NPZ contract
 
 | Key | Dtype | Shape | Required by kinUV |
@@ -22,6 +24,8 @@ ms2kinuv convert /path/to/calibrated.ms -o KILOGAS066.npz
 | `field_id` | int64 | scalar | optional provenance |
 | `reference_dir_rad` | float64 | `(2,)` | optional provenance |
 | `schema_version` | Unicode | scalar | written as `ms2kinuv-npz-v1` |
+| `source_backend` | Unicode | scalar | optional extraction provenance |
+| `data_column` | Unicode | scalar | optional Measurement Set column provenance |
 
 Baselines stay in metres. kinUV derives wavelengths independently for every channel as `(u_m, v_m) * frequency / c`. Flags are represented by zero weights. Extraction does not trim the line, average rows, bin uv cells, apply the spectral response, construct a model, or evaluate a likelihood; those operations belong to kinUV.
 
