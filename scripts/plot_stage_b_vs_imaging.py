@@ -47,7 +47,7 @@ ROOT_10KMS = Path(
 )
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "kinuv-KGAS066-07b714-milestone1"
 )
 ARTIFACT = Path(
     "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings"
@@ -245,7 +245,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--data-cube", type=Path, default=ROOT_10KMS / "KGAS66_clipped_cube.fits")
     p.add_argument("--mask-cube", type=Path, default=ROOT_10KMS / "KGAS66_mask_cube.fits")
-    p.add_argument("--model-cube", type=Path, default=MAP_DIR / "stage_b_model_cube.fits")
+    p.add_argument("--model-cube", type=Path, default=MAP_DIR / "plots/model_native.fits")
     p.add_argument("--stage-a", type=Path, default=MAP_DIR / "stage_a_map.json")
     p.add_argument("--out-dir", type=Path, default=None)
     p.add_argument(

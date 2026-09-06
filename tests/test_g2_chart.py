@@ -27,7 +27,7 @@ REPO = Path(__file__).resolve().parents[1]
 SRC_CHART = REPO / "src/kinuv/infer/chart.py"
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "kinuv-KGAS066-07b714-milestone1"
 )
 CANFAR_NPZ = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz"
@@ -296,7 +296,7 @@ def test_official_chi2_after_roundtrip():
     back = unconstrained_to_params(z)
     vis = predict_binned(data, back, tmpl, grid, xla=False)
     c = chi2(data.vis, vis, data.weights, data.s)
-    assert abs(float(c) - 168675.6) < 1.0
+    assert abs(float(c) - 168675.596) < 0.05
     assert abs(float(data.s) - 0.5136098555284736) < 1e-6
 
 

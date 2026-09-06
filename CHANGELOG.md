@@ -4,6 +4,12 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-06 — production closeout and documentation cleanup
 
+- Promoted MILESTONE-001 as exactly one immutable production bundle for KGAS066 and KGAS007, each containing fresh visibility MAP fits, cubes, moments, spectra, PVDs, rotation curves, visibility residuals, a KinMS comparison, checksums, and retained mixed posterior draws.
+- Fixed target inclination propagation through Stage B and model-cube export; KGAS007 now uses 28.9 degrees throughout its forward model and diagnostics.
+- Added versioned target configurations and a clean-checkout production runner with two PA starts, likelihood-identity verification, environment and input hashes, bounded output, and immutable promotion receipts.
+- Added a Stage B adequacy gate. KGAS066 selects its stable ring fit at chi2 167302.963; KGAS007 falls back to Stage A at chi2 122070.763 because its nominal Stage B solution reaches the zero-speed bound and exceeds the oscillation threshold.
+- Archived the superseded production products, two rejected milestone attempts, and the duplicate standalone KinMS benchmark after checksum verification.
+
 - Decoupled cosmological scale conversion from the visibility hot path, added a generic kinematic velocity-profile interface, and added automated KGAS066/KGAS007 downstream KinMS comparison products.
 - Added source-level guards that prohibit dark-matter, baryonic/halo, cosmology, and physical-scale dependencies in `kinuv.forward`, `kinuv.likelihood`, and `kinuv.infer`.
 - Replaced the target-coupled field guide with a data-agnostic production standard covering Consultant/Registrar/Implementer authority, independent science and software reviews, precommitted scientific gates, immutable promotion, and scratch/durable storage tiers.

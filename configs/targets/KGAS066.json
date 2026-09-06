@@ -7,7 +7,7 @@
   "diagnostic_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
   "diagnostic_mask": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_mask_cube.fits",
   "geometry": {
-    "inclination_deg": 43.85986559577437,
+    "inclination_deg": 43.86289587982063,
     "pa_seed_deg": 205.2,
     "vsys_optical_seed_kms": 8299.563
   },
@@ -30,10 +30,10 @@
     "maxiter": 40
   },
   "kinms": {
-    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/benchmarks/kinms-canonical/KGAS066/kinms_model_k.fits",
-    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/benchmarks/kinms-canonical/KGAS066/kinms_fit_result.json"
+    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/benchmark/kinms_model_k.fits",
+    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/benchmark/kinms_fit_result.json"
   },
-  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-3de838-nuts",
+  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/posterior",
   "acceptance": {
     "minimum_delta_chi2": 1.0,
     "likelihood_identity_atol": 0.05,

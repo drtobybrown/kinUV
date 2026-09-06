@@ -45,7 +45,7 @@ SRC_MODEL = REPO / "src/kinuv/forward/model.py"
 SRC_MAP = REPO / "src/kinuv/infer/map.py"
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "kinuv-KGAS066-07b714-milestone1"
 )
 CANFAR_NPZ = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz"
@@ -309,7 +309,7 @@ def test_official_chi2_after_chart_xla():
     back = {n: float(v) for n, v in zip(PARAM_NAMES, np.asarray(unconstrained_to_physical(z8)))}
     vis = predict_binned(data, back, tmpl, grid, xla=True)
     c = chi2(data.vis, vis, data.weights, data.s)
-    assert abs(float(c) - 168675.6) < 1.0
+    assert abs(float(c) - 168675.596) < 0.05
     assert abs(float(data.s) - 0.5136098555284736) < 1e-6
 
 

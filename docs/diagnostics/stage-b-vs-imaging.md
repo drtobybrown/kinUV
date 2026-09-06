@@ -17,7 +17,7 @@ The fitted gas dispersion is σ ≈ 12 km/s and the visibility fit array has Δv
 
 The Stage B sky cube (native vis channels, ~1.27 km/s, Jy/pixel, no restoring beam) lives next to the MAP JSON:
 
-`/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-uvsign-map/plots/stage_b_model_cube.fits`
+`/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/plots/model_native.fits`
 
 `sky_cube` uses +x east. `scripts/write_model_cubes.py` flips NAXIS1 so the FITS `CDELT1 < 0` WCS is sky-true. Do not flip again on read. The Ico SB template is flipped the same way on ingest (`fits_image_east_north`) because the CASA map has `CDELT1<0`. The 066 npz Fourier kernel uses `NPZ_UV_SIGN = -1`: CASA visibilities match the WCS-true CLEAN cube with a `+2πi` kernel, not a conjugated export. `kinuv-KGAS066-f47bc9-map` is the historical vis-winner at PA=21.9° before that sign.
 
@@ -84,7 +84,7 @@ What remains is a **different estimator of the same galaxy**:
 - Official Stage A MAP is radio \(V_{\rm sys}\approx 8098.77\) km/s → optical \(\approx 8323.6\) km/s (**+24 km/s** vs catalogue).
 - Image-plane flux-weighted centroids (model − data, this run): mask-integrated **+15.4 km/s**, centre **+35.0 km/s**, receding **+36.3 km/s**, approaching **+12.7 km/s**. Not one rigid WCS translation.
 
-That offset is the vis-weighted MAP vs the CLEAN-cube brightness-weighted line (frozen Wiener Ico, leftover-vs-velocity, \(r_t\) at the 0.5″ floor, 1-beam vs mask weighting). **Do not apply a silent velocity fudge** to the model cube or to `hann_then_bin` — that would raise vis \(\chi^2\). A catalogue-frozen \(V_{\rm sys}\) refit would be a **new MAP tree**, not an in-place overwrite of `kinuv-KGAS066-uvsign-map`.
+That offset is the vis-weighted MAP vs the CLEAN-cube brightness-weighted line (frozen Wiener Ico, leftover-vs-velocity, \(r_t\) at the 0.5″ floor, 1-beam vs mask weighting). **Do not apply a silent velocity fudge** to the model cube or to `hann_then_bin` — that would raise vis \(\chi^2\). A catalogue-frozen \(V_{\rm sys}\) refit requires a new immutable run tree.
 
 The 4-panel spectra annotate \(\Delta v_{\rm M-D}\) per aperture and draw MAP \(v_{\rm sys}\) (dashed) plus catalogue \(v_{\rm sys}\) (dotted). Exact overlay of centroids is not expected and is not a pass/fail on the operator.
 

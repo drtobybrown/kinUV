@@ -1,13 +1,12 @@
 ---
-generation: 6
-phase: visibility-hot-path-decoupling
+generation: 7
+phase: milestone-001-promoted
 code_freeze: false
-next_role: senior-registrar
+next_role: consultant
 board: idle
 build_licensed: false
 pending:
-  - target-config-migration
-  - campaign-config-validation
+  - exact-workflow-posterior-calibration
 last_propose: null
 last_review: null
 last_review_a: null
@@ -15,26 +14,23 @@ last_review_b: null
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 6
+canon_generation: 7
 ---
 
 ## Agent Run Status
 
-* **Phase:** Visibility-likelihood hot-path decoupling and downstream comparator automation
-* **Last Action:** Removed physical-scale conversion from core constants, opened the forward model to caller-supplied kinematic profiles, added mass-decomposition dependency guards, and implemented the two-target downstream KinMS benchmark
-* **Decisions Made:** visibility chi2 is the sole scientific likelihood; baryonic/halo decomposition and cosmology are downstream-only; kinUV is the sole production fitter; `ms2kinuv` is the separate CASA ETL companion; KGAS066 official MAP remains read-only; G4 is not licensed
-* **Blockers / Gates:** posterior intervals are not calibrated; no real-data inner slope may be quoted; another production campaign is not licensed until target metadata and site paths leave Python entry points and validated configuration is recorded in run manifests
-* **Next Step:** validate the canonical KinMS comparison in an environment containing KinMS, then migrate remaining inference target metadata into validated configuration before licensing another production campaign
+* **Phase:** MILESTONE-001 promoted for KGAS066 and KGAS007
+* **Last Action:** Ran clean two-start Stage A and Stage B visibility fits, rendered the complete image and visibility diagnostic suites, embedded KinMS comparisons, revalidated retained mixed NUTS draws, and promoted one immutable product per target
+* **Decisions Made:** KGAS066 selects Stage B; KGAS007 selects Stage A because its Stage B fit hits the zero-speed bound and fails the oscillation gate; target values and site paths now live in versioned target configurations
+* **Blockers / Gates:** posterior intervals remain uncalibrated; KGAS066 visibility residuals remain structured with velocity; no real-data inner slope may be quoted
+* **Next Step:** run exact-workflow simulation-based calibration before promoting calibrated credible intervals
 
 ## Current products
 
 | Target | Product | Status |
 |---|---|---|
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-uvsign-map/` | Official Stage A MAP; PA 199.730 deg, chi2 168675.596, delta chi2 versus V=0 35552.652 |
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-uvsign-map/stage_b_map.json` | Stage B N=7, lambda=0; chi2 167302.187; improvement over Stage A 1373.409 |
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-3de838-nuts/` | Mixed; max Rhat 1.004, min ESS 889; intervals uncalibrated |
-| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-stage-a-map/` | Stage A MAP; chi2 122070.763; delta chi2 versus V=0 6211.629 |
-| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-32cbbd-nuts/` | Mixed; max Rhat 1.00214, min ESS 1093; intervals uncalibrated |
+| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Accepted MILESTONE-001 bundle; Stage B chi2 167302.963, Stage A delta chi2 versus V=0 35551.583, retained posterior max Rhat 1.00369 and min ESS 889 |
+| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted MILESTONE-001 bundle; Stage A chi2 122070.763 and delta chi2 versus V=0 6211.629; Stage B rejected for bound pressure and oscillation; retained posterior max Rhat 1.00214 and min ESS 1093 |
 
 The authoritative artifact index is `/arc/projects/KILOGAS/analysis/toby_sandbox/results/MANIFEST.md`.
 

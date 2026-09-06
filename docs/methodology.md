@@ -1,6 +1,6 @@
 # kinUV methodology (human)
 
-This is the science write-up. Agent process is in [`docs/reviews/BOARD.md`](reviews/BOARD.md) and [`DEC-066-AGENTS`](decisions/DEC-066-AGENTS.md). Official 066 product: **`kinuv-KGAS066-uvsign-map`**.
+This is the science write-up. Agent process is in [`docs/reviews/BOARD.md`](reviews/BOARD.md) and [`DEC-066-AGENTS`](decisions/DEC-066-AGENTS.md). The canonical products are indexed in [`MILESTONE-001.md`](MILESTONE-001.md).
 
 **Your job:** look at the latest Data | Model | Residual moments / spectra / PV and leftover `chi2` in the plot folder named on STATUS. You are not sitting gates. Agents decide those and keep going.
 
@@ -51,7 +51,7 @@ Style: [`docs/diagnostics/plotting.md`](diagnostics/plotting.md) (`kinuv.diagnos
 
 Runner: `scripts/plot_fit_diagnostics.py`.
 
-Canonical KinMS runner: `scripts/run_canonical_kinms_benchmark.py`. It defaults to KGAS066 and KGAS007, writes only under `results/incoming/benchmarks/`, and cannot call a kinUV optimizer or sampler.
+Canonical KinMS runner: `scripts/run_canonical_kinms_benchmark.py`. It defaults to KGAS066 and KGAS007 and cannot call a kinUV optimizer or sampler. The accepted milestone embeds its output under each production bundle's `benchmark/` directory.
 
 ## How production work is governed
 
@@ -63,6 +63,7 @@ The Consultant defines and signs the scientific specification and quantitative g
 |---|---|
 | 066 kernel sequence | [`docs/diagnostics/gold-standard-roadmap.md`](diagnostics/gold-standard-roadmap.md) |
 | Production index | `/arc/projects/KILOGAS/analysis/toby_sandbox/results/MANIFEST.md` |
+| MILESTONE-001 receipt | [`docs/MILESTONE-001.md`](MILESTONE-001.md) |
 | S1 artifacts | `docs/reviews/artifacts/2026-08-29-s1-mock/` |
 | S2 artifacts | `docs/reviews/artifacts/2026-08-29-s2/` |
 | **Your review folder** | [`docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/`](reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/) |

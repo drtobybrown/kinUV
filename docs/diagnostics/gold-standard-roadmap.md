@@ -1,6 +1,6 @@
 # 066 kernel sequence (human)
 
-This is the KGAS066 kernel sequence, not a population runner. Official product: **`kinuv-KGAS066-uvsign-map`**. The accepted review is summarized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md). Leftover-vs-velocity is a G0 flag; flags live in `kinuv.diagnostics`; G1 is CPU JAX only.
+This is the historical KGAS066 kernel sequence, not a population runner. The current accepted bundle is **`kinuv-KGAS066-07b714-milestone1`**. The accepted review is summarized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md). Leftover-vs-velocity is a G0 flag; flags live in `kinuv.diagnostics`; G1 is CPU JAX only.
 
 ## What is already true
 

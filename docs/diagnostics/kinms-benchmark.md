@@ -11,7 +11,7 @@ KINUV_KINMS_PYTHON=/path/to/kinms-env/bin/python \
 
 The runner reuses the retained KGAS066 KinMS fit. If KGAS007 has no cached comparator, it invokes `external/_kinms_best_worker.py` using the versioned fit configuration. Use `--target KGAS066` or `--target KGAS007` for a focused diagnostic, and `--no-fit` to require cached KinMS products.
 
-Each target directory under `results/incoming/benchmarks/kinms-canonical/` contains:
+Each accepted target bundle under `results/production/<target>/<run_id>/benchmark/` contains:
 
 - `benchmark.json`: source paths and matched-voxel residual metrics;
 - `kinms_model_k.fits`: KinMS cube converted to kelvin on the official grid;

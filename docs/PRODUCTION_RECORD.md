@@ -6,11 +6,8 @@ This document is the durable synthesis of completed review cards, architecture n
 
 | Target | Product | Result | Interpretation |
 |---|---|---|---|
-| KGAS066 | Stage A MAP, `results/production/KGAS066/kinuv-KGAS066-uvsign-map/` | PA 199.730 deg; V0 267.670 km/s; rt 0.500 arcsec; gas sigma 12.050 km/s; chi2 168675.596; delta chi2 versus V=0 = 35552.652 | Official read-only arctan MAP. The optimizer reached the rt lower bound, so no real-data inner slope is quoted. |
-| KGAS066 | Stage B, N=7 and lambda=0 | chi2 167302.187; improvement over Stage A 1373.409 | AIC favors the ring model, but Stage A remains the quoted rotation-curve product. Rings are not evidence for a warp. |
-| KGAS066 | Receding CPU NUTS, `results/production/KGAS066/kinuv-KGAS066-3de838-nuts/` | mean V0 254.983 km/s; mean rt 0.223922 arcsec; chi2 at mean 167486.764; max Rhat 1.004; min ESS 889 | Valid `sampler: nuts` product. Intervals remain uncalibrated because the earlier SBC failed; do not quote V0/rt as an inner slope. |
-| KGAS007 | Stage A MAP, `results/production/KGAS007/kinuv-KGAS007-stage-a-map/` | PA 151.602 deg; V0 195.984 km/s; rt 0.500 arcsec; chi2 122070.763; delta chi2 versus V=0 = 6211.629 | MAP initialized the licensed KGAS007 NUTS run. |
-| KGAS007 | Four-shard CPU NUTS, `results/production/KGAS007/kinuv-KGAS007-32cbbd-nuts/` | mean PA 151.608 deg; mean V0 194.867 km/s; mean rt 0.48199 arcsec; max Rhat 1.00214; min ESS 1093 | Valid `sampler: nuts` product. Intervals are not calibrated and no inner slope is quoted. |
+| KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Selected Stage B chi2 167302.963; Stage A PA 199.731 deg, V0 267.705 km/s, rt 0.500 arcsec, delta chi2 versus V=0 35551.583; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable baseline. Stage B passes AIC, bound-pressure, and oscillation gates. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
+| KGAS007 | MILESTONE-001, `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus V=0 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s and `max_omega=76.329 km/s`. Posterior intervals remain uncalibrated. |
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 
@@ -20,7 +17,7 @@ The production target set is KGAS066 plus KGAS007. G4 and population inference h
 - The fit arrays are 881 by 95 for KGAS066 (`N=4`, `dv=5.080 km/s`, `s=0.513610`) and 956 by 66 for KGAS007 (`N=4`, `dv=5.080 km/s`, `s=0.570735`).
 - Native channels are Hann-smoothed with guard channels before binning. The production Fourier convention uses `NPZ_UV_SIGN=-1` with the negative-exponential kernel.
 - Surface brightness is the 30 km/s Wiener-deconvolved Ico map, transformed so positive x is east. The primary beam is applied in the image plane after the positional shift.
-- Stage A uses an arctangent rotation curve. Stage B fits seven ring velocities with Stage A geometry fixed.
+- Stage A uses an arctangent rotation curve. Stage B fits seven ring velocities with Stage A geometry fixed and is selected only when AIC, bound-pressure, and oscillation gates pass.
 - The unconstrained NUTS chart logs flux, gas dispersion, and rt, uses a stable softplus for V0, and leaves PA and systemic velocity on identity coordinates. Position offsets are frozen at the MAP during NUTS.
 - Production sampling uses CPU JAX/FINUFFT and NumPyro in headless CANFAR jobs. Four independent one-chain jobs may be merged after per-parameter Rhat and ESS checks.
 
@@ -34,7 +31,9 @@ The JAX likelihood reproduced the official KGAS066 MAP chi2 and ran at 3.01 eval
 
 The retained S3 comparison uses KinMS only as an image-plane comparator. Its corrected wrapper passes face-on disk coordinates to KinMS, lets KinMS project inclination and PA, writes cubes with transpose `(2, 1, 0)`, and applies systemic velocity through `vOffset`. The best real-data KinMS comparator found PA 198.70 deg, V0 266.92 km/s, rt 0.465 arcsec, inclination 48.41 deg, and gas dispersion 12.83 km/s. These cube-fit parameters do not replace the visibility likelihood or official kinUV parameters. On the controlled mock, KinMS returned `rt=0.395 arcsec` for truth 0.25 arcsec, while kinUV returned 0.253 arcsec.
 
-The 2026-09-06 canonical downstream runner extended the same comparison contract to KGAS007 and regenerated a homogeneous diagnostic suite for both targets. The independent KGAS007 KinMS cube fit completed after 475 evaluations with PA 152.72 deg, V0 285.25 km/s, rt 1.095 arcsec, inclination 25.26 deg, systemic optical velocity 14203.71 km/s, and gas dispersion 15.56 km/s. KinMS has lower residual RMS on the masked CLEAN cube for both targets, as expected for a model optimized in that image domain. That metric is not a visibility likelihood comparison. The retained controlled KGAS066 mock remains the evidence that kinUV recovers injected sub-beam kinematics more accurately than the restored-cube fit.
+The 2026-09-06 canonical downstream runner extended the same comparison contract to KGAS007 and regenerated a homogeneous diagnostic suite for both targets. The independent KGAS007 KinMS cube fit completed after 475 evaluations with PA 152.72 deg, V0 285.25 km/s, rt 1.095 arcsec, inclination 25.26 deg, systemic optical velocity 14203.71 km/s, and gas dispersion 15.56 km/s. MILESTONE-001 embeds the comparator in each accepted bundle. KinMS has lower residual RMS on the masked CLEAN cube for both targets, as expected for a model optimized in that image domain. That metric is not a visibility likelihood comparison. The retained controlled KGAS066 mock remains the evidence that kinUV recovers injected sub-beam kinematics more accurately than the restored-cube fit.
+
+MILESTONE-001 fixed an inclination propagation defect in Stage B and model-cube serialization. The previous KGAS007 Stage A likelihood used 28.9 degrees correctly, but its exported cube inherited the KGAS066 default inclination. The milestone reran the fit and now propagates the configured target inclination through likelihood evaluation, Stage B, native cube creation, matched imaging products, and the KinMS comparison. Both products were generated from clean commits, reproduce their selected chi2 exactly, and contain complete SHA-256 manifests.
 
 ## Closed alternatives
 
@@ -57,7 +56,9 @@ The 2026-09-06 canonical downstream runner extended the same comparison contract
 | `docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/` | KGAS007 MAP initialization and diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas007-nuts/` | Merged KGAS007 NUTS product and mixing diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/` | KinMS live and controlled-mock comparator, excluding retired exploratory figures. |
-| `../../results/incoming/benchmarks/kinms-canonical/` | Generated two-target downstream KinMS comparison; unpromoted diagnostic output with checksums. |
+| `MILESTONE-001.md` | Compact milestone receipt and acceptance summary. |
+| `../../results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Accepted KGAS066 visibility, imaging, benchmark, and posterior bundle. |
+| `../../results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted KGAS007 visibility, imaging, benchmark, and posterior bundle. |
 
 The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_20260906.tar.gz`](../../archives/kinuv_docs_legacy_20260906.tar.gz). It contains the closed review cards and removed artifacts exactly as they existed before cleanup.
 
@@ -65,6 +66,6 @@ The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_
 
 1. Calibrate the exact NUTS workflow with simulation-based calibration before publishing credible intervals.
 2. Re-export the historical KGAS007 wavelength-coordinate NPZ with `ms2kinuv` when its source Measurement Set becomes available.
-3. Define a target-selection contract before adding a multi-galaxy runner or hierarchical model.
-4. Test richer surface-brightness models only when they preserve the visibility-plane likelihood and have an explicit comparison criterion.
-5. Keep large intermediate arrays in scratch storage and commit only summaries, plots, and compact arrays required by tests or scientific review.
+3. Investigate the KGAS066 velocity-structured residual and define an outer-ring support criterion before another Stage B campaign.
+4. Define a target-selection contract before adding a multi-galaxy runner or hierarchical model.
+5. Test richer surface-brightness models only when they preserve the visibility-plane likelihood and have an explicit comparison criterion.

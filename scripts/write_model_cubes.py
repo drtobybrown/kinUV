@@ -26,7 +26,7 @@ CUBE = Path(
 )
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "kinuv-KGAS066-07b714-milestone1"
 )
 DEFAULT_OUT = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/KGAS066/"
