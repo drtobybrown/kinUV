@@ -1,33 +1,35 @@
 ---
 role: reviewer
-seat: a | b
+seat: science-numerics | software-reproducibility
+phase: specification | implementation
 date: YYYY-MM-DD
-agent: subagent-id
-canon_generation: 4
-ids: []
-verdict: accept | reject
-severity: major | minor
-propose: docs/reviews/YYYY-MM-DD-propose-<slug>.md
+reviewer: independent-agent-id
+canon_generation: 5
+campaign_id: campaign-id
+proposal: docs/reviews/YYYY-MM-DD-propose-<slug>.md
+reviewed_commit: null
+verdict: accept | accept-with-required-changes | reject
 ---
+# Independent review
 
-# Review <a|b>: title
+Do not read the other review before recording this verdict. Do not implement the proposal under review. For an implementation review, replace `reviewed_commit: null` with the exact commit and verify code plus artifacts against the frozen proposal.
 
-Do not read the other seat's review file. Do not implement.
+## Attempted falsification
 
-## Attacks / bounds
+Identify the strongest failure mode tested: physical inconsistency, unit/sign error, non-identifiability, covariance mismatch, missing recovery case, package-boundary violation, irreproducibility, or operational data loss.
 
-At least one of: ADR contradiction; tighter quantitative bound; missing test/gate; residual risk the propose omitted. "Looks good" is invalid.
+## Findings
 
-## Comments
+Number each finding and label it `required` or `advisory`. Cite the specification, code, test, or missing evidence.
 
-Numbered. Tag each `major` or `minor`.
+## Gate assessment
+
+State whether every declared gate is measurable, precommitted, and sufficient for the proposed claim.
 
 ## Residual risks
 
-Numbered. Carry forward anything still open.
+List risks remaining even if required findings are fixed.
 
-## STATUS updates required
+## Verdict rationale
 
-- `verdict` and `severity` as in the header
-- `last_review_a` or `last_review_b`: this file
-- Do not set `board: accepted` (parent tallies)
+Explain why the verdict follows. A generic approval is invalid.

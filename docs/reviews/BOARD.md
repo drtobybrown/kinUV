@@ -1,30 +1,35 @@
 # Review board
 
-Message board for the current propose / dual-review card. Physics stays in `docs/decisions/`. Completed cards are summarized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md) and removed after closure.
+The board tracks one active proposal and its independent reviews. Scientific values live in frozen configuration and proposals; durable results live in run manifests and `docs/PRODUCTION_RECORD.md`.
 
-## Files
+## Roles and files
 
-| Role | Path |
-|---|---|
-| Propose | `docs/reviews/YYYY-MM-DD-propose-<slug>.md` |
-| Reviewer A | `docs/reviews/YYYY-MM-DD-review-a-<slug>.md` |
-| Reviewer B | `docs/reviews/YYYY-MM-DD-review-b-<slug>.md` |
-| Templates | [`_template.md`](_template.md), [`_review_template.md`](_review_template.md) |
+| Role | Responsibility | File |
+|---|---|---|
+| Consultant | Sign scientific strategy and acceptance criteria | `YYYY-MM-DD-propose-<slug>.md` |
+| Senior Registrar | Register, freeze, assign, tally, verify | STATUS front matter and proposal record |
+| Reviewer A | Science and numerical review | `YYYY-MM-DD-review-a-<slug>.md` |
+| Reviewer B | Software and reproducibility review | `YYYY-MM-DD-review-b-<slug>.md` |
+| Implementer | Execute accepted specification | Code, tests, run manifest, gate artifacts |
+| Reviewer A/B after critical code changes | Verify implementation against the frozen specification | `YYYY-MM-DD-code-review-{a,b}-<slug>.md` |
 
-STATUS front matter tracks the live card: `next_role`, `board` (`idle` / `open` / `accepted` / `rejected`), `last_propose`, `last_review_a`, `last_review_b`.
+Templates: [`_template.md`](_template.md) and [`_review_template.md`](_review_template.md).
 
 ## Independence
 
-Launch reviewer A and B in the same turn, in parallel. Give each the propose path and STATUS. Tell each **not** to open the other review file. The parent tallies only after both files exist.
+Reviewers receive the frozen proposal, configuration checksums, relevant decisions, and acceptance criteria. They do not read each other's review before committing a verdict. Neither reviewer implements the proposal under review. A generic approval without an attempted falsification, missing-gate check, or residual-risk assessment is invalid.
 
-## After dual accept
+## Tally
 
-No third review. Parent becomes implementer: write code, run the licensed stages, **decide each gate**, update human docs, commit, and push `origin/dev` after each stage. Do not ping the user mid-gate. Hand the user the final plot folder (moments / spectra / PV / leftover `chi2`).
+- Two `accept` verdicts license implementation.
+- `accept-with-required-changes` licenses implementation only after the Registrar verifies incorporation into the frozen proposal.
+- Any `reject` returns the scope to the Consultant and requires two fresh reviews after revision.
+- Persistent disagreement is escalated to Astra; the last writer does not win.
 
-## User role
+The Implementer may resolve routine defects inside the accepted specification. A change to physics, priors, covariance, data selection, transform conventions, quantitative gates, or promoted claims reopens the proposal.
 
-The user is not a gate sitter. They review whether the **final** Data | Model | Residual (and leftover) plots work.
+## Promotion
 
-## Closeout
+After execution, Reviewer A checks scientific and numerical code changes and Reviewer B checks software and reproducibility changes where the field guide requires dual code review. These are implementation reviews, distinct from the proposal verdicts, and both must name the reviewed commit. The Registrar verifies manifests, checksums, gate states, and artifact completeness. The Consultant then signs or rejects scientific promotion.
 
-After implementation and verification, fold durable conclusions into `docs/PRODUCTION_RECORD.md`, clear the live-card pointers in STATUS, and remove the closed propose/review files. Keep only this board and the two templates when no card is active.
+Closeout folds durable findings into `docs/PRODUCTION_RECORD.md`, clears active STATUS pointers, and removes closed discussion from the board.

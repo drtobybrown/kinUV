@@ -1,36 +1,40 @@
 ---
-role: proposer
+role: consultant-proposal
 date: YYYY-MM-DD
-agent: parent
-canon_generation: 4
-ids: []
+consultant: agent-or-human-id
+registrar: agent-id
+canon_generation: 5
+campaign_id: campaign-id
+target_config_sha256: pending
+campaign_config_sha256: pending
 verdict: propose
 ---
+# Proposal title
 
-# Title
+## Scientific question and permitted claims
 
-## Scope
+State the question, estimands, and claims this campaign may make.
 
-Which existing DEC ids. Stages to execute if the board accepts. Do not open ids that are not in `STATUS.pending` unless the user added them.
+## Frozen specification
 
-## What changed / what was checked
+List model family, parameterization, free/fixed quantities, physical priors, transform and spectral response, covariance, data selection, and null models. Link resolved configuration.
 
-Bullets. Quote generation numbers.
+## Quantitative gates
 
-## Rejected alternatives
+Declare analytic, recovery, null, covariance, MAP, convergence, calibration, and promotion criteria before production results are inspected.
 
-Why not the other sampler, kernel, or galaxy.
+## Execution stages and products
+
+List implementation, tests, compute stages, checkpoints, diagnostics, and final artifacts.
+
+## Change contingencies
+
+State which operational adjustments are pre-authorized and which changes require a revised proposal.
 
 ## Residual risks
 
-Numbered.
+Numbered scientific, numerical, software, and operational risks.
 
-## Execute if accepted
+## Consultant sign-off
 
-Numbered stages the implementer will run without a second review. Include commit/push points.
-
-## STATUS updates required
-
-- `next_role: board`
-- `board: open`
-- `last_propose:` this file
+Name, date, and statement that the scientific specification is ready for independent review.

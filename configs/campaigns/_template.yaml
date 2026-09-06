@@ -1,0 +1,35 @@
+schema_version: kinuv-campaign-v1
+campaign_id: null
+target_config: null
+model:
+  family: null
+  free_parameters: []
+  fixed_parameters: []
+  parameterization: {}
+  priors: {}
+visibility:
+  schema_version: ms2kinuv-npz-v1
+  selection: {}
+  transform: {}
+  spectral_response: {}
+  covariance: {}
+null_models: []
+gates:
+  analytic_closure: {}
+  mock_recovery: {}
+  null_comparison: {}
+  covariance: {}
+  map_stability: {}
+  posterior_convergence: {}
+  calibration: {}
+sampler:
+  algorithm: null
+  chains: null
+  warmup: null
+  draws: null
+  seeds: []
+execution:
+  backend: null
+  resources: {}
+  run_root_env: KINUV_RUN_ROOT
+products: []

@@ -1,23 +1,27 @@
 ---
 id: DEC-067-RUNNER
 status: accepted
-generation: 4
+generation: 5
 date: 2026-08-30
-owner: user
+amended: 2026-09-06
+owner: senior-registrar
 ---
-# CANFAR headless execution ceiling
+# Asynchronous production execution and storage
 
-**Question:** When may an agent run a long NUTS (or other) job, and where does it run?
+**Question:** How are long production jobs executed and persisted without coupling the engine to a target or site path?
 
 ## Answer
 
-User 2026-08-30 mission directive (user creates `DEC-*` ids). The 7200 s interactive/subagent cap is **not** a batch ceiling.
+Jobs expected to outlive an interactive turn run asynchronously on the configured batch platform. Resource requests come from campaign configuration and a recorded preflight estimate. Hardware is selected from measured behavior of the exact production kernel; no CPU or GPU class is assumed globally.
 
-1. Jobs with expected wall-clock **> 15 minutes** run as asynchronous CANFAR **headless** sessions (`canfar create headless`). Interactive agents must not block on the sampling loop.
-2. Flexible resources by default: omit `--cpu` and `--memory` (platform grows to ≤8 cores / ≤32 GB and is easier to schedule than a pinned 64 GB request). Pass `--gpu` only when the live JAX build actually sees CUDA (this repo's recovery venv is CPU jax 0.11.1 / jax-finufft; do not request a GPU that that venv cannot use). **GPU jobs:** pin `--cpu` and `--memory`; do not use flexible mode with GPU. The tested GPU path was retired after losing the official-kernel benchmark; see [`docs/PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md#validation-and-benchmark-evidence).
-3. Compute on `/scratch/kinuv-$USER/<session>` (TMP, JAX cache, chain `npz`, verbose stdout). Durable products — manifests, **job-owned logs** (`worker.log` overwrite-copied from scratch every 60 s, `logs/run.log`), chain-draw `npz` (kB parameter arrays, not vis), posterior JSON, **and PNGs** (6D corner, leftover chi2, moments/spectra/PV at the NUTS mean) — go to `/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/{KGASID}-{YYYYMMDDTHHMMSSZ}-{kind}/`, never `$HOME`. Copy those PNGs plus posterior JSON into `docs/reviews/artifacts/2026-08-30-g3-nuts/`. `{KGASID}-latest` is a symlink to the newest run. After each chain, write draws on scratch then copy+fsync that `npz` to `/arc` (file-handle `savez`, not `savez(path.tmp)`). Crash/SIGTERM copies checkpoint `*.npz` onto `/arc`. Do not rsync the JAX cache, vis, cubes, or scratch tmp onto `/arc`. Do not tee tqdm onto NFS. FITS cubes for imaging stay in the run dir (`plots/`), not the official MAP tree and not git (`docs/reviews/artifacts/**/*.fits` is ignored). Platform `canfar logs` expire in ~1 hour and vanish on 404; a submit-host watcher snapshots `canfar logs`/`info`/`events` (overwrite, no append of full dumps into `platform.log`). On success or fail the worker (and the watcher, if still alive) patches `docs/architecture/STATUS.md` **Agent Run Status** and YAML `pending`; it does not rewrite Architecture mailbox history.
-4. Session name stays `kinuv-KGAS066-{git_sha[:6]}-nuts` (`DEC-OPS-AUTH`). `cadc-get-cert` immediately before `canfar create` when the cert is missing or near expiry.
-5. Image preference: `skaha/astroml:latest`. If the platform refuses that image for `headless`, fall back to a headless-tagged image (`skaha/base-notebook:latest`).
-6. Official MAP `kinuv-KGAS066-uvsign-map` stays read-only. `sampler: nuts` on a 066 product still requires autodiff + mixing (`R_hat < 1.01`, bulk/tail ESS > 400 on sampled names).
+Each run has a unique target-neutral ID and receives resolved configuration paths through CLI arguments or environment variables. Target IDs are manifest metadata. Production source must not encode target names, site usernames, project paths, resource sizes, chain counts, or convergence thresholds.
 
-Interactive debug and unit tests may keep a short wall cap. Headless workers ignore it.
+High-frequency I/O uses node-local `/scratch/kinuv-$USER/<run_id>`. Durable products use `${KINUV_RUN_ROOT}/<run_id>` on the project `/arc` volume. `$HOME` is not a production data tier.
+
+Scratch contains JIT caches, temporary arrays, verbose progress streams, and staging files. Durable storage contains the run manifest, bounded logs, validated checkpoints, compact draws, posterior summaries, gate reports, and required figures. Raw inputs, duplicated visibility tables, JIT caches, and unbounded platform polling dumps are not copied into each run.
+
+Checkpoint promotion is scratch-first and atomic: close, validate, copy to a temporary durable path, fsync, verify, and rename. Workers preserve the last valid checkpoint and failure record on controlled exit or termination. Platform logs are sampled into bounded job-owned records before provider expiry; unless deployment evidence guarantees longer retention, snapshot them within 1 hour.
+
+Completion is a manifest state, not the existence of a file. Successful computation may still end as `UNMIXED`, `UNCALIBRATED`, or `REJECTED`. Only a verified dossier with Registrar and Consultant sign-off becomes `PROMOTED`.
+
+Run names, launch commands, environments, resource profiles, retry rules, sampler settings, and numeric convergence gates belong in deployment or campaign configuration. Campaign-specific runbooks may record historical commands but do not redefine this decision.

@@ -4,6 +4,8 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-06 — production closeout and documentation cleanup
 
+- Replaced the target-coupled field guide with a data-agnostic production standard covering Consultant/Registrar/Implementer authority, independent science and software reviews, precommitted scientific gates, immutable promotion, and scratch/durable storage tiers.
+- Added target and campaign configuration templates and blocked new production campaigns until remaining target metadata and site paths are migrated from Python entry points.
 - Removed the last legacy runtime coupling: KGAS007 metadata now lives in `kinuv.targets`, and canonical plus historical visibility tables share `kinuv.io.vis.load_visibility_table`.
 - Established `ms2kinuv` as the separately installed CASA Measurement Set extractor and documented its versioned NPZ boundary.
 - Archived the final uvkin and uvfit Git snapshots; neither repository remains in the active workspace or package path.

@@ -1,11 +1,14 @@
 ---
-generation: 4
-phase: production-closeout
+generation: 5
+phase: operational-generalization
 code_freeze: false
-next_role: implementer
+next_role: senior-registrar
 board: idle
-build_licensed: true
-pending: []
+build_licensed: false
+pending:
+  - target-config-migration
+  - campaign-config-validation
+  - runner-path-decoupling
 last_propose: null
 last_review: null
 last_review_a: null
@@ -13,16 +16,16 @@ last_review_b: null
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 4
+canon_generation: 5
 ---
 
 ## Agent Run Status
 
-* **Phase:** KGAS066 and KGAS007 production closeout
-* **Last Action:** kinUV was decoupled from its archived predecessors; KGAS007 target metadata and visibility compatibility loading are now kinUV-owned
+* **Phase:** Data-agnostic production governance and configuration migration
+* **Last Action:** Replaced the target-coupled field guide and parent/subagent loop with explicit Consultant → Senior Registrar → Implementer authority, independent dual review, generalized scientific gates, and storage/promotion protocols
 * **Decisions Made:** kinUV is the sole production fitter; `ms2kinuv` is the separate CASA ETL companion; KGAS066 official MAP remains read-only; 30 km/s Ico remains locked; receding NUTS is the sole KGAS066 posterior; approaching mode is terminated; G4 is not licensed
-* **Blockers / Gates:** posterior intervals are not calibrated; no real-data inner slope may be quoted
-* **Next Step:** run exact-workflow SBC, then re-export KGAS007 through the canonical `ms2kinuv-npz-v1` schema when its source Measurement Set is available
+* **Blockers / Gates:** posterior intervals are not calibrated; no real-data inner slope may be quoted; another production campaign is not licensed until target metadata and site paths leave Python entry points and validated configuration is recorded in run manifests
+* **Next Step:** migrate remaining target metadata and site paths from Python entry points into validated `configs/targets/` and `configs/campaigns/` records before licensing another production campaign
 
 ## Current products
 

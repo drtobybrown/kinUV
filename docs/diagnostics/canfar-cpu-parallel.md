@@ -1,4 +1,6 @@
-# CANFAR CPU-parallel headless NUTS (production)
+# Historical CANFAR CPU-parallel NUTS runbook
+
+This document records commands for a completed target-specific campaign. It is evidence, not the general production operating standard. New campaigns obtain target values, sampler settings, thresholds, paths, and resources from frozen configuration and follow [`../../field-guide/index.md`](../../field-guide/index.md) plus [`../decisions/DEC-067-RUNNER.md`](../decisions/DEC-067-RUNNER.md).
 
 Canonical 066 NUTS path under `DEC-067-RUNNER`. GPU acceleration was benchmarked and rejected; timings and rationale are retained in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md#validation-and-benchmark-evidence).
 

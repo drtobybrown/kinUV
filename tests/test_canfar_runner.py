@@ -29,13 +29,12 @@ def test_dec_067_on_disk():
     assert index["DEC-067-RUNNER"] == "accepted"
     text = (Path(__file__).resolve().parents[1] / "docs/decisions/DEC-067-RUNNER.md").read_text()
     assert "1 hour" in text
-    assert "worker.log" in text
-    assert "/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs" in text
-    assert "/arc/home/thbrown/kinuv_runs" not in text
-    assert "YYYYMMDDTHHMMSSZ" in text
-    assert "symlink to the newest run" in text
-    assert "Agent Run Status" in text
-    assert "corner" in text or "PNG" in text
+    assert "/scratch/kinuv-$USER/<run_id>" in text
+    assert "${KINUV_RUN_ROOT}/<run_id>" in text
+    assert "target-neutral ID" in text
+    assert "PROMOTED" in text
+    for forbidden in ("KGAS066", "KGAS007", "/arc/projects/KILOGAS", "/arc/home/"):
+        assert forbidden not in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
@@ -783,4 +782,3 @@ def test_kgas007_merge_refuses_incomplete_shards(tmp_path):
     assert proc3.returncode != 0
     assert "four" in (proc3.stderr + proc3.stdout).lower()
     assert not dest.exists()
-

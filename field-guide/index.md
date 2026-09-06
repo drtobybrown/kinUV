@@ -1,53 +1,235 @@
-# kinUV Field Guide (066)
+# kinUV Production Field Guide
 
-Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-INDEX`. Handshake: `DEC-066-AGENTS` (dual-review board).
+This guide defines how kinUV science is specified, implemented, verified, run, and promoted. It is deliberately independent of any galaxy, survey, filesystem layout, sampler result, or current campaign. Target values and campaign thresholds belong in versioned configuration and run manifests.
 
-## Mailbox
+## 1. Scope and source of truth
 
-Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Durable history: `docs/PRODUCTION_RECORD.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated. TARGET is KGAS066+KGAS007. 007 NUTS merged (`sampler: nuts`; dest `2026-09-05-kgas007-nuts/`). Do not start G4.
+kinUV is a standalone visibility-domain modeling and inference engine. This guide governs production work in the repository. It does not contain target coordinates, inclinations, position-angle seeds, data paths, fitted values, or target-specific pass thresholds.
 
-## Gates (implementer decides)
+When records disagree, apply this order:
 
-Prefer the DEC. If you leave it, STATUS one-liner and continue. Do not wait for the user. Still forbidden: new `DEC-*`, in-place overwrite of `kinuv-KGAS066-uvsign-map`, labeling Laplace-MH as NUTS, committing secrets. Split files if BLOATED; do not stop the build.
+1. Astra's current written directive.
+2. Accepted architectural and scientific decisions in `docs/decisions/`.
+3. This field guide.
+4. The active campaign proposal and its frozen configuration.
+5. `docs/architecture/STATUS.md` and `docs/reviews/BOARD.md`.
+6. `PLAN.md`, diagnostics, and implementation notes.
 
-## 066 gates (in order)
+Historical campaign decisions remain evidence for their original products. They do not silently become defaults for another target or campaign.
 
-1. Analytic Gaussian + thin-ring, transform error < 1e-7.
-2. Mock on real 066 uv: recover flux, PA, vsys, 0.3″ (dx,dy).
-3. Real MAP: report Δχ² vs V=0, not reduced χ².
-4. Injected V_c within beam-scale covariance (S1 vis recovered; cube did not).
-5. Then sampling: report `R_hat`/`ESS`; do not call Laplace-MH "NUTS". Laplace SBC failed 68/95.
+## 2. Agent hierarchy and authority boundaries
 
-## DEC ids (closed)
+Agent names describe authority, not a particular vendor or model release. The same agent must not approve its own scientific proposal or review its own implementation.
 
-| ID | Answer |
-|---|---|
-| INDEX | ADRs > Field Guide > STATUS > PLAN.md > Cursor plans |
-| AGENTS | parent proposes; dual-board accept; user ties; no new DEC ids |
-| TARGET | KGAS066 + KGAS007 |
-| INC | 43.9° freeze, ±5° |
-| PA | fit; seed 205.2° receding |
-| SB | Wiener; pad ≥2×; clip only if centroid shift <0.01″ |
-| PB | A after image (dx,dy); FWHM=1.13 λ/D ≈25.9″ |
-| VC | arctan then 6–8 rings; outer flat; inner solid-body |
-| OSCMETRIC | r0≥0.5 BMAJ; Ω/Δv<0.3; 20×5 λ; AIC |
-| SHIFT | Fourier/spline image shift then PB; σ=0.5″ |
-| INFER | MAP then sample; Laplace CIs not calibrated |
-| VIS | aggregated npz; record N, Δv |
-| SPECRESP | Hann native+guards then bin; empirical s |
-| WEIGHT | s=2/⟨w\|V|²⟩; not 0.5; not 12/29 |
-| POL | XX+YY re-export |
-| GRID | Nyquist vs 305 kλ; npz `(u,v)→(−u,−v)` in −2πi kernel |
-| ZEROMODEL | V=0; Δχ² |
-| REPO | standalone kinUV |
-| OPS-AUTH | `kinuv-KGAS066-{sha6}-{map\|nuts}` |
+| Role | Typical capability | Owns | Must not do |
+|---|---|---|---|
+| **Principal Project Authority: Astra** | Human project authority | Mission, publication authority, exceptions, final dispute resolution | Be made a routine gate sitter |
+| **Consultant: Lead Architect / frontier model** | Highest available reasoning capability | Scientific strategy, parameterization, physical priors, model class, declared gate criteria, residual-risk acceptance, scientific promotion sign-off | Run an unreviewed production campaign or delegate away scientific accountability |
+| **Senior Registrar** | Senior coordinating agent | Canon, proposal registration, configuration freeze, provenance, review tally, state transitions, promotion dossier | Relax a scientific criterion or reinterpret a failed gate as a pass |
+| **Implementer** | Execution model such as Composer or GPT-5.6 | Code, tests, diagnostics, profiling, refactoring, batch execution, bounded operational decisions inside the accepted specification | Change priors, likelihoods, sign conventions, model class, or promotion thresholds without change control |
+| **Reviewer A: science/numerics** | Independent senior reviewer | Physical validity, identifiability, units, conventions, likelihood, mocks, statistical gates | Read Reviewer B before submitting a verdict or implement the proposal under review |
+| **Reviewer B: software/reproducibility** | Independent senior reviewer | Package boundaries, tests, data contracts, performance, storage, manifests, failure recovery | Read Reviewer A before submitting a verdict or waive a scientific failure |
 
-## Imaging products (CANFAR)
+The Consultant writes or signs the scientific specification. The Registrar converts it into an executable campaign record without changing its meaning. The Implementer may choose algorithms, batching, and refactors only within the frozen acceptance criteria.
 
-Root: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/`
-- Ico / vis-trim / SB: `30kms/`
-- Stage B vs imaging: `10kms/`. Method: `docs/diagnostics/stage-b-vs-imaging.md`. Style: `docs/diagnostics/plotting.md`.
+Any proposed change to the model, prior, covariance, transform convention, data selection, or gate threshold returns to the Consultant and both reviewers. A defect fix that restores already specified behavior may proceed with focused tests and a Registrar record.
 
-## Git
+An Implementer may stop a run immediately for corruption, invalid numerics, resource exhaustion, or a failed gate. Stopping protects the specification; it does not constitute authority to weaken it.
 
-Branch `dev`. Commit and push `origin/dev` after each propose, board tally, and stage deliverable. Conventional subject; do not skip hooks. High-frequency I/O: [`docs/diagnostics/scratch.md`](../docs/diagnostics/scratch.md) (`/scratch`, not `/arc`). CPU headless NUTS (flexible default; 4×1-chain parallel): [`docs/diagnostics/canfar-cpu-parallel.md`](../docs/diagnostics/canfar-cpu-parallel.md). GPU rejection and benchmark details: [`docs/PRODUCTION_RECORD.md`](../docs/PRODUCTION_RECORD.md#validation-and-benchmark-evidence).
+## 3. Configuration boundary
+
+Target and campaign state must be external to the operational manual and modeling modules.
+
+- Target metadata belongs in `configs/targets/<target_id>.yaml` or an equivalent versioned catalogue adapter.
+- Campaign choices belong in `configs/campaigns/<campaign_id>.yaml`.
+- Machine paths belong in deployment configuration or environment variables.
+- Secrets, credentials, and short-lived certificates never belong in configuration committed to Git.
+
+A target configuration records coordinates and reference frame, systemic-velocity convention, inclination information, position-angle convention, phase centre, data-product identifiers, and scientifically justified priors. A campaign configuration records model family, free and fixed parameters, initialization policy, transform and spectral response, covariance treatment, null models, gate criteria, sampler settings, random seeds, storage root, and requested products.
+
+Configuration is immutable after a production run starts. A correction creates a new configuration revision and run ID. The run manifest stores the resolved configuration and its checksum.
+
+## 4. Architectural invariants
+
+These are production invariants. Violating one requires an architectural decision and a new review; a STATUS note cannot waive it.
+
+### Package boundaries
+
+1. `kinuv` must import and run without uvkin, uvfit, or any archived predecessor on the filesystem or Python path.
+2. CASA, casatasks, python-casacore, pyuvdata, and Measurement Set calibration code remain outside kinUV.
+3. `ms2kinuv` is a separately installed ETL companion. kinUV consumes its versioned data product and never imports it at runtime.
+4. Legacy archives are read-only evidence. They are never added to `sys.path`, installed into a production environment, or used as a hidden backend.
+5. CI must scan production source, scripts, and package metadata for forbidden imports, sibling-path injection, and legacy symlinks.
+
+### Data and coordinate contracts
+
+1. Visibility inputs declare schema version, units, frame, polarization selection, flag treatment, and provenance.
+2. Projected baselines are stored in metres. Per-channel spatial frequencies are derived from the actual channel frequencies and the speed of light.
+3. Complex visibility, weight, frequency, time, baseline, and phase-centre arrays pass shape, dtype, finiteness, positivity, and alignment checks before modeling.
+4. Fourier sign, sky-axis orientation, position-angle definition, velocity convention, and phase-centre behavior are explicit and covered by analytic tests.
+5. Flags map to zero statistical weight. Weight rescaling and covariance correction are recorded transformations, never implicit constants.
+
+### Model and likelihood contracts
+
+1. The forward model, primary beam, astrometric shift, spectral response, channel binning, and visibility sampling execute in a declared order.
+2. Data and model receive compatible spectral operators. Previously correlated or smoothed data are not smoothed a second time.
+3. Likelihood accounting includes both real and imaginary visibility components and states the assumed covariance.
+4. Image-plane cubes, moments, spectra, and position-velocity diagrams are diagnostics unless an accepted specification explicitly defines an image-domain likelihood.
+5. Parameter bounds are computational constraints only when declared as such. A posterior or optimizer pressing a bound is a failed identifiability or prior-pressure diagnostic, not a measurement.
+6. Sampler labels describe the algorithm actually run. Approximate, Laplace, importance, or Metropolis results are not relabeled as HMC or NUTS.
+
+### Product integrity
+
+1. Promoted products are immutable. A rerun writes a new run directory.
+2. Every product identifies code commit, dirty-state hash, resolved configuration, input checksums, environment, backend, random seeds, and gate results.
+3. Failed, interrupted, unmixed, or uncalibrated outputs remain evidence with an explicit state; they are not promoted or silently merged.
+
+## 5. Generalized scientific pipeline gates
+
+The Consultant declares quantitative tolerances before seeing production answers. Tolerances may vary with precision, signal-to-noise, uv coverage, and scientific objective, so target values do not appear in this guide. Each gate produces a machine-readable result and a short scientific interpretation.
+
+### Gate 0 — Intake and preflight
+
+- Validate configuration schemas and freeze resolved copies.
+- Verify input hashes, units, frames, phase centre, polarization, spectral ordering, flags, and weight support.
+- Record array dimensions, channel width, baseline range, time sampling, and missing-data fractions.
+- Confirm the environment imports kinUV with forbidden packages absent.
+- Estimate memory, runtime, and storage before allocating the production run.
+
+Failure blocks all later gates.
+
+### Gate 1 — Analytic closure
+
+- Compare the production transform with a direct calculation on analytic sources such as a point source, offset Gaussian, and thin ring.
+- Test amplitude normalization, conjugation, Fourier sign, east/north orientation, channel-frequency scaling, phase shifts, and primary-beam ordering.
+- Compare automatic gradients with finite differences or an analytic derivative at well-scaled interior points.
+- Test the spectral response and binning operator at edges and with guard channels.
+
+The declared tolerance must reflect numeric precision and the downstream noise floor. A transform that fails closure cannot proceed to empirical tuning.
+
+### Gate 2 — Mock recovery and identifiability
+
+- Generate exact-model mocks with the campaign's actual sampling and covariance.
+- Recover all promoted parameters from multiple initializations and relevant symmetry-related modes.
+- Include noise realizations spanning the intended operating regime.
+- Test known misspecification cases separately from exact closure.
+- Report bias, dispersion, interval coverage where applicable, parameter correlations, bound pressure, and failure rate.
+
+Passing one convenient injection is insufficient. Parameters that are not identifiable must be fixed, reparameterized, regularized by a declared physical prior, or removed from the promoted claim.
+
+### Gate 3 — Null and baseline comparisons
+
+- Evaluate the declared zero-signal null and any scientifically required nested baseline model on exactly the same visibility cells and covariance.
+- Report raw likelihood or chi-square terms, the direction and magnitude of improvement, parameter counts, and the selected comparison criterion.
+- Keep prior contributions separate from likelihood-only null comparisons.
+- Verify that the optimizer did not manufacture improvement through a sign, phase-centre, flux-normalization, or data-selection error.
+
+A positive improvement alone does not establish scientific adequacy. The proposal defines the threshold and its interpretation before the production fit.
+
+### Gate 4 — Covariance and residual adequacy
+
+- Estimate the weight scale from declared line-free or noise-only data without contaminating signal channels.
+- Measure residual correlation across frequency, baseline, time, polarization, and repeated averaging groups.
+- Test whitened residual location, scale, tails, and structured dependence.
+- Account for known correlator, smoothing, averaging, and binning correlations with a covariance operator or demonstrate that the diagonal approximation meets the declared tolerance.
+- Re-run Gates 2 and 3 if covariance treatment changes.
+
+Posterior sampling is prohibited until this gate passes or the Consultant explicitly narrows the scientific claim to a documented diagnostic result.
+
+### Gate 5 — MAP stability and model adequacy
+
+- Use multiple starts for periodic, reflected, or otherwise multimodal coordinates.
+- Record optimizer status, gradients, evaluations, bound pressure, and sensitivity to initialization.
+- Compare residual structure against visibility coordinates and frequency, and inspect image-domain diagnostic products.
+- Distinguish kinematic mismatch from surface-brightness, calibration, primary-beam, or covariance mismatch.
+
+The MAP supplies initialization and a reproducible likelihood identity. It is not by itself a calibrated uncertainty result.
+
+### Gate 6 — Posterior sampling and convergence
+
+- Use the sampler and parameter chart named in the accepted campaign specification.
+- Run independent chains with recorded seeds and initial states.
+- Report split rank-normalized convergence statistics, bulk and tail effective sample sizes, divergences, energy/BFMI diagnostics, tree-depth saturation, acceptance behavior, and chain-wise parameter ranges as applicable.
+- Test all relevant posterior modes or state which mode the product conditions on.
+- Run simulation-based calibration or an accepted coverage study before describing intervals as calibrated.
+
+The Consultant sets numeric convergence and coverage thresholds. An Implementer may extend a run under an approved contingency but may not lower the thresholds, drop a bad chain, or merge incompatible configurations to obtain a pass.
+
+### Gate 7 — Promotion
+
+- Recompute the promoted likelihood identity from the saved parameter record.
+- Generate declared visibility residuals and Data/Model/Residual diagnostic figures.
+- Verify manifest completeness, checksums, sampler label, units, and configuration identity.
+- Record every gate as pass, fail, waived-by-Astra, or not applicable, with evidence paths.
+- Obtain Registrar verification and Consultant scientific sign-off.
+
+Only then may a run become a production product or a source for scientific tables.
+
+## 6. Run protocol and state machine
+
+Every run uses a unique, target-neutral identifier such as `<campaign>-<UTC timestamp>-<git short sha>-<kind>`. The resolved target ID is metadata, not executable naming logic.
+
+Allowed states are:
+
+`PLANNED → REVIEWED → PREFLIGHTED → RUNNING → CHECKPOINTED → SUCCEEDED → VERIFIED → PROMOTED`
+
+Terminal non-promotion states are `FAILED`, `INTERRUPTED`, `UNMIXED`, `UNCALIBRATED`, and `REJECTED`. State transitions are append-only in the run manifest. File presence alone is not completion evidence.
+
+Before execution, the Registrar records the accepted proposal, both reviews, code commit, dirty diff hash, configuration checksums, input checksums, expected resources, and output contract. The Implementer runs preflight from a clean environment and writes the initial manifest before expensive computation.
+
+Long jobs run asynchronously under the configured batch platform. Interactive agents monitor bounded status records and do not block on the sampling loop. A retry receives a new attempt identifier and links to its predecessor.
+
+## 7. Storage tiering
+
+Paths are resolved from deployment configuration. Source code must not embed a user's home directory, target directory, or site-specific project root.
+
+| Tier | Purpose | Contents | Retention |
+|---|---|---|---|
+| Git repository | Reviewable source and compact evidence | Code, schemas, configuration, decisions, small summaries, selected figures | Permanent, versioned |
+| Node-local `/scratch/kinuv-$USER/<run_id>` | High-frequency disposable I/O | JIT cache, temporary arrays, verbose sampler stream, staging files | Ephemeral |
+| Durable `${KINUV_RUN_ROOT}/<run_id>` on `/arc` | Reproducible run record | Manifest, bounded logs, checkpoints, draws, posterior summaries, required figures | Durable, immutable after promotion |
+| Data store | Calibrated scientific inputs | Visibility tables, FITS products, external catalogues | Managed independently; referenced by checksum |
+| Archive | Closed legacy or superseded evidence | Verified compressed bundles with checksums and manifests | Durable, read-only |
+
+Write large intermediate arrays to scratch first. Promote a checkpoint by closing it, validating it, copying to a temporary durable path, fsyncing file and directory, verifying size/checksum, and atomically renaming it. Never stream high-volume progress output, JIT caches, or repeatedly rewritten arrays directly to `/arc`.
+
+On success or failure, preserve the bounded log, status, last valid checkpoint, environment record, and failure reason. Delete scratch only after durable verification. Never copy raw inputs into every run directory.
+
+## 8. Review and promotion workflow
+
+1. **Consultant specification.** Define the scientific question, model, parameterization, priors, covariance, gates, products, and residual risks.
+2. **Registrar registration.** Create the proposal, assign a campaign ID, validate configurations, and freeze acceptance criteria.
+3. **Independent review.** Reviewer A assesses science and numerics; Reviewer B assesses implementation and reproducibility. They work independently and issue `accept`, `accept-with-required-changes`, or `reject` verdicts with evidence.
+4. **Tally.** The Registrar may license implementation only when both reviews accept and all required changes are incorporated into the frozen proposal. A rejection returns the proposal to the Consultant.
+5. **Implementation.** The Implementer writes code and tests, runs the accepted gates, and records results. Dual code review is required for changes to transforms, likelihoods, parameter charts, covariance, serialization, or promotion logic.
+6. **Verification.** The Registrar checks that the implementation matches the frozen specification and that artifacts are complete and reproducible.
+7. **Scientific sign-off.** The Consultant reviews gate evidence and signs or rejects promotion. Astra resolves exceptions and authorizes publication policy.
+8. **Closeout.** Summarize durable findings, link the immutable product, clear the active review card, and archive superseded discussion.
+
+Review comments are classified as required or advisory. Required comments block tally until resolved. No role may convert a failed scientific gate into an advisory comment after seeing the result.
+
+## 9. Change control and emergency rules
+
+- A scientific-specification change creates a revised proposal and repeats both reviews.
+- A production bug fix records affected runs and whether products require invalidation or regeneration.
+- A security or data-corruption issue may freeze execution immediately. The Registrar records the freeze and affected scope.
+- Only Astra may waive an invariant or promotion gate. The waiver must identify the evidence, scope, expiration, and prohibited claims.
+- Secrets are never committed. Promoted data are never overwritten in place.
+
+## 10. Required campaign dossier
+
+Each promoted campaign links:
+
+- accepted proposal and two independent reviews;
+- resolved target and campaign configurations with checksums;
+- input manifest and data-contract validation;
+- environment and code provenance;
+- Gate 1 analytic closure report;
+- Gate 2 mock recovery report;
+- Gate 3 null comparison;
+- Gate 4 covariance report;
+- Gate 5 MAP and residual diagnostics;
+- Gate 6 convergence and calibration report;
+- Gate 7 promotion receipt and sign-offs.
+
+Missing evidence means the campaign is incomplete, regardless of whether a plausible figure exists.

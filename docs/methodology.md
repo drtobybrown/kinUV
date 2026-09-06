@@ -48,9 +48,9 @@ Style: [`docs/diagnostics/plotting.md`](diagnostics/plotting.md) (`kinuv.diagnos
 
 Runner: `scripts/plot_fit_diagnostics.py`.
 
-## What a "build" will do
+## How production work is governed
 
-The parent proposes a scope, two independent reviewers accept or reject on the board, then the parent executes every accepted stage, **chooses each gate**, and stops at a plot folder for you. KGAS066 and KGAS007 are the current targets. Legacy fitters are archived; kinUV owns the production visibility likelihood.
+The Consultant defines and signs the scientific specification and quantitative gates. The Senior Registrar freezes configuration and tallies independent science/numerics and software/reproducibility reviews. The Implementer runs the accepted work without changing or relaxing the specification. The Registrar verifies the resulting dossier, and the Consultant signs scientific promotion. See the data-agnostic [`field-guide/index.md`](../field-guide/index.md).
 
 ## Where to look
 

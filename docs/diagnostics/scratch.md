@@ -1,26 +1,42 @@
-# CANFAR scratch and checkpoints (human)
+# Scratch, checkpoints, and durable storage
 
-High-frequency I/O (JIT cache, TMP) goes on **node-local** `/scratch`. `/scratch` is ephemeral: a preempted or OOM-killed node loses it. Durable products (logs, MCMC checkpoints, posterior JSON, manifests) go to **`/arc/projects/KILOGAS/analysis/toby_sandbox/kinuv_runs/<run_id>/`**, never `$HOME`.
+This runbook implements the storage policy in the field guide and `DEC-067-RUNNER`.
 
-Root: `/scratch/kinuv-$USER/$SKAHA_SESSION_ID` (mode 0700), else `/tmp/kinuv-$USER/...`. Helper: `kinuv.scratch.kinuv_scratch_root`. Tests set `TMPDIR` and `JAX_COMPILATION_CACHE_DIR` there **before** jax import (`tests/conftest.py`).
+## Tiers
 
-## Do
+- Use `/scratch/kinuv-$USER/<run_id>` for JIT caches, temporary arrays, staging files, and high-volume progress output.
+- Use `${KINUV_RUN_ROOT}/<run_id>` on `/arc` for manifests, bounded logs, validated checkpoints, compact posterior products, gate reports, and required figures.
+- Reference calibrated inputs by stable URI and checksum. Do not duplicate them into every run.
+- Never use `$HOME` for production data or credentials embedded in manifests.
 
-- `export TMPDIR=$root/tmp` (and `TEMP`, `TMP`) in long workers.
-- JAX: `JAX_PLATFORMS=cpu`, `JAX_ENABLE_X64=1`, compile cache under that root. Cache is disposable; a preempted node recompiles. Do not rsync the JAX cache onto NFS.
-- Worker stdout (NumPyro tqdm): tee to `$root/worker.log` on scratch only. Overwrite-copy that file to the project run dir every 60 s and on exit. Do not tee every sample onto NFS `/arc`. Structured `logs/run.log` and `status.json` stay small on `/arc`.
-- After each NUTS chain: write `checkpoints/chain_N.npz` on `/scratch`, then copy+fsync **that** file (parameter draws, kB) to the project run dir. File-handle `np.savez` (a `.tmp` path becomes `.tmp.npz` and the replace misses). Crash/SIGTERM copies checkpoint `*.npz` onto `/arc`. Never rsync the JAX cache, vis, cubes, or `/scratch` tmp onto `/arc`.
-- Checkpoints are kB-MB: parameter vectors, RNG, chain metadata. Native 066 vis (43240 x 1920 complex128 ~ 1.3 GB) is **not** a per-eval checkpoint, including on `/scratch` and `/dev/shm`.
+`KINUV_RUN_ROOT` and the run ID are deployment inputs. Code must not synthesize them from a target name or a developer-specific path.
 
-## Do not
+## Worker startup
 
-- Loop unbuffered vis or 881x95 cubes over `/arc/projects` or `/arc/home`.
-- Rsync the JAX cache onto NFS `/arc`.
-- Set `TMPDIR=/arc/home/...` or write run products under `$HOME`.
-- Treat `scripts/plot_fit_diagnostics.py`'s preview dir `docs/reviews/artifacts/fit-diagnostics/` as filesystem `/scratch`.
-- Use `/dev/shm` for native vis (RAM OOM).
-- Rely on `canfar logs` (expire ~1 hour; vanish on 404).
+1. Create the scratch directory with restrictive permissions.
+2. Set `TMPDIR`, `TMP`, `TEMP`, and compilation-cache variables before importing numerical backends.
+3. Create the durable run directory and write the initial manifest atomically.
+4. Record host, scheduler/session ID, environment, code revision, configuration checksums, input checksums, expected resources, and current state.
 
-Composer 2.5 (`composer-2.5-fast`) may edit only `## Agent Run Status` in `docs/architecture/STATUS.md` (up to `# Architecture mailbox`). It must not touch YAML `board` / `next_role` / reviews, skip hooks, amend, or force-push. Parent writes physics mailbox lines.
+## Checkpoint protocol
 
-The retired GPU benchmark and current CPU rationale are recorded in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md#validation-and-benchmark-evidence).
+1. Write a complete checkpoint to scratch using a temporary name.
+2. Close it and validate shape, dtype, finiteness, configuration identity, and expected keys.
+3. Copy to a temporary file in the durable checkpoint directory.
+4. Flush and fsync the file, then fsync its parent directory.
+5. Verify size or checksum and atomically rename to the final checkpoint name.
+6. Update the manifest only after the durable checkpoint exists.
+
+Independent chains and retries have distinct identifiers. Do not merge checkpoints from different code commits, configuration hashes, data hashes, or parameter charts.
+
+## Logs and monitoring
+
+Keep verbose sampler output on scratch. Periodically overwrite-copy a bounded worker log to durable storage and maintain a compact structured status record. Avoid append loops, repeated full scheduler dumps, and per-sample writes on network storage.
+
+Record explicit states such as `RUNNING`, `CHECKPOINTED`, `FAILED`, `INTERRUPTED`, `UNMIXED`, `UNCALIBRATED`, `VERIFIED`, and `PROMOTED`. A scheduler's success state proves process exit only.
+
+## Exit and cleanup
+
+On success or controlled failure, promote the final valid checkpoint, bounded logs, environment record, and failure or completion reason. Verify durable artifacts before deleting scratch. Interrupted or invalid partial files retain a non-promotion state and are never treated as complete draws.
+
+Archive superseded durable runs only after their scientific conclusions and checksums are preserved. Never overwrite a promoted run directory.

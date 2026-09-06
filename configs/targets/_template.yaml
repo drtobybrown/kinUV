@@ -1,0 +1,27 @@
+schema_version: kinuv-target-v1
+target_id: null
+coordinates:
+  frame: null
+  longitude_deg: null
+  latitude_deg: null
+phase_centre:
+  frame: null
+  longitude_rad: null
+  latitude_rad: null
+velocity:
+  systemic_kms: null
+  convention: null
+geometry:
+  position_angle:
+    value_deg: null
+    convention: null
+    provenance: null
+  inclination:
+    value_deg: null
+    treatment: null
+    provenance: null
+data_products:
+  visibility_id: null
+  brightness_template_id: null
+  diagnostic_cube_id: null
+priors: {}
