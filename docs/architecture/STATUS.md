@@ -5,12 +5,12 @@ code_freeze: false
 next_role: implementer
 board: accepted
 build_licensed: true
-pending: ["faoik171"]
+pending: []
 last_propose: docs/reviews/2026-09-06-propose-kgas007-c2-relaunch.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-06-review-a-kgas007-c2-relaunch.md
 last_review_b: docs/reviews/2026-09-06-review-b-kgas007-c2-relaunch.md
-user_review: docs/reviews/artifacts/2026-09-05-kgas066-m2-sb/
+user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
 canon_generation: 4
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 007 NUTS c2 relaunch running (`faoik171`)
-* **Last Action:** Relunched chain 2 only (`faoik171` / `KGAS007-20260906T003036Z-nuts-kgas007-c2`); c1/c3/c4 complete
+* **Phase:** 007 NUTS merged (`sampler: nuts`)
+* **Last Action:** Four-shard merge `faoik171` + c1/c3/c4; mix pass; dest `2026-09-05-kgas007-nuts/`
 * **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. c1 `b1mqxsov` c3 `y5tspgit` c4 `zq1olquy` complete. Crashed `xkytxih1` evidence only
-* **Next Step:** After new c2 `.trigger_complete` and `chain_2.json` `[600, 6]`, merge four shards. Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 intervals_calibrated false. Do not quote inner dV/dr
+* **Next Step:** Human review of `docs/reviews/artifacts/2026-09-05-kgas007-nuts/`. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-06 (007 NUTS merge).** Four finite shards (c1 `b1mqxsov`, relaunch c2 `faoik171`, c3 `y5tspgit`, c4 `zq1olquy`). `sampler: nuts`, mix pass, n_kept=4. Mean PA 151.61°, V_0 194.87 km/s, r_t 0.482″ (off 0.5″ MAP floor). Max \(\hat{R}\) 1.002 (V_0); min ESS 1093. `quote_inner_slope: false`. `intervals_calibrated: false`. Product `docs/reviews/artifacts/2026-09-05-kgas007-nuts/`. Official MAP unchanged. No G4.
 
 **2026-09-06 (007 c2 relaunch).** Session `faoik171` run `KGAS007-20260906T003036Z-nuts-kgas007-c2` (`--kind nuts-kgas007 --chain-id 2 --skip-pull`). `pending` is that id only. c1/c3/c4 complete. Crashed `xkytxih1` kept as evidence. `KGAS066-latest` untouched. Official MAP unchanged. No G4.
 

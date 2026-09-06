@@ -35,7 +35,7 @@
       "session_id": "faoik171",
       "run_id": "KGAS007-20260906T003036Z-nuts-kgas007-c2",
       "name": "kinuv-KGAS007-cabede-nuts-kgas007-c2",
-      "state": "RUNNING",
+      "state": "SUCCEEDED",
       "replaces": "xkytxih1"
     },
     {
@@ -66,6 +66,9 @@
     "--map-json",
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007/kinuv-KGAS007-stage-a-map/stage_a_map.json"
   ],
-  "convergence_pending": true,
-  "note": "Merge after new c2 .trigger_complete and uncorrupted chain_2.json [600, 6]. Crashed xkytxih1 stays out. sampler: nuts only if R_hat<=1.01 and ESS>400. Do not start G4."
+  "convergence_pending": false,
+  "sampler": "nuts",
+  "mixing_pass": true,
+  "n_kept": 4,
+  "note": "Merged 2026-09-06T01:46Z. Crashed xkytxih1 stayed out. sampler: nuts. Do not start G4."
 }

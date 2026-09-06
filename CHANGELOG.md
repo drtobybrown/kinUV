@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-09-06 — 007 NUTS merged (`sampler: nuts`)
+
+Relaunch `faoik171` (`KGAS007-20260906T003036Z-nuts-kgas007-c2`) plus c1/c3/c4. Mix pass; n_kept=4; mean PA 151.61°, V_0 194.87 km/s, r_t 0.482″. Product `docs/reviews/artifacts/2026-09-05-kgas007-nuts/`. Official MAP unchanged. Do not start G4.
+
 ## 2026-09-06 — 007 NUTS c2 relaunch dual accept (major)
 
 Leftover execute of `nuts-kgas007`. Relaunch crashed chain 2 only; merge four finite shards. Watcher must not clear `pending` on `pending_merge`. Merge refuses fewer than four sentinels or a bad `z6_shape`. Official MAP unchanged. Do not start G4.

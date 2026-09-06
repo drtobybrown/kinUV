@@ -8,7 +8,7 @@ Four flexible CPU chains (`--skip-pull`, image `skaha/astroml:latest`):
 |---|---|---|---|
 | 1 | `b1mqxsov` | `KGAS007-20260905T141720Z-nuts-kgas007-c1` | SUCCEEDED |
 | 2 | `xkytxih1` | `KGAS007-20260905T141746Z-nuts-kgas007-c2` | CRASHED (evidence only; shared `status.json` tmp race) |
-| 2 | `faoik171` | `KGAS007-20260906T003036Z-nuts-kgas007-c2` | RUNNING (relaunch) |
+| 2 | `faoik171` | `KGAS007-20260906T003036Z-nuts-kgas007-c2` | SUCCEEDED (relaunch; merged) |
 | 3 | `y5tspgit` | `KGAS007-20260905T141754Z-nuts-kgas007-c3` | SUCCEEDED |
 | 4 | `zq1olquy` | `KGAS007-20260905T141801Z-nuts-kgas007-c4` | SUCCEEDED |
 
@@ -27,4 +27,4 @@ python scripts/merge_nuts_chains.py \
   --map-json /arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007/kinuv-KGAS007-stage-a-map/stage_a_map.json
 ```
 
-`sampler: nuts` only if \(\hat{R}\le 1.01\) and ESS > 400 on four finite chains. Do not start G4.
+Merged 2026-09-06T01:46Z: `sampler: nuts`, mix pass, n_kept=4. Mean PA 151.61°, V_0 194.87 km/s, r_t 0.482″ (off Stage A 0.5″ floor). Max \(\hat{R}\) 1.002 (V_0); min ESS 1093. `quote_inner_slope: false`. `intervals_calibrated: false`. Do not start G4.

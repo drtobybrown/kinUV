@@ -1,0 +1,82 @@
+{
+  "sampler": "nuts",
+  "param_names": [
+    "flux",
+    "pa_deg",
+    "vsys_kms",
+    "gas_sigma_kms",
+    "dx_arcsec",
+    "dy_arcsec",
+    "v0_kms",
+    "r_t_arcsec"
+  ],
+  "sampled_names": [
+    "flux",
+    "pa_deg",
+    "vsys_kms",
+    "gas_sigma_kms",
+    "v0_kms",
+    "r_t_arcsec"
+  ],
+  "frozen_names": [
+    "dx_arcsec",
+    "dy_arcsec"
+  ],
+  "pa_init_deg": 151.60246996291383,
+  "dx_arcsec": -0.018618208613728593,
+  "dy_arcsec": -0.09096900872440915,
+  "mixing": {
+    "flux": {
+      "rhat": 1.0009629639653561,
+      "ess": 1667.902303459029,
+      "ess_tail": 1802.438498692404
+    },
+    "pa_deg": {
+      "rhat": 0.9990527947542385,
+      "ess": 1976.8156165330256,
+      "ess_tail": 1374.9415548760664
+    },
+    "vsys_kms": {
+      "rhat": 0.99907518532407,
+      "ess": 2400.0,
+      "ess_tail": 1853.5314714574847
+    },
+    "gas_sigma_kms": {
+      "rhat": 1.0002788187307883,
+      "ess": 1093.2274422394403,
+      "ess_tail": 1577.2095967477212
+    },
+    "v0_kms": {
+      "rhat": 1.002143235349503,
+      "ess": 1176.5001794922462,
+      "ess_tail": 1398.8360992081584
+    },
+    "r_t_arcsec": {
+      "rhat": 1.0008276967698935,
+      "ess": 1156.2411507129705,
+      "ess_tail": 1351.0956320855353
+    }
+  },
+  "intervals_calibrated": false,
+  "r_t_at_floor": false,
+  "mean_num_steps": NaN,
+  "eval_s": NaN,
+  "note": "CPU NUTS merge; leftover unevaluated; 16/50/84 not calibrated; do not quote inner dV/dr",
+  "n_chain": 4,
+  "mixing_pass": true,
+  "kind": "nuts-kgas007",
+  "quote_inner_slope": false,
+  "galaxy": "KGAS007",
+  "dec_066_target_amended": true,
+  "infer_mock_recovery": "waived-this-card",
+  "chain_elapsed_s": [
+    3478.1460257843137,
+    4188.857152406126,
+    3823.366182019934,
+    4209.236248549074
+  ],
+  "merge_s": 0.016413403674960136,
+  "t_run_s": 4209.252661952749,
+  "dropped_shards": [],
+  "n_kept": 4
+}
