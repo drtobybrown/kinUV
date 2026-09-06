@@ -11,6 +11,13 @@ This document is the durable synthesis of completed review cards, architecture n
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 
+The independent KGAS007 fit assessment is recorded in
+[`diagnostics/kgas007-fit-assessment.md`](diagnostics/kgas007-fit-assessment.md).
+It finds a robust visibility-domain rotation detection and PA, but no current
+evidence that kinUV outperforms KinMS for this target. The dominant mismatch is
+the fixed-geometry, frozen-brightness model at 1--3 arcsec and in asymmetric
+spectral channels; an equal visibility-likelihood comparison has not yet been run.
+
 ## Production method and invariants
 
 - The likelihood is evaluated on complex ALMA visibilities: `chi2 = s * sum(w * |data - model|^2)`. A complex visibility contributes two real degrees of freedom.
