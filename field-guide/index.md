@@ -42,6 +42,13 @@ An Implementer may stop a run immediately for corruption, invalid numerics, reso
 * Direct Repair Authority: Localized mathematical, numerical, unit, or interpolation repairs do not require formal ADR drafting, immutable dossier serialization, or pre-implementation approval rounds. Implementers proceed directly with code fixes.
 * Bias Toward Velocity: Directives must prioritize empirical numerical closure (refinement gate ≤ 0.1) over asymptotic float64 perfection (1e-6) to maintain engineering momentum and avoid review deadlock.
 
+### Architectural Scope & Delegation Invariants
+
+* Visionary Architecture, Not Micromanagement: The Lead Architect (Astra) formulates physical hypotheses, identifies model degeneracies, defines high-level likelihood formulations, and sets scientific acceptance gates. Astra must not prescribe line-by-line implementation mechanics, low-level data structures, or auxiliary test harness designs.
+* Trust the Implementer: Once a physical direction is set, Senior Implementer agents (e.g., GPT-5.6 Sol) hold full authority over software design, numerical quadrature choices, algorithm efficiency, and code organization.
+* Prohibition on Overengineering: Astra is strictly barred from requiring secondary/redundant reference engines (e.g., ungridded slow-DFT calculations) or extreme theoretical tolerances (e.g., 1e-6 float64 closures) for localized bug fixes when a standard empirical refinement gate (e.g., <= 0.1) confirms physical convergence on real data.
+* Bias Toward Delivery: Theoretical conservatism must not stall development velocity. Architectural specifications must target the minimum viable mathematical formulation required to pass empirical gates on target datasets.
+
 ## 3. Configuration boundary
 
 Target and campaign state must be external to the operational manual and modeling modules.

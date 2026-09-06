@@ -68,6 +68,19 @@ achieves empirical closure. A secondary reference engine becomes eligible only
 after the primary numerical implementation demonstrably fails empirical
 refinement closure on target data.
 
+Reviewer A and Reviewer B must actively flag and push back on architectural
+proposals from Astra that prescribe implementation mechanics, low-level data
+structures, non-essential secondary test harnesses, or paperwork delays beyond
+the risk of the change. Such proposals receive `changes-requested` until the
+division of responsibility is restored: Astra defines what must be achieved and
+the physical reason; the Senior Implementer, including Sol when assigned,
+decides how to implement it.
+
+This mandate governs the upcoming S2 and S3 proposal cycles and all later
+stages. Reviewers enforce scientific acceptance gates while preserving the
+Implementer's authority over software design, numerical methods, efficiency,
+and code organization.
+
 ## Independence
 
 Reviewers receive the frozen proposal, configuration checksums, relevant decisions, and acceptance criteria. They do not read each other's review before committing a verdict. Neither reviewer implements the proposal under review. A generic approval without an attempted falsification, missing-gate check, or residual-risk assessment is invalid.
