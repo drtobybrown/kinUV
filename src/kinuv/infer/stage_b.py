@@ -64,6 +64,22 @@ class StageBResult:
     dv_kms: float
 
 
+def stage_b_model_adequate(result: StageBResult | dict, maximum_omega_kms: float) -> bool:
+    """Require AIC improvement, interior ring speeds, and bounded oscillation."""
+    get = result.get if isinstance(result, dict) else lambda key: getattr(result, key)
+    speeds = np.asarray(get("v_knots_kms"), dtype=np.float64)
+    at_bound = bool(
+        np.any(np.isclose(speeds, V_K_MIN_KM_S, atol=1.0e-6))
+        or np.any(np.isclose(speeds, V_K_MAX_KM_S, atol=1.0e-6))
+    )
+    return bool(
+        not get("keep_stage_a")
+        and float(get("chi2_map")) < float(get("chi2_stage_a"))
+        and not at_bound
+        and float(get("max_omega")) <= float(maximum_omega_kms)
+    )
+
+
 def nuisance_from_params(params: dict[str, float]) -> dict[str, float]:
     """Geometry/flux freeze vector. Not ``V_0`` / ``r_t``."""
     keys = (

@@ -37,6 +37,7 @@
   "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-32cbbd-nuts",
   "acceptance": {
     "minimum_delta_chi2": 1.0,
-    "likelihood_identity_atol": 0.05
+    "likelihood_identity_atol": 0.05,
+    "maximum_stage_b_omega_kms": 20.0
   }
 }

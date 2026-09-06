@@ -8,7 +8,11 @@ import pytest
 
 from kinuv.forward.model import VSYS_SEED_KM_S, los_velocity
 from kinuv.geometry import inclination_rad, pa_seed_rad, sky_to_galaxy
-from kinuv.infer.stage_b import predict_binned, recover_arctan_from_rings
+from kinuv.infer.stage_b import (
+    predict_binned,
+    recover_arctan_from_rings,
+    stage_b_model_adequate,
+)
 from kinuv.profiles.rotation import (
     CALIBRATION_RT_ARCSEC,
     CALIBRATION_V0_KM_S,
@@ -100,3 +104,16 @@ def test_stage_b_uses_caller_inclination(monkeypatch):
     }
     predict_binned(data, nuisance, np.ones((2, 2)), object(), i_rad=0.37)
     assert seen["i_rad"] == pytest.approx(0.37)
+
+
+def test_stage_b_adequacy_rejects_bound_pressure_and_oscillation():
+    base = {
+        "v_knots_kms": [100.0, 140.0, 170.0],
+        "keep_stage_a": False,
+        "chi2_map": 90.0,
+        "chi2_stage_a": 110.0,
+        "max_omega": 12.0,
+    }
+    assert stage_b_model_adequate(base, 20.0)
+    assert not stage_b_model_adequate({**base, "v_knots_kms": [100.0, 0.0, 170.0]}, 20.0)
+    assert not stage_b_model_adequate({**base, "max_omega": 76.0}, 20.0)

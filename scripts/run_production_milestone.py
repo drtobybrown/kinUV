@@ -33,10 +33,15 @@ from kinuv.diagnostics.s1 import leftover_chi2
 from kinuv.forward.sb import load_sb_template
 from kinuv.infer.map import PARAM_NAMES, _lbfgs_one_start, image_grid_for_vis
 from kinuv.infer.seeds import PA_AMBIGUITY_DEG, PA_BOUND_HALF_DEG, VSYS_BOUND_HALF_KM_S, stage_a_seeds
-from kinuv.infer.stage_b import nuisance_from_params, predict_binned as predict_stage_b, run_stage_b_map
+from kinuv.infer.stage_b import (
+    nuisance_from_params,
+    predict_binned as predict_stage_b,
+    run_stage_b_map,
+    stage_b_model_adequate,
+)
 from kinuv.io.vis import load_target_vis, optical_to_radio_kms, radio_to_optical_kms
 from kinuv.likelihood.chi2 import chi2
-from kinuv.profiles.rotation import arctan_vc, ring_vc
+from kinuv.profiles.rotation import V_K_MAX_KM_S, V_K_MIN_KM_S, arctan_vc, ring_vc
 from kinuv.runner.plots import write_imaging_plots, write_model_cube
 
 REPO = Path(__file__).resolve().parents[1]
@@ -275,10 +280,21 @@ def main(argv=None) -> int:
     )
     stage_b = _jsonable(stage_b_rec)
     stage_b["delta_chi2_vs_stage_a"] = float(stage_a["chi2_map"] - stage_b["chi2_map"])
+    v_knots = np.asarray(stage_b["v_knots_kms"], dtype=float)
+    stage_b["bound_pressure"] = bool(
+        np.any(np.isclose(v_knots, V_K_MIN_KM_S, atol=1.0e-6))
+        or np.any(np.isclose(v_knots, V_K_MAX_KM_S, atol=1.0e-6))
+    )
+    stage_b["oscillation_pass"] = bool(
+        stage_b["max_omega"] <= config["acceptance"]["maximum_stage_b_omega_kms"]
+    )
     (output / "stage_b_map.json").write_text(json.dumps(stage_b, indent=2) + "\n")
     print(json.dumps({"target": config["target_id"], "stage": "B", "chi2": stage_b["chi2_map"], "delta_chi2_vs_a": stage_b["delta_chi2_vs_stage_a"], "success": stage_b["success"]}), flush=True)
 
-    selected = "stage_a" if stage_b["keep_stage_a"] or stage_b["chi2_map"] >= stage_a["chi2_map"] else "stage_b"
+    stage_b_accepted = stage_b_model_adequate(
+        stage_b, config["acceptance"]["maximum_stage_b_omega_kms"]
+    )
+    selected = "stage_b" if stage_b_accepted else "stage_a"
     params = {name: float(stage_a[name]) for name in PARAM_NAMES}
     if selected == "stage_b":
         model = predict_stage_b(
@@ -349,6 +365,14 @@ def main(argv=None) -> int:
         "null_comparison": {"status": "pass" if stage_a["delta_chi2"] >= config["acceptance"]["minimum_delta_chi2"] else "fail", "delta_chi2": stage_a["delta_chi2"]},
         "covariance": {"status": "pass_for_map_baseline", "weight_scale": float(data.s), "structured_residual": leftover["leftover_chi2_structured"]},
         "map_stability": {"status": "pass" if len(starts) == 2 and identity_error <= config["acceptance"]["likelihood_identity_atol"] else "fail", "starts": 2, "identity_error": identity_error},
+        "stage_b_model_adequacy": {
+            "status": "pass" if stage_b_accepted else "rejected_with_stage_a_fallback",
+            "aic_stage_a": stage_b["aic_stage_a"],
+            "aic_stage_b": stage_b["aic_stage_b"],
+            "bound_pressure": stage_b["bound_pressure"],
+            "max_omega_kms": stage_b["max_omega"],
+            "maximum_omega_kms": config["acceptance"]["maximum_stage_b_omega_kms"],
+        },
         "posterior": {"status": "mixed_but_uncalibrated", "max_rhat": posterior["max_rhat"], "min_ess": posterior["min_ess"], "intervals_calibrated": False},
         "promotion": {"status": "ready_for_astra_directed_promotion"},
     }
