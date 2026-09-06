@@ -2,11 +2,11 @@
 generation: 4
 phase: 066-13
 code_freeze: false
-next_role: implementer
-board: accepted
+next_role: board
+board: open
 build_licensed: true
 pending: ["b1mqxsov", "xkytxih1", "y5tspgit", "zq1olquy"]
-last_propose: docs/reviews/2026-09-05-propose-m2-surface-brightness.md
+last_propose: docs/reviews/2026-09-06-propose-kgas007-c2-relaunch.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-05-review-a-m2-surface-brightness.md
 last_review_b: docs/reviews/2026-09-05-review-b-m2-surface-brightness.md
@@ -18,13 +18,15 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** m=2 SB execute: I0 tax +2498; m=2 gain −99; still worse than 2-D Ico; lock 30 km/s
+* **Phase:** 007 NUTS c2 relaunch board open
+* **Last Action:** Propose c2 relaunch + four-shard merge (`2026-09-06-propose-kgas007-c2-relaunch`)
 * **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
-* **Next Step:** After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
+* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. c2 `xkytxih1` CRASHED; c1/c3/c4 SUCCEEDED
+* **Next Step:** Dual review of c2 relaunch. Do not merge 1/3/4 as official NUTS. Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-06 (007 c2 relaunch propose).** Board open. Leftover execute of accepted `nuts-kgas007`. Relaunch chain 2 only (`--kind nuts-kgas007`, not `--kind nuts`). Keep crashed `xkytxih1` as evidence. Replace that id in `pending` only after the new session exists. Merge after `.trigger_complete` and uncorrupted `chain_2.json` `[600, 6]`. Official MAP unchanged. No G4.
 
 **2026-09-05 (m=2 SB execute).** Identity χ²_2D=168675.596. A=0 tax +2498.5. Best A=0.127 φ2=0 (polish) χ²=171074.6; (3)−(2)=−99.5; (3)−(1)=+2399. Production Ico unchanged. M1 model-model pass (<2 km/s). Artifacts `docs/reviews/artifacts/2026-09-05-kgas066-m2-sb/`. Official MAP unchanged. No G4.
 
