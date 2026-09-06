@@ -47,7 +47,7 @@ ROOT_10KMS = Path(
 )
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-07b714-milestone1"
+    "kinuv-KGAS066-4c1bc4-milestone1"
 )
 ARTIFACT = Path(
     "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings"

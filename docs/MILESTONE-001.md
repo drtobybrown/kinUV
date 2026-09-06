@@ -4,7 +4,7 @@ Promoted by Astra directive on 2026-09-06. This milestone establishes one accept
 
 | Target | Production product | Selected model | Visibility result | Posterior status |
 |---|---|---|---|---|
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Stage B, seven rings | chi2 167302.963357; Stage A delta chi2 versus V=0 35551.582543 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
+| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus V=0 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
 | KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Stage A arctan | chi2 122070.763375; delta chi2 versus V=0 6211.628755 | Four retained chains; max Rhat 1.00214; min bulk ESS 1093; intervals uncalibrated |
 
 Both two-start optimizations converged to the same physical PA mode, and both saved likelihoods reproduce exactly from the serialized selected model. KGAS007 Stage B reached a 0 km/s ring bound and `max_omega=76.329 km/s`, above the 20 km/s campaign threshold, so it is retained as rejected evidence and does not supply the accepted cube or rotation curve.

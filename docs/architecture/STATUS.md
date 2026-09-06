@@ -29,7 +29,7 @@ canon_generation: 7
 
 | Target | Product | Status |
 |---|---|---|
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Accepted MILESTONE-001 bundle; Stage B chi2 167302.963, Stage A delta chi2 versus V=0 35551.583, retained posterior max Rhat 1.00369 and min ESS 889 |
+| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Accepted MILESTONE-001 bundle; Stage B chi2 167302.366, Stage A delta chi2 versus V=0 35552.645, retained posterior max Rhat 1.00369 and min ESS 889 |
 | KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted MILESTONE-001 bundle; Stage A chi2 122070.763 and delta chi2 versus V=0 6211.629; Stage B rejected for bound pressure and oscillation; retained posterior max Rhat 1.00214 and min ESS 1093 |
 
 The authoritative artifact index is `/arc/projects/KILOGAS/analysis/toby_sandbox/results/MANIFEST.md`.

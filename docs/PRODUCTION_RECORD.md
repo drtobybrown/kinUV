@@ -6,7 +6,7 @@ This document is the durable synthesis of completed review cards, architecture n
 
 | Target | Product | Result | Interpretation |
 |---|---|---|---|
-| KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Selected Stage B chi2 167302.963; Stage A PA 199.731 deg, V0 267.705 km/s, rt 0.500 arcsec, delta chi2 versus V=0 35551.583; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable baseline. Stage B passes AIC, bound-pressure, and oscillation gates. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
+| KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Selected Stage B chi2 167302.366; Stage A PA 199.729 deg, V0 267.670 km/s, rt 0.500 arcsec, delta chi2 versus V=0 35552.645; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable baseline. Stage B passes AIC, bound-pressure, and oscillation gates. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
 | KGAS007 | MILESTONE-001, `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus V=0 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s and `max_omega=76.329 km/s`. Posterior intervals remain uncalibrated. |
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
@@ -57,7 +57,7 @@ MILESTONE-001 fixed an inclination propagation defect in Stage B and model-cube 
 | `docs/reviews/artifacts/2026-09-05-kgas007-nuts/` | Merged KGAS007 NUTS product and mixing diagnostics. |
 | `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/` | KinMS live and controlled-mock comparator, excluding retired exploratory figures. |
 | `MILESTONE-001.md` | Compact milestone receipt and acceptance summary. |
-| `../../results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/` | Accepted KGAS066 visibility, imaging, benchmark, and posterior bundle. |
+| `../../results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Accepted KGAS066 visibility, imaging, benchmark, and posterior bundle. |
 | `../../results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted KGAS007 visibility, imaging, benchmark, and posterior bundle. |
 
 The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_20260906.tar.gz`](../../archives/kinuv_docs_legacy_20260906.tar.gz). It contains the closed review cards and removed artifacts exactly as they existed before cleanup.

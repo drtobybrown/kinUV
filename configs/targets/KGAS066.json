@@ -30,10 +30,10 @@
     "maxiter": 40
   },
   "kinms": {
-    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/benchmark/kinms_model_k.fits",
-    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/benchmark/kinms_fit_result.json"
+    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/benchmark/kinms_model_k.fits",
+    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/benchmark/kinms_fit_result.json"
   },
-  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-07b714-milestone1/posterior",
+  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/posterior",
   "acceptance": {
     "minimum_delta_chi2": 1.0,
     "likelihood_identity_atol": 0.05,

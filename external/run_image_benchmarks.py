@@ -66,7 +66,7 @@ INIT = {
     "v0_kms": 200.0,
     "r_t_arcsec": BEAM_ARCSEC,
     "pa_deg": 205.2,
-    "i_deg": 43.85986559577437,
+    "i_deg": 43.86289587982063,
     "vsys_optical_kms": 8323.6,
     "gas_sigma_kms": 10.0,
     "dx_arcsec": 0.09104737371760792,

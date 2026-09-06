@@ -45,7 +45,7 @@ SRC_MODEL = REPO / "src/kinuv/forward/model.py"
 SRC_MAP = REPO / "src/kinuv/infer/map.py"
 MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-07b714-milestone1"
+    "kinuv-KGAS066-4c1bc4-milestone1"
 )
 CANFAR_NPZ = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz"

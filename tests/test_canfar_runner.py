@@ -536,7 +536,7 @@ def test_kgas007_merge_refuses_g3_and_066_map(tmp_path):
     )
     map066 = (
         Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066")
-        / "kinuv-KGAS066-07b714-milestone1"
+        / "kinuv-KGAS066-4c1bc4-milestone1"
         / "stage_a_map.json"
     )
     proc = subprocess.run(
