@@ -1,38 +1,35 @@
 ---
-generation: 13
-phase: s1-blocked-consultant-decision
+generation: 14
+phase: s1-amendment-proposal-review
 code_freeze: true
-next_role: consultant-astra
-board: s1-renderer-convergence-escalated
+next_role: reviewer-a-reviewer-b
+board: s1-continuum-contract-proposal-review
 build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s1-dual-code-review
-  - s1-renderer-convergence-decision
+  - s1-continuum-contract-dual-review
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
-last_propose: docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md
+last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
 last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
 last_review_a: docs/reviews/2026-09-06-code-review-a-crossdomain-s1.md
 last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
-open_questions:
-  - s1-kinms-antialias-deposition-contract
-  - s2-inclination-prior-provenance
-  - s2-covariance-bmaj-and-bound-freeze
+open_questions: []
 deadlocks:
-  - s1-target-path-resolution-gate
-canon_generation: 13
+  - s1-continuum-contract-proposal-review
+canon_generation: 14
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 bounded review repairs are complete at `0c95240`, but full target-path resolution convergence failed and requires an Astra renderer decision
-* **Last Action:** Published a sealed failed-gate dossier after independently doubling the image, radial, azimuthal, dispersion, and spectral integration axes
+* **Phase:** Astra accepted the S1 continuum-renderer and S2 contracts; independent proposal review precedes implementation
+* **Last Action:** Registered `DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS`, preserving the failed `r2` dossier as immutable evidence
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
-* **Blockers / Gates:** KinMS nearest-cell/Gauss-Hermite rendering is not converged at `|Delta chi2| <= 0.1`; S2 also lacks an approved inclination-prior uncertainty/source and KGAS007 grouping metadata
-* **Next Step:** Astra resolves [`ESC-KINUV-S1-RENDERER-CONVERGENCE`](../decisions/ESC-KINUV-S1-RENDERER-CONVERGENCE.md); a revised transform specification requires two fresh reviews before implementation resumes
+* **Blockers / Gates:** Reviewer A and Reviewer B must independently accept the revised transform and S2 proposal; KGAS007 real holdout remains blocked pending a provenance-complete `ms2kinuv` re-export
+* **Next Step:** complete dual proposal review, then implement the accepted continuum adapter without relaxing the existing chi-square gate
 
 ## S1 operator/comparator closure
 

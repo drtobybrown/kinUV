@@ -10,8 +10,8 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Resolve the S1 renderer escalation.** Astra must freeze an eligible anti-aliased KinMS deposition/LOSVD contract after the complete target-path matrix failed the unchanged `|Delta chi2| <= 0.1` gate. Then obtain two fresh proposal reviews before implementation resumes.
-2. **Freeze S2 missing inputs.** Register the independently sourced inclination prior uncertainty/source, BMAJ definition, LOS bounds, covariance candidates/selection, and gradient convention; re-export KGAS007 grouping metadata before any real held-out claim.
+1. **Review the frozen S1/S2 amendment.** Obtain independent science/numerics and software/reproducibility accepts on `DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS`.
+2. **Implement and close S1.** Replace nearest-cell and finite Gauss-Hermite rendering with the external cubic-B-spline/analytic-LOSVD continuum adapter, correct the flux-density contract, and pass the unchanged closure gates.
 3. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
 4. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
 5. **Re-export KGAS007 through `ms2kinuv`.** Replace the historical export when its source Measurement Set becomes available; until then real grouped holdout remains blocked rather than approximated.

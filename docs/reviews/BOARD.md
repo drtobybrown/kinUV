@@ -23,6 +23,12 @@ gate. The active card is escalated through
 No fresh code verdict is requested until Astra freezes the eligible intrinsic
 KinMS deposition/LOSVD transform.
 
+Astra froze that transform and the missing S2 contracts in
+[`DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS`](../decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md).
+The proposal awaits independent Reviewer A science/numerics and Reviewer B
+software/reproducibility verdicts. The previous code-freeze remains active
+until both accept the exact proposal commit.
+
 ## Roles and files
 
 | Role | Responsibility | File |
