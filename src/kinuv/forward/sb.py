@@ -120,6 +120,146 @@ def load_sb_template(grid: ImageGrid, ico_path: Path | None = None) -> np.ndarra
     return exponential_template(grid)
 
 
+M2_R2_ARCSEC = 2.5
+M2_SIGMA_ARCSEC = 1.5
+M2_MIN_POSITIVE = 8
+CENTROID_TOL_ARCSEC = 0.01
+
+
+def galaxy_r_phi(grid: ImageGrid, pa_rad, i_rad):
+    """Galaxy-plane R, phi with phi = atan2(yg, xg). Not sky atan2."""
+    from kinuv.geometry import sky_to_galaxy
+
+    x, y = image_grid_xy_arcsec(grid)
+    xe, yn = np.meshgrid(x, y, indexing="xy")
+    xg, yg = sky_to_galaxy(xe, yn, pa_rad, i_rad)
+    radius = np.hypot(xg, yg)
+    phi = np.arctan2(yg, xg)
+    return radius, phi
+
+
+def _template_centroid(image, grid: ImageGrid):
+    x, y = image_grid_xy_arcsec(grid)
+    xe, yn = np.meshgrid(x, y, indexing="xy")
+    w = np.asarray(image, dtype=np.float64)
+    tot = float(np.sum(w))
+    if not np.isfinite(tot) or abs(tot) < 1e-30:
+        return float("nan"), float("nan")
+    return float(np.sum(xe * w) / tot), float(np.sum(yn * w) / tot)
+
+
+@requires("DEC-066-SB", "DEC-066-GRID", "DEC-066-PA", "DEC-066-INC")
+def axisymmetrise_template(
+    sb,
+    grid: ImageGrid,
+    pa_rad,
+    i_rad,
+    *,
+    min_positive: int = M2_MIN_POSITIVE,
+    dr_arcsec=None,
+):
+    """Azimuthal mean I0(R) on deprojected elliptical annuli.
+
+    Membership is ``(I > 0) & isfinite``. Do not ``nan_to_num`` first.
+    Inner dropped bins share one nuclear aperture mean; last valid mean
+    is held outward. ``dr`` defaults to one vis cell.
+    """
+    img = np.asarray(sb, dtype=np.float64)
+    if img.shape != (grid.ny, grid.nx):
+        raise ValueError(f"template {img.shape} != grid {(grid.ny, grid.nx)}")
+    radius, _ = galaxy_r_phi(grid, pa_rad, i_rad)
+    pos = (img > 0.0) & np.isfinite(img)
+    dr = float(grid.cell_arcsec) if dr_arcsec is None else float(dr_arcsec)
+    if dr <= 0.0:
+        raise ValueError("dr_arcsec must be positive")
+    r_max = float(np.max(radius))
+    n_bin = max(int(np.ceil(r_max / dr)), 1)
+    edges = np.arange(n_bin + 1, dtype=np.float64) * dr
+    means = np.full(n_bin, np.nan)
+    counts = np.zeros(n_bin, dtype=int)
+    for i in range(n_bin):
+        sel = pos & (radius >= edges[i]) & (radius < edges[i + 1])
+        counts[i] = int(np.sum(sel))
+        if counts[i] >= int(min_positive):
+            means[i] = float(np.mean(img[sel]))
+    valid = np.where(np.isfinite(means))[0]
+    if valid.size == 0:
+        raise ValueError("no annulus has enough positive pixels")
+    first, last = int(valid[0]), int(valid[-1])
+    if first > 0:
+        nuclear = pos & (radius < edges[first])
+        if int(np.sum(nuclear)) >= 1:
+            nuc = float(np.mean(img[nuclear]))
+        else:
+            nuc = float(means[first])
+        means[:first] = nuc
+    if last < n_bin - 1:
+        means[last + 1 :] = means[last]
+    centres = 0.5 * (edges[:-1] + edges[1:])
+    i0 = np.interp(radius, centres, means, left=means[0], right=means[-1])
+    i0 = np.where(np.isfinite(img), i0, 0.0)
+    tot = float(np.sum(i0) * grid.cell_arcsec**2)
+    if abs(tot) < 1e-30:
+        raise ValueError("axisymmetrised integral vanishes")
+    i0 = i0 / tot
+    return i0, {
+        "dr_arcsec": dr,
+        "r_centre_arcsec": centres,
+        "I0_R": means,
+        "n_positive": counts,
+        "first_valid_bin": first,
+        "last_valid_bin": last,
+    }
+
+
+@requires("DEC-066-SB", "DEC-066-GRID", "DEC-066-PA", "DEC-066-INC")
+def apply_m2(
+    i0,
+    grid: ImageGrid,
+    pa_rad,
+    i_rad,
+    amplitude,
+    phi2,
+    *,
+    r2_arcsec: float = M2_R2_ARCSEC,
+    sigma_arcsec: float = M2_SIGMA_ARCSEC,
+):
+    """I = I0 [1 + a2(R) cos 2(phi-phi2)], then unit integral."""
+    base = np.asarray(i0, dtype=np.float64)
+    if base.shape != (grid.ny, grid.nx):
+        raise ValueError(f"I0 {base.shape} != grid {(grid.ny, grid.nx)}")
+    amp = float(amplitude)
+    if amp < 0.0 or amp >= 1.0:
+        raise ValueError(f"A must be in [0, 1), got {amp}")
+    phi2 = float(phi2) % np.pi
+    radius, phi = galaxy_r_phi(grid, pa_rad, i_rad)
+    a2 = amp * np.exp(-0.5 * ((radius - float(r2_arcsec)) / float(sigma_arcsec)) ** 2)
+    raw = base * (1.0 + a2 * np.cos(2.0 * (phi - phi2)))
+    d_omega = grid.cell_arcsec**2
+    integ0 = float(np.sum(base) * d_omega)
+    monopole = float(np.sum(base * a2 * np.cos(2.0 * (phi - phi2))) * d_omega)
+    monopole_frac = monopole / integ0 if abs(integ0) > 1e-30 else float("nan")
+    if np.any(raw < 0.0):
+        raw = np.maximum(raw, 0.0)
+    tot = float(np.sum(raw) * d_omega)
+    if abs(tot) < 1e-30:
+        raise ValueError("m=2 integral vanishes")
+    out = raw / tot
+    cx0, cy0 = _template_centroid(base, grid)
+    cx, cy = _template_centroid(out, grid)
+    shift = float(np.hypot(cx - cx0, cy - cy0))
+    if shift >= CENTROID_TOL_ARCSEC:
+        raise ValueError(f"m=2 centroid shift {shift:.4f}\" >= 0.01\"")
+    imag_sum = float(np.sum(np.imag(np.asarray(out, dtype=np.complex128))))
+    return out, {
+        "A": amp,
+        "phi2": phi2,
+        "monopole_frac": monopole_frac,
+        "centroid_shift_arcsec": shift,
+        "im_sum": imag_sum,
+    }
+
+
 @requires("DEC-066-SHIFT")
 def fourier_shift_padded(image, dx_arcsec, dy_arcsec, cell_arcsec, pad_n=None):
     """Fourier shift on the Wiener pad; **no crop**. For the SHIFT broadening bound."""

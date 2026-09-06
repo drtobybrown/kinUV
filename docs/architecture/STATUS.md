@@ -10,7 +10,7 @@ last_propose: docs/reviews/2026-09-05-propose-m2-surface-brightness.md
 last_review: docs/reviews/2026-08-29-review-methodology.md
 last_review_a: docs/reviews/2026-09-05-review-a-m2-surface-brightness.md
 last_review_b: docs/reviews/2026-09-05-review-b-m2-surface-brightness.md
-user_review: docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/
+user_review: docs/reviews/artifacts/2026-09-05-kgas066-m2-sb/
 open_questions: []
 deadlocks: []
 canon_generation: 4
@@ -19,12 +19,14 @@ canon_generation: 4
 ## Agent Run Status
 
 * **Phase:** 007 NUTS Running (`b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy`)
-* **Last Action:** Dual accept (major) m=2 SB; execute opt-in I0 + grid
+* **Last Action:** m=2 SB execute: I0 tax +2498; m=2 gain −99; still worse than 2-D Ico; lock 30 km/s
 * **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
 * **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 merge pending sentinels
-* **Next Step:** Implement axisym I0 + m=2 helpers and 36×20 grid. After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
+* **Next Step:** After four 007 `.trigger_complete`, merge to `2026-09-05-kgas007-nuts/` (refuse G3). Official MAP unchanged. Do not start G4
 
 # Architecture mailbox
+
+**2026-09-05 (m=2 SB execute).** Identity χ²_2D=168675.596. A=0 tax +2498.5. Best A=0.127 φ2=0 (polish) χ²=171074.6; (3)−(2)=−99.5; (3)−(1)=+2399. Production Ico unchanged. M1 model-model pass (<2 km/s). Artifacts `docs/reviews/artifacts/2026-09-05-kgas066-m2-sb/`. Official MAP unchanged. No G4.
 
 **2026-09-05 (m=2 SB tally).** Dual accept (major): `review-a-m2-surface-brightness` and `review-b-m2-surface-brightness`. Execute: three χ² and three deltas; φ=atan2(yg,xg); positive-finite annuli; inward+outward hold; 36×20 grid mandatory; identity on 2-D Ico only; no ΔlnL; no m2-map tree; no load_sb_template change. No G4. 007 pending four ids untouched.
 
