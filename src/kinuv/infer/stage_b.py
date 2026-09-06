@@ -87,6 +87,7 @@ def predict_binned(
     r_t_arcsec: float | None = None,
     r_knots_arcsec=None,
     v_knots_kms=None,
+    i_rad=None,
 ):
     """Native ``predict_vis`` → Hann+bin. Arctan or rings, not both."""
     n_g = int(data.n_guard)
@@ -104,7 +105,7 @@ def predict_binned(
         grid=grid,
         v0_kms=CALIBRATION_V0_KM_S if v0_kms is None else float(v0_kms),
         r_t_arcsec=CALIBRATION_RT_ARCSEC if r_t_arcsec is None else float(r_t_arcsec),
-        i_rad=inclination_rad(),
+        i_rad=inclination_rad() if i_rad is None else float(i_rad),
         r_knots_arcsec=r_knots_arcsec,
         v_knots_kms=v_knots_kms,
     )
@@ -151,6 +152,7 @@ def fit_v0_rt(
     v0_seed: float = CALIBRATION_V0_KM_S,
     rt_seed: float = CALIBRATION_RT_ARCSEC,
     maxiter: int = MAXITER_STAGE_B,
+    i_rad=None,
 ):
     """Stage A kinematics only: ``(V_0, r_t)`` at frozen nuisance."""
     scales = np.array([50.0, 1.0], dtype=np.float64)
@@ -164,7 +166,13 @@ def fit_v0_rt(
     def fun(z):
         v0, rt = unpack(z)
         model = predict_binned(
-            data, nuisance, template, grid, v0_kms=v0, r_t_arcsec=rt
+            data,
+            nuisance,
+            template,
+            grid,
+            v0_kms=v0,
+            r_t_arcsec=rt,
+            i_rad=i_rad,
         )
         return chi2(data.vis, model, data.weights, data.s)
 
@@ -194,7 +202,9 @@ def fit_v0_rt(
         options={"maxiter": int(maxiter), "ftol": 1e-9},
     )
     v0, rt = unpack(opt.x)
-    model = predict_binned(data, nuisance, template, grid, v0_kms=v0, r_t_arcsec=rt)
+    model = predict_binned(
+        data, nuisance, template, grid, v0_kms=v0, r_t_arcsec=rt, i_rad=i_rad
+    )
     c, c0, dchi = map_gate_scores(data.vis, model, data.weights, data.s)
     return {
         "v0_kms": v0,
@@ -221,9 +231,11 @@ def run_stage_b_map(
     n_rings: int = N_RINGS_DEFAULT,
     chi2_stage_a: float | None = None,
     maxiter: int = MAXITER_STAGE_B,
+    i_rad=None,
+    r_last_arcsec: float = DISK_RADIUS_ARCSEC,
 ) -> StageBResult:
     """L-BFGS on ``V_k``. Init ``rings_from_arctan``. Freeze nuisance."""
-    r_k = uniform_knot_radii(int(n_rings), r_last_arcsec=DISK_RADIUS_ARCSEC)
+    r_k = uniform_knot_radii(int(n_rings), r_last_arcsec=float(r_last_arcsec))
     v_init = rings_from_arctan(r_k, v0_init, rt_init)
     scales = np.full(r_k.size, 20.0, dtype=np.float64)
     nfev = {"n": 0}
@@ -240,6 +252,7 @@ def run_stage_b_map(
             grid,
             r_knots_arcsec=r_k,
             v_knots_kms=v_k,
+            i_rad=i_rad,
         )
         c_z = chi2(data.vis, model, data.weights, data.s)
         return float(c_z) + ring_regulariser(v_k, lam_reg)
@@ -270,12 +283,24 @@ def run_stage_b_map(
     )
     v_k = unpack(opt.x)
     model = predict_binned(
-        data, nuisance, template, grid, r_knots_arcsec=r_k, v_knots_kms=v_k
+        data,
+        nuisance,
+        template,
+        grid,
+        r_knots_arcsec=r_k,
+        v_knots_kms=v_k,
+        i_rad=i_rad,
     )
     c, c0, dchi = map_gate_scores(data.vis, model, data.weights, data.s)
     if chi2_stage_a is None:
         model_a = predict_binned(
-            data, nuisance, template, grid, v0_kms=v0_init, r_t_arcsec=rt_init
+            data,
+            nuisance,
+            template,
+            grid,
+            v0_kms=v0_init,
+            r_t_arcsec=rt_init,
+            i_rad=i_rad,
         )
         chi2_a = chi2(data.vis, model_a, data.weights, data.s)
     else:

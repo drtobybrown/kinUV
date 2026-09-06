@@ -125,7 +125,7 @@ def write_leftover_at_params(
     return summary
 
 
-def write_stage_a_cube(
+def write_model_cube(
     params: dict,
     dest: Path,
     *,
@@ -134,8 +134,12 @@ def write_stage_a_cube(
     grid,
     ico_path: Path = ICO,
     object_name: str = "KGAS066",
+    i_rad=None,
+    r_knots_arcsec=None,
+    v_knots_kms=None,
+    origin: str = "kinUV visibility MAP sky_cube",
 ) -> Path:
-    """Native-channel Stage A cube at NUTS mean. Never the official MAP tree."""
+    """Write a native-channel arctan or ring-profile visibility-fit cube."""
     from astropy.io import fits
     from astropy.wcs import WCS
 
@@ -160,6 +164,9 @@ def write_stage_a_cube(
         gas_sigma_kms=params["gas_sigma_kms"],
         v0_kms=params["v0_kms"],
         r_t_arcsec=params["r_t_arcsec"],
+        i_rad=i_rad,
+        r_knots_arcsec=r_knots_arcsec,
+        v_knots_kms=v_knots_kms,
     )
     ico_path = Path(ico_path)
     ico_hdr = fits.getheader(ico_path) if ico_path.is_file() else {}
@@ -181,11 +188,36 @@ def write_stage_a_cube(
     hdr["BUNIT"] = "Jy/pixel"
     hdr["RESTFRQ"] = (float(F_REST_CO21_HZ), "CO(2-1) rest frequency [Hz]")
     hdr["OBJECT"] = str(object_name)
-    hdr["ORIGIN"] = "kinUV Stage A NUTS-mean sky_cube"
+    hdr["ORIGIN"] = str(origin)
     hdr["V0"] = (float(params["v0_kms"]), "km/s")
     hdr["RT"] = (float(params["r_t_arcsec"]), "arcsec")
     fits.PrimaryHDU(data=arr, header=hdr).writeto(dest, overwrite=True)
     return dest
+
+
+def write_stage_a_cube(
+    params: dict,
+    dest: Path,
+    *,
+    data,
+    tmpl,
+    grid,
+    ico_path: Path = ICO,
+    object_name: str = "KGAS066",
+    i_rad=None,
+) -> Path:
+    """Backward-compatible Stage A cube writer with explicit inclination."""
+    return write_model_cube(
+        params,
+        dest,
+        data=data,
+        tmpl=tmpl,
+        grid=grid,
+        ico_path=ico_path,
+        object_name=object_name,
+        i_rad=i_rad,
+        origin="kinUV Stage A visibility-fit sky_cube",
+    )
 
 
 def write_imaging_plots(
@@ -281,7 +313,12 @@ def write_nuts_product_plots(
 
     if imaging:
         cube = write_stage_a_cube(
-            params, plots / "stage_a_nuts_mean.fits", data=data, tmpl=tmpl, grid=grid
+            params,
+            plots / "stage_a_nuts_mean.fits",
+            data=data,
+            tmpl=tmpl,
+            grid=grid,
+            i_rad=i_rad,
         )
         write_imaging_plots(
             geom_path,

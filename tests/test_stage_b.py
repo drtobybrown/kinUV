@@ -1,13 +1,14 @@
 """Stage B ring MAP helpers (066-12). No visibility campaign here."""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from kinuv.forward.model import VSYS_SEED_KM_S, los_velocity
 from kinuv.geometry import inclination_rad, pa_seed_rad, sky_to_galaxy
-from kinuv.infer.stage_b import recover_arctan_from_rings
+from kinuv.infer.stage_b import predict_binned, recover_arctan_from_rings
 from kinuv.profiles.rotation import (
     CALIBRATION_RT_ARCSEC,
     CALIBRATION_V0_KM_S,
@@ -65,3 +66,37 @@ def test_run_stage_b_map_stores_residual_omega():
     chunk = src.split("def run_stage_b_map", 1)[1]
     assert "om = omega_residual(v_k, v_init, data.dv_kms)" in chunk
     assert "max_omega=float(np.max(om))" in chunk
+
+
+def test_stage_b_uses_caller_inclination(monkeypatch):
+    seen = {}
+
+    def fake_predict(*_args, **kwargs):
+        seen["i_rad"] = kwargs["i_rad"]
+        return np.zeros((2, 6), dtype=np.complex128)
+
+    def fake_bin(*_args, **_kwargs):
+        return np.zeros((2, 1), dtype=np.complex128)
+
+    monkeypatch.setattr("kinuv.infer.stage_b.predict_vis", fake_predict)
+    monkeypatch.setattr("kinuv.infer.stage_b.hann_then_bin", fake_bin)
+    data = SimpleNamespace(
+        n_guard=1,
+        u_m=np.zeros(2),
+        v_m=np.zeros(2),
+        freqs_native=np.arange(6.0),
+        vel_native=np.arange(6.0),
+        weights_native=np.ones((2, 6)),
+        n_bin=4,
+        vis=np.zeros((2, 1), dtype=np.complex128),
+    )
+    nuisance = {
+        "flux": 1.0,
+        "pa_deg": 10.0,
+        "vsys_kms": 1000.0,
+        "dx_arcsec": 0.0,
+        "dy_arcsec": 0.0,
+        "gas_sigma_kms": 8.0,
+    }
+    predict_binned(data, nuisance, np.ones((2, 2)), object(), i_rad=0.37)
+    assert seen["i_rad"] == pytest.approx(0.37)

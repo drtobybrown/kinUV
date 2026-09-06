@@ -1,0 +1,35 @@
+{
+  "schema_version": "kinuv-production-target-v1",
+  "target_id": "KGAS007",
+  "visibility_npz": "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS007.npz",
+  "template_ico": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_Ico_K_kms-1.fits",
+  "fit_window_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_clipped_cube.fits",
+  "diagnostic_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_clipped_cube.fits",
+  "diagnostic_mask": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_mask_cube.fits",
+  "phase_center_deg": [146.576065, 2.88434],
+  "geometry": {
+    "inclination_deg": 28.9,
+    "pa_seed_deg": 212.6,
+    "vsys_optical_seed_kms": 14229.0
+  },
+  "stage_a": {
+    "maxiter": 80,
+    "v0_seed_kms": 250.0,
+    "r_t_seed_arcsec": 3.0
+  },
+  "stage_b": {
+    "n_rings": 7,
+    "r_last_arcsec": 7.5,
+    "lambda_regularization": 0.0,
+    "maxiter": 40
+  },
+  "kinms": {
+    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/benchmarks/kinms-canonical/KGAS007/kinms/model_cube.fits",
+    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/benchmarks/kinms-canonical/KGAS007/kinms/kinms_fit_result.json"
+  },
+  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-32cbbd-nuts",
+  "acceptance": {
+    "minimum_delta_chi2": 1.0,
+    "likelihood_identity_atol": 0.05
+  }
+}
