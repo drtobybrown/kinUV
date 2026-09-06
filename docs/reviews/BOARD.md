@@ -2,6 +2,13 @@
 
 The board tracks one active proposal and its independent reviews. Scientific values live in frozen configuration and proposals; durable results live in run manifests and `docs/PRODUCTION_RECORD.md`.
 
+## Active card
+
+`crossdomain-recovery`: Astra accepted the strategy in
+[`DEC-KINUV-CROSSDOMAIN-RECOVERY`](../decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md).
+Reviewer A and Reviewer B specification verdicts are pending. No formal review,
+tally, or implementation license has been recorded.
+
 ## Roles and files
 
 | Role | Responsibility | File |

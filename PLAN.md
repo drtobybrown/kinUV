@@ -10,15 +10,17 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Calibrate posterior intervals.** Run exact-workflow simulation-based calibration before treating retained NUTS quantiles as credible intervals.
-2. **Re-export KGAS007 through `ms2kinuv`.** Replace its retained historical wavelength-coordinate NPZ when the source Measurement Set becomes available.
-3. **Benchmark the hot path.** Track compiled visibility-likelihood evaluations per second, memory, and scaling with rows, channels, and image grid. Keep GPU disabled until an official-kernel benchmark beats the CPU path.
-4. **Resolve model adequacy.** Investigate KGAS066 velocity-structured residuals and define an outer-ring support criterion before revisiting KGAS007 Stage B.
+1. **Review the recovery specification.** Obtain two independent proposal verdicts on [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md); implementation remains unlicensed.
+2. **Audit evidence and fairness.** After a two-accept tally, execute S0 null/smoothness/provenance corrections and S1 intrinsic-comparator/operator closure.
+3. **Test one-factor candidates.** Execute S2--S4 geometry/covariance, joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
+4. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
+5. **Re-export KGAS007 through `ms2kinuv`.** Replace the historical export when its source Measurement Set becomes available.
 
 ## Exit criteria for the next production increment
 
-- Exact-workflow SBC meets the declared coverage criterion.
+- S0--S5 MAP/recovery gates pass with dual review and Consultant sign-off.
+- Exact-workflow SBC meets a separately declared coverage criterion only for a calibrated-interval claim.
 - MILESTONE-001 remains reproducible from the frozen target configurations and run manifests.
 - A clean checkout reproduces MAP identity chi2 and validates retained NUTS summaries from manifests.
 - The review board contains only an active card; completed discussion is folded into the production record.
-- No production result depends on an archived artifact path.
+- No runtime code or data extraction depends on legacy repositories; valid archive provenance links remain preserved.

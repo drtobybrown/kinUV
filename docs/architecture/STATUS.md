@@ -1,36 +1,38 @@
 ---
-generation: 7
-phase: milestone-001-promoted
+generation: 8
+phase: milestone-scientific-gates-under-audit
 code_freeze: false
-next_role: consultant
-board: idle
+next_role: independent-proposal-reviewers
+board: crossdomain-recovery-review-pending
 build_licensed: false
 pending:
+  - crossdomain-recovery-independent-proposal-reviews
+  - null-and-smoothness-gate-audit
   - exact-workflow-posterior-calibration
-last_propose: null
+last_propose: docs/decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md
 last_review: null
 last_review_a: null
 last_review_b: null
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 7
+canon_generation: 8
 ---
 
 ## Agent Run Status
 
-* **Phase:** MILESTONE-001 promoted for KGAS066 and KGAS007
-* **Last Action:** Ran clean two-start Stage A and Stage B visibility fits, rendered the complete image and visibility diagnostic suites, embedded KinMS comparisons, revalidated retained mixed NUTS draws, and promoted one immutable product per target
-* **Decisions Made:** KGAS066 selects Stage B; KGAS007 selects Stage A because its Stage B fit hits the zero-speed bound and fails the oscillation gate; target values and site paths now live in versioned target configurations
-* **Blockers / Gates:** posterior intervals remain uncalibrated; KGAS066 visibility residuals remain structured with velocity; no real-data inner slope may be quoted
-* **Next Step:** run exact-workflow simulation-based calibration before promoting calibrated credible intervals
+* **Phase:** MILESTONE-001 artifacts remain sealed historical engineering baselines; scientific gates are under audit
+* **Last Action:** Astra accepted [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](../decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md); independent proposal reviews have not occurred and implementation is unlicensed
+* **Decisions Made:** The reported delta chi-square is emission versus blank, not zero rotation; Stage B omega has a unit/threshold defect; fair KinMS visibility scoring requires an intrinsic pre-restoration adapter
+* **Blockers / Gates:** two independent proposal reviews; S0 evidence corrections; legacy KGAS007 grouping may block valid real holdout; posterior intervals remain uncalibrated
+* **Next Step:** independent specification review, then S0 scientific audit and S1 fair operator/comparator benchmark before any new campaign
 
 ## Current products
 
 | Target | Product | Status |
 |---|---|---|
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Accepted MILESTONE-001 bundle; Stage B chi2 167302.366, Stage A delta chi2 versus V=0 35552.645, retained posterior max Rhat 1.00369 and min ESS 889 |
-| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted MILESTONE-001 bundle; Stage A chi2 122070.763 and delta chi2 versus V=0 6211.629; Stage B rejected for bound pressure and oscillation; retained posterior max Rhat 1.00214 and min ESS 1093 |
+| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Sealed historical engineering baseline; reported delta chi2 is versus blank complex signal and intervals are conditional/uncalibrated |
+| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Sealed historical engineering baseline; delta chi2 6211.629 is versus blank complex signal, not non-rotation; intervals are conditional/uncalibrated |
 
 The authoritative artifact index is `/arc/projects/KILOGAS/analysis/toby_sandbox/results/MANIFEST.md`.
 

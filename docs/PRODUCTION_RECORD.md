@@ -1,5 +1,13 @@
 # kinUV production record
 
+## 2026-09-06 scientific-gate audit supersession
+
+MILESTONE-001 numerical artifacts remain sealed. Per
+[`DEC-KINUV-CROSSDOMAIN-RECOVERY`](decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md),
+earlier rotation-null and omega interpretations are withdrawn pending S0. Neither
+real target has an established truth-recovery ranking. Archived evidence is
+preserved unchanged.
+
 This document is the durable synthesis of completed review cards, architecture notes, and superseded diagnostic artifacts through 2026-09-06. It records conclusions needed to interpret or reproduce the current KGAS066 and KGAS007 products. Active coordination belongs in [`reviews/BOARD.md`](reviews/BOARD.md); binding model choices remain in [`decisions/`](decisions/).
 
 ## Current products
