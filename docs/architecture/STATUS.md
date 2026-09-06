@@ -1,35 +1,38 @@
 ---
-generation: 14
-phase: s1-amendment-proposal-review
+generation: 15
+phase: s1-amendment-required-changes
 code_freeze: true
-next_role: reviewer-a-reviewer-b
-board: s1-continuum-contract-proposal-review
+next_role: consultant-astra
+board: s1-continuum-contract-required-changes
 build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s1-dual-code-review
-  - s1-continuum-contract-dual-review
+  - s1-continuum-contract-revision
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
-last_review: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
-last_review_a: docs/reviews/2026-09-06-code-review-a-crossdomain-s1.md
-last_review_b: docs/reviews/2026-09-06-code-review-b-crossdomain-s1.md
+last_review: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
+last_review_a: docs/reviews/2026-09-06-review-a-s1-continuum-contract.md
+last_review_b: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
-open_questions: []
-deadlocks:
-  - s1-continuum-contract-proposal-review
-canon_generation: 14
+open_questions:
+  - s1-refinement-and-flux-ledger-freeze
+  - s2-covariance-and-fold-estimator-freeze
+  - s2-start-table-and-optimizer-freeze
+  - s2-campaign-config-and-target-bounds
+deadlocks: []
+canon_generation: 15
 ---
 
 ## Agent Run Status
 
-* **Phase:** Astra accepted the S1 continuum-renderer and S2 contracts; independent proposal review precedes implementation
-* **Last Action:** Registered `DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS`, preserving the failed `r2` dossier as immutable evidence
+* **Phase:** Both independent proposal reviewers accepted the architectural direction with required scientific and reproducibility changes; implementation remains frozen
+* **Last Action:** Recorded Reviewer A/B verdicts on exact proposal commit `e7a1e71` and consolidated their executable-contract gaps
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold.
-* **Blockers / Gates:** Reviewer A and Reviewer B must independently accept the revised transform and S2 proposal; KGAS007 real holdout remains blocked pending a provenance-complete `ms2kinuv` re-export
-* **Next Step:** complete dual proposal review, then implement the accepted continuum adapter without relaxing the existing chi-square gate
+* **Blockers / Gates:** exact S1 refinement/metric/unit semantics, checksum-bound campaign configuration, and S2 covariance/start/optimizer contracts require Astra revision; both retained target exports block real S2 covariance and held-out scoring
+* **Next Step:** Astra issues one executable amendment; the Registrar freezes its configurations and both reviewers assess the revised exact commit
 
 ## S1 operator/comparator closure
 

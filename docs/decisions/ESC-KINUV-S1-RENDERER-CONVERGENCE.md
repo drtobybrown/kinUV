@@ -1,10 +1,11 @@
 ---
 id: ESC-KINUV-S1-RENDERER-CONVERGENCE
-status: awaiting-consultant-decision
+status: resolved-by-astra-pending-executable-amendment
 date: 2026-09-06
 authority_requested: Astra
 implementation_commit: 0c95240b2f7e238ba6c0666f61871c65558494b0
 artifact: results/validation/crossdomain-recovery-s1-20260906-r2
+resolution: DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS
 ---
 # S1 intrinsic-renderer convergence escalation
 

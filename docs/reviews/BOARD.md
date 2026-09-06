@@ -25,9 +25,14 @@ KinMS deposition/LOSVD transform.
 
 Astra froze that transform and the missing S2 contracts in
 [`DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS`](../decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md).
-The proposal awaits independent Reviewer A science/numerics and Reviewer B
-software/reproducibility verdicts. The previous code-freeze remains active
-until both accept the exact proposal commit.
+Reviewer A and Reviewer B independently returned `accept-with-required-changes`
+on exact proposal commit `e7a1e71eba9ffe68a21754bb41dc9bb03d6c2acc`; see
+[`review-a`](2026-09-06-review-a-s1-continuum-contract.md) and
+[`review-b`](2026-09-06-review-b-s1-continuum-contract.md). Both require exact
+metric/refinement/unit definitions, checksum-bound campaign state, and an
+executable S2 covariance/start/optimizer contract. Both retained target exports
+are insufficient for real S2 covariance selection and held-out scoring. The
+code freeze remains active pending an Astra revision and two fresh verdicts.
 
 ## Roles and files
 

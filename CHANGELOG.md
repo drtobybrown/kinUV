@@ -4,6 +4,7 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-06 — production closeout and documentation cleanup
 
+- Registered Astra's continuum-adapter/S2 architecture at `e7a1e71`; independent Reviewer A/B verdicts both require executable metric, refinement, unit, campaign-configuration, covariance, and optimizer details before implementation is licensed.
 - Closed S0 scientific accounting at `fb4a145`, distinguishing blank from fitted non-rotating emission and blocking universal use of the historical dimensionless omega threshold.
 - Added the S1 intrinsic KinMS adapter and shared PB/NUFFT/Hann-bin operator, then repaired the independently discovered PA, fail-closed metadata, atomic-publication, input-lock, and provenance defects at `0c95240`.
 - Sealed the revised S1 dossier as failed evidence after the newly complete per-axis target matrix exposed unconverged KinMS cloud deposition; no S2 work or scientific promotion followed.

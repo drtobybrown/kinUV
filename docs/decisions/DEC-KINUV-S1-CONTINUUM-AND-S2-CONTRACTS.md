@@ -1,6 +1,6 @@
 ---
 id: DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS
-status: accepted-by-astra-pending-proposal-review
+status: accepted-by-astra-required-changes
 date: 2026-09-06
 authority: Astra
 supersedes_transform: ESC-KINUV-S1-RENDERER-CONVERGENCE
