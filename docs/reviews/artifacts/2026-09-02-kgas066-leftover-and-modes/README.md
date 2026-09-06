@@ -15,7 +15,7 @@ Official MAP `kinuv-KGAS066-uvsign-map` was not written. 16/50/84 are not calibr
 | [stage-b-rings/moments.png](stage-b-rings/moments.png) | Stage B rings vs 10 km/s cube |
 | [stage-a-map/spectra.png](stage-a-map/spectra.png) | Aperture \(\Delta v_{M-D}\) (do not fudge) |
 
-Approaching PA 25.2 NUTS products go in [pa25/](pa25/) when the headless job finishes. That job must not write `2026-08-30-g3-nuts/` or retarget `KGAS066-latest`.
+The approaching PA 25.2 search was terminated after failed mixing and a recovery MAP returned to the receding solution. Its evidence is summarized in `docs/PRODUCTION_RECORD.md`.
 
 ## Identity leftover (881 x 95, s=0.5136, hann_then_bin)
 
@@ -27,9 +27,9 @@ Approaching PA 25.2 NUTS products go in [pa25/](pa25/) when the headless job fin
 
 \(\Delta\chi^2\) NUTS-mean vs MAP = \(-1189\). Gap NUTS-mean vs Stage B = \(+185\). Leftover-vs-velocity stays True at Stage B, so the leftover gate is **SB-dominated** (frozen Wiener Ico). Do not add \(s_1\)/\(c_3\). Do not unfreeze \(i\). Do not quote inner dV/dr.
 
-Aperture \(\Delta v_{M-D}\) (optical, no velocity nudge): Stage B approaching \(+12.71\) vs receding \(+36.31\) km/s; MAP−catalog \(+24.07\) km/s. Same root cause as `docs/reviews/artifacts/2026-08-30-final-fit/vsys_shift.json`.
+Aperture \(\Delta v_{M-D}\) (optical, no velocity nudge): Stage B approaching \(+12.71\) vs receding \(+36.31\) km/s; MAP−catalog \(+24.07\) km/s. The current receipts are in `stage-a-map/vsys_shift.json` and `stage-b-rings/vsys_shift.json`.
 
 ## DEC-067 leaves (approaching)
 
-- Artifact dest is this folder / `pa25/`, not `2026-08-30-g3-nuts/`.
+- Receding NUTS artifacts remain in `2026-08-30-g3-nuts/`; this folder contains the current three-way diagnostic comparison.
 - `KGAS066-latest` stays the receding run.

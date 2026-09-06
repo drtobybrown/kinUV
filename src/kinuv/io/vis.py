@@ -1,4 +1,4 @@
-"""KGAS066 visibility load, cube-window trim, time/uv aggregate (DEC-066-VIS).
+"""Visibility loading, cube-window trim, and time/uv aggregation.
 
 Source is the native ``43240×1920`` npz. Fit product is time-averaged 30 s,
 uv-binned 10 m, then software-binned ``N=4``. Data are already
@@ -6,8 +6,7 @@ correlator-Hann'd — this module never Hanns visibilities.
 
 The Ico cube is ``VOPT``; visibilities are radio vs rest CO via
 :func:`kinuv.constants.freq_to_velocity_kms`. The trim converts the cube
-window to radio so the same sky frequencies are selected. YAML
-``obs_freq_range`` is not used (it clips the receding side).
+window to radio so the same sky frequencies are selected.
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ from pathlib import Path
 
 import numpy as np
 
-from kinuv.constants import C_LIGHT_KM_S, freq_to_velocity_kms
+from kinuv.constants import C_LIGHT_KM_S, C_LIGHT_M_S, freq_to_velocity_kms
 from kinuv.decisions import requires
 from kinuv.likelihood.chi2 import empirical_s
 from kinuv.response.spectral import bin_channels
@@ -38,6 +37,7 @@ TRIM_MARGIN_NATIVE = 3
 N_GUARD = 1
 NATIVE_N_ROW = 43240
 NATIVE_N_CHAN = 1920
+MS2KINUV_SCHEMA_VERSION = "ms2kinuv-npz-v1"
 
 
 @dataclass
@@ -61,6 +61,97 @@ class VisData:
     weights_native: np.ndarray | None = None
     v_lo_line: float = 0.0
     v_hi_line: float = 0.0
+
+
+@dataclass
+class NativeVisTable:
+    """Native spectral visibility table before kinUV aggregation."""
+
+    u_m: np.ndarray
+    v_m: np.ndarray
+    vis: np.ndarray
+    weights: np.ndarray
+    freqs: np.ndarray
+    time: np.ndarray | None
+    baseline: np.ndarray | None
+    phase_dir_rad: np.ndarray | None
+    schema: str
+    uv_ref_hz: float | None
+
+
+def load_visibility_table(path) -> NativeVisTable:
+    """Load canonical ms2kinuv NPZ or the retained historical wavelength schema."""
+    npz_path = Path(path)
+    if not npz_path.is_file():
+        raise FileNotFoundError(npz_path)
+    with np.load(npz_path, mmap_mode="r", allow_pickle=False) as z:
+        required = ("vis", "weights", "freqs")
+        missing = [key for key in required if key not in z.files]
+        if missing:
+            raise KeyError(f"{npz_path} missing keys {missing}")
+        freqs = np.asarray(z["freqs"], dtype=np.float64).ravel()
+        if "u_m" in z.files and "v_m" in z.files:
+            if "schema_version" in z.files:
+                version = str(np.asarray(z["schema_version"]).item())
+                if version != MS2KINUV_SCHEMA_VERSION:
+                    raise ValueError(
+                        f"{npz_path}: unsupported schema_version {version!r}; "
+                        f"expected {MS2KINUV_SCHEMA_VERSION!r}"
+                    )
+            u_m = np.asarray(z["u_m"], dtype=np.float64)
+            v_m = np.asarray(z["v_m"], dtype=np.float64)
+            schema = (
+                MS2KINUV_SCHEMA_VERSION
+                if "schema_version" in z.files
+                else "unversioned-metres"
+            )
+            uv_ref_hz = None
+        elif "u" in z.files and "v" in z.files:
+            uv_ref_hz = float(np.mean(freqs))
+            scale = C_LIGHT_M_S / uv_ref_hz
+            u_m = np.asarray(z["u"], dtype=np.float64) * scale
+            v_m = np.asarray(z["v"], dtype=np.float64) * scale
+            schema = "historical-reference-wavelengths"
+        else:
+            raise KeyError(f"{npz_path} missing u_m/v_m coordinates")
+        vis = np.asarray(z["vis"], dtype=np.complex128)
+        weights = np.asarray(z["weights"], dtype=np.float64)
+        time = (
+            np.asarray(z["time"], dtype=np.float64).ravel()
+            if "time" in z.files
+            else None
+        )
+        baseline = (
+            np.asarray(z["baseline"], dtype=np.int64).ravel()
+            if "baseline" in z.files
+            else None
+        )
+        phase_dir = (
+            np.asarray(z["phase_dir_rad"], dtype=np.float64).reshape(2)
+            if "phase_dir_rad" in z.files
+            else None
+        )
+    n_row, n_chan = vis.shape
+    if weights.shape != vis.shape:
+        raise ValueError(f"weights shape {weights.shape} != vis shape {vis.shape}")
+    if u_m.shape != (n_row,) or v_m.shape != (n_row,):
+        raise ValueError("visibility coordinates must have one value per row")
+    if freqs.shape != (n_chan,):
+        raise ValueError("freqs must have one value per visibility channel")
+    if (time is None) != (baseline is None):
+        raise ValueError("time and baseline metadata must be present together")
+    return NativeVisTable(
+        u_m=u_m,
+        v_m=v_m,
+        vis=vis,
+        weights=weights,
+        freqs=freqs,
+        time=time,
+        baseline=baseline,
+        phase_dir_rad=phase_dir,
+        schema=schema,
+        uv_ref_hz=uv_ref_hz,
+    )
 
 
 def optical_to_radio_kms(v_opt_kms, c_kms: float = C_LIGHT_KM_S):
@@ -215,6 +306,103 @@ def _extend_axis(freq_core, vel_core, extra_lo, extra_hi, dvel):
         freqs = np.concatenate([freqs, hi_f])
         vel = np.concatenate([vel, hi_v])
     return freqs, vel
+
+
+def load_target_vis(
+    path,
+    *,
+    cube_path,
+    phase_dir_rad=None,
+    n_bin: int = N_BIN,
+    time_bin_s: float = TIME_BIN_S,
+    uv_bin_m: float = UV_BIN_M,
+    trim_margin: int = TRIM_MARGIN_NATIVE,
+    n_guard: int = N_GUARD,
+) -> tuple[VisData, dict]:
+    """Prepare any configured target from canonical or historical NPZ input."""
+    table = load_visibility_table(path)
+    freqs_all = table.freqs
+    vel_all = freq_to_velocity_kms(freqs_all)
+    v_lo_opt, v_hi_opt = cube_vopt_window_kms(cube_path)
+    v_lo_line = float(optical_to_radio_kms(v_lo_opt))
+    v_hi_line = float(optical_to_radio_kms(v_hi_opt))
+    i0, i1, g0, g1, dv_native, extra_lo, extra_hi, dvel = _trim_and_guard_indices(
+        vel_all,
+        v_lo_line,
+        v_hi_line,
+        margin=int(trim_margin),
+        n_guard=int(n_guard),
+    )
+    sl = slice(i0, i1 + 1)
+    vis = table.vis[:, sl]
+    weights = table.weights[:, sl]
+    u_m = table.u_m
+    v_m = table.v_m
+    freqs_trim = freqs_all[sl]
+    vel_trim = vel_all[sl]
+    freqs_native = freqs_all[g0 : g1 + 1]
+    vel_native = vel_all[g0 : g1 + 1]
+    freqs_native, vel_native = _extend_axis(
+        freqs_native, vel_native, extra_lo, extra_hi, dvel
+    )
+    time_average = table.time is not None
+    if time_average:
+        u_m, v_m, vis, weights = average_time_steps(
+            u_m,
+            v_m,
+            vis,
+            weights,
+            table.time,
+            float(time_bin_s),
+            table.baseline,
+        )
+    u_m, v_m, vis, weights = bin_uv_plane(
+        u_m, v_m, vis, weights, float(uv_bin_m)
+    )
+    vis_b, w_b, vel_b, freqs_b, _ = bin_channels(
+        vis, weights, vel_trim, freqs_trim, int(n_bin)
+    )
+    dv_kms = (
+        float(np.median(np.abs(np.diff(vel_b))))
+        if vel_b.size > 1
+        else float(n_bin) * dv_native
+    )
+    line_free = (vel_b < v_lo_line) | (vel_b > v_hi_line)
+    s = empirical_s(vis_b, w_b, line_free)
+    phase = table.phase_dir_rad
+    if phase is None:
+        if phase_dir_rad is None:
+            raise ValueError(
+                "phase_dir_rad is absent from NPZ and no target fallback was given"
+            )
+        phase = np.asarray(phase_dir_rad, dtype=np.float64).reshape(2)
+    data = VisData(
+        u_m=u_m,
+        v_m=v_m,
+        vis=vis_b,
+        weights=w_b,
+        freqs=freqs_b,
+        vel=vel_b,
+        freqs_native=freqs_native,
+        vel_native=vel_native,
+        n_bin=int(n_bin),
+        dv_kms=dv_kms,
+        s=s,
+        phase_dir_rad=phase,
+        line_free_mask=line_free,
+        n_guard=int(n_guard),
+        weights_native=weights,
+        v_lo_line=v_lo_line,
+        v_hi_line=v_hi_line,
+    )
+    meta = {
+        "schema": table.schema,
+        "uv_ref_hz": table.uv_ref_hz,
+        "time_average": time_average,
+        "time_bin_s": float(time_bin_s) if time_average else None,
+        "uv_bin_m": float(uv_bin_m),
+    }
+    return data, meta
 
 
 @requires("DEC-066-VIS", "DEC-066-SPECRESP", "DEC-066-WEIGHT", "DEC-066-ZEROMODEL")

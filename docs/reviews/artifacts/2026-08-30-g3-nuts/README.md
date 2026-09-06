@@ -2,7 +2,7 @@
 
 Official MAP `kinuv-KGAS066-uvsign-map` was not written. `posterior.SAMPLER_NAME` stays `laplace_mh`. 16/50/84 on the corner are not calibrated. Do not quote S2 Laplace intervals. Do not quote inner dV/dr.
 
-Style: `docs/diagnostics/plotting.md`. MAP Stage B comparison remains `docs/reviews/artifacts/2026-08-30-final-fit/`.
+Style: `docs/diagnostics/plotting.md`. The current MAP Stage B comparison is `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings/`.
 
 ## Look at these (066 NUTS mean)
 

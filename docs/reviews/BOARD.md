@@ -1,6 +1,6 @@
 # Review board
 
-Message board for propose / dual review. Physics stays in `docs/decisions/`. This folder is the conversation.
+Message board for the current propose / dual-review card. Physics stays in `docs/decisions/`. Completed cards are summarized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md) and removed after closure.
 
 ## Files
 
@@ -25,6 +25,6 @@ No third review. Parent becomes implementer: write code, run the licensed stages
 
 The user is not a gate sitter. They review whether the **final** Data | Model | Residual (and leftover) plots work.
 
-## Historical notes
+## Closeout
 
-Reviews from before 2026-08-30 used a single reviewer and `verdict: ack | challenge`. Leave them. New cards use `accept | reject` and A/B files.
+After implementation and verification, fold durable conclusions into `docs/PRODUCTION_RECORD.md`, clear the live-card pointers in STATUS, and remove the closed propose/review files. Keep only this board and the two templates when no card is active.

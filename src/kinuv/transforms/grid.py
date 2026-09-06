@@ -1,7 +1,7 @@
 """Sky grid for FINUFFT type-2. Cell comes from uv coverage, never CDELT.
 
 DEC-066-GRID: ``1 / (2 · cell_rad) > max_baseline_λ`` with margin. The 0.4″
-cell was uvkin silently replacing YAML 0.1″ with an imaging-cube header.
+cell was the legacy pipeline silently replacing configured 0.1″ with an imaging-cube header.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ def nyquist_assert(cell_arcsec, max_baseline_lambda, *, margin: float = 1.0) -> 
         raise ValueError(
             f"cell {float(cell_arcsec):.4g}\" is not Nyquist for "
             f"{float(max_baseline_lambda):.6g} λ (u_max={u_max:.6g} λ, "
-            f"margin={margin:g}). 0.4\" is the uvkin imaging-header override "
+            f"margin={margin:g}). 0.4\" is the legacy imaging-header override "
             f"bug; choose the cell from uv coverage, not FITS CDELT."
         )
 

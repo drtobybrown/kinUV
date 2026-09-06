@@ -19,7 +19,7 @@ Two separate treatments. Do not conflate them.
 
 ## Signal path (mandatory)
 
-ALMA's default correlator window is Hann. On native channels that is convolution with `[0.25, 0.5, 0.25]`. Software spectral binning (`uvkin.bin_channels`) then takes a weighted mean of N adjacent channels and sums the weights.
+ALMA's default correlator window is Hann. On native channels that is convolution with `[0.25, 0.5, 0.25]`. Software spectral binning (`kinuv.response.spectral.bin_channels`) then takes a weighted mean of N adjacent channels and sums the weights.
 
 **066 implementation:**
 

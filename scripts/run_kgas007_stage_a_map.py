@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""KGAS007 Stage A MAP diagnostic. Does not amend DEC-066-TARGET. No NUTS."""
+"""Generate the KGAS007 Stage A MAP used to initialize its NUTS run."""
 
 from __future__ import annotations
 
@@ -13,15 +13,17 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "src"))
+
+from kinuv.targets import get_target
+
+TARGET = get_target("KGAS007")
 DEST = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS007/"
     "kinuv-KGAS007-stage-a-map"
 )
 ARTIFACT = (
     REPO / "docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map"
-)
-CATALOGUE_YAML = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/uvkin/config/uvkin_settings.yaml"
 )
 VIS = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS007.npz"
@@ -43,52 +45,11 @@ SEARCH = [
     Path("/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms"),
     Path("/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS007/30kms"),
     Path("/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/../KGAS7"),
-    CATALOGUE_YAML,
 ]
 
 
 def _exists(p: Path) -> bool:
     return p.is_file() or p.is_dir()
-
-
-def _read_kgas007_catalogue(path: Path) -> dict | None:
-    """Parse the KGAS007 block only. Refuse 066 ba/PA/vsys fallbacks."""
-    if not path.is_file():
-        return None
-    in_block = False
-    got: dict[str, float] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("  KGAS007:"):
-            in_block = True
-            continue
-        if in_block and line.startswith("  KGAS") and not line.startswith("  KGAS007"):
-            break
-        if not in_block:
-            continue
-        raw = line.split("#", 1)[0].strip()
-        if ":" not in raw:
-            continue
-        key, val = raw.split(":", 1)
-        key = key.strip()
-        val = val.strip()
-        if key == "pa_init":
-            got["pa_deg"] = float(val)
-        elif key == "inc_init":
-            got["i_deg"] = float(val)
-        elif key == "vsys":
-            got["vsys_optical_kms"] = float(val)
-        elif key == "ra_deg":
-            got["ra_deg"] = float(val)
-        elif key == "dec_deg":
-            got["dec_deg"] = float(val)
-    need = ("pa_deg", "i_deg", "vsys_optical_kms")
-    if any(k not in got for k in need):
-        return None
-    if abs(got["i_deg"] - 43.9) < 0.2 or abs(got["pa_deg"] - 205.2) < 0.05:
-        return None
-    if abs(got["vsys_optical_kms"] - 8299.563) < 1.0:
-        return None
-    return got
 
 
 def _inventory() -> dict:
@@ -110,7 +71,7 @@ def _inventory() -> dict:
                         ico = cand
                         break
     cube = CUBE if CUBE.is_file() else None
-    cat = _read_kgas007_catalogue(CATALOGUE_YAML)
+    cat = TARGET.inference_overrides()
     inv = {
         "galaxy": "KGAS007",
         "diagnostic_only": True,
@@ -119,12 +80,12 @@ def _inventory() -> dict:
         "vis": str(vis) if vis else None,
         "ico": str(ico) if ico else None,
         "cube": str(cube) if cube else None,
-        "catalogue": str(CATALOGUE_YAML) if cat else None,
+        "catalogue": TARGET.source,
         "catalogue_overrides": cat,
         "sampler": "map",
         "note": (
-            "TARGET stays KGAS066 only. This tree is a diagnostic. "
-            "No 007 NUTS. Official 066 MAP untouched."
+            "KGAS007 Stage A MAP provenance. Target metadata is owned by "
+            "kinuv.targets. Official KGAS066 products are untouched."
         ),
     }
     return inv, vis, ico, cube, cat
@@ -151,8 +112,6 @@ def main() -> int:
     if cat is None:
         return _stop(inv, "stopped_no_007_catalogue")
 
-    sys.path.insert(0, str(REPO / "src"))
-    from kinuv.constants import C_LIGHT_M_S, freq_to_velocity_kms
     from kinuv.forward.sb import load_sb_template
     from kinuv.infer.map import MAXITER_STAGE_A, _lbfgs_one_start, image_grid_for_vis
     from kinuv.infer.seeds import (
@@ -162,93 +121,16 @@ def main() -> int:
         stage_a_seeds,
     )
     from kinuv.io.vis import (
-        N_BIN,
-        N_GUARD,
-        TRIM_MARGIN_NATIVE,
-        UV_BIN_M,
         VisData,
-        _extend_axis,
-        _trim_and_guard_indices,
-        bin_uv_plane,
-        cube_vopt_window_kms,
+        load_target_vis,
         optical_to_radio_kms,
     )
-    from kinuv.likelihood.chi2 import empirical_s
-    from kinuv.response.spectral import bin_channels
     from kinuv.runner.plots import write_leftover_at_params
 
     def _load_007(path: Path, cube_path: Path, cat_row: dict) -> tuple[VisData, dict]:
-        """007 npz is (u,v) in wavelengths, no time/baseline. Do not invent those keys."""
-        z = np.load(path, mmap_mode="r")
-        if any(k not in z.files for k in ("u", "v", "vis", "weights", "freqs")):
-            raise KeyError(f"{path} missing u/v/vis/weights/freqs")
-        if "u_m" in z.files:
-            raise RuntimeError("unexpected u_m on 007; refuse 066 copy")
-        freqs_all = np.asarray(z["freqs"], dtype=np.float64).ravel()
-        f_ref = float(np.mean(freqs_all))
-        u_m = np.asarray(z["u"], dtype=np.float64) * C_LIGHT_M_S / f_ref
-        v_m = np.asarray(z["v"], dtype=np.float64) * C_LIGHT_M_S / f_ref
-        vel_all = freq_to_velocity_kms(freqs_all)
-        v_lo_opt, v_hi_opt = cube_vopt_window_kms(cube_path)
-        v_lo_line = float(optical_to_radio_kms(v_lo_opt))
-        v_hi_line = float(optical_to_radio_kms(v_hi_opt))
-        i0, i1, g0, g1, dv_native, extra_lo, extra_hi, dvel = _trim_and_guard_indices(
-            vel_all,
-            v_lo_line,
-            v_hi_line,
-            margin=int(TRIM_MARGIN_NATIVE),
-            n_guard=int(N_GUARD),
-        )
-        sl = slice(i0, i1 + 1)
-        vis = np.asarray(z["vis"][:, sl], dtype=np.complex128)
-        weights = np.asarray(z["weights"][:, sl], dtype=np.float64)
-        freqs_trim = freqs_all[sl]
-        vel_trim = vel_all[sl]
-        freqs_native = freqs_all[g0 : g1 + 1]
-        vel_native = vel_all[g0 : g1 + 1]
-        freqs_native, vel_native = _extend_axis(
-            freqs_native, vel_native, extra_lo, extra_hi, dvel
-        )
-        u_m, v_m, vis, weights = bin_uv_plane(u_m, v_m, vis, weights, float(UV_BIN_M))
-        vis_b, w_b, vel_b, freqs_b, _ = bin_channels(
-            vis, weights, vel_trim, freqs_trim, int(N_BIN)
-        )
-        dv_kms = (
-            float(np.median(np.abs(np.diff(vel_b))))
-            if vel_b.size > 1
-            else float(N_BIN) * dv_native
-        )
-        line_free = (vel_b < v_lo_line) | (vel_b > v_hi_line)
-        s = empirical_s(vis_b, w_b, line_free)
-        ra = float(cat_row.get("ra_deg", 0.0))
-        dec = float(cat_row.get("dec_deg", 0.0))
-        data = VisData(
-            u_m=u_m,
-            v_m=v_m,
-            vis=vis_b,
-            weights=w_b,
-            freqs=freqs_b,
-            vel=vel_b,
-            freqs_native=freqs_native,
-            vel_native=vel_native,
-            n_bin=int(N_BIN),
-            dv_kms=dv_kms,
-            s=s,
-            phase_dir_rad=np.array([np.radians(ra), np.radians(dec)], dtype=np.float64),
-            line_free_mask=line_free,
-            n_guard=int(N_GUARD),
-            weights_native=weights,
-            v_lo_line=v_lo_line,
-            v_hi_line=v_hi_line,
-        )
-        meta = {
-            "npz_keys": list(z.files),
-            "uv_stored": "wavelengths",
-            "uv_ref_hz": f_ref,
-            "time_average": False,
-            "uv_bin_m": float(UV_BIN_M),
-        }
-        return data, meta
+        """Load current ms2kinuv output or the retained historical 007 NPZ."""
+        phase = np.radians([cat_row["ra_deg"], cat_row["dec_deg"]])
+        return load_target_vis(path, cube_path=cube_path, phase_dir_rad=phase)
 
     i_rad = math.radians(float(cat["i_deg"]))
     pa_seed = float(cat["pa_deg"])
@@ -325,8 +207,8 @@ def main() -> int:
         params, DEST, data=data, tmpl=tmpl, grid=grid, i_rad=i_rad
     )
     leftover["note"] = (
-        "KGAS007 diagnostic Stage A leftover. TARGET stays KGAS066 only. "
-        "sampler is map. No 007 NUTS. Official 066 MAP untouched. "
+        "KGAS007 Stage A MAP leftover; sampler is map. Target metadata is "
+        "owned by kinuv.targets. Official KGAS066 products are untouched. "
         "Do not quote inner dV/dr."
     )
     leftover["galaxy"] = "KGAS007"
@@ -343,7 +225,7 @@ def main() -> int:
         "sampler": "map",
         "i_deg_frozen": float(cat["i_deg"]),
         "i_rad_frozen": i_rad,
-        "catalogue_source": str(CATALOGUE_YAML),
+        "catalogue_source": TARGET.source,
         "catalogue_overrides": cat,
         "vsys_seed_radio_kms": vsys_radio,
         "pa_starts_deg": list(pa_starts),
@@ -372,8 +254,8 @@ def main() -> int:
         **params,
         "starts": runs,
         "note": (
-            "Diagnostic new tree only. TARGET stays KGAS066 only. "
-            "No 007 NUTS even if MAP beats V=0. Official MAP untouched."
+            "KGAS007 Stage A MAP provenance. Target metadata is owned by "
+            "kinuv.targets. The official KGAS066 MAP is untouched."
         ),
     }
     (DEST / "stage_a_map.json").write_text(json.dumps(product, indent=2) + "\n")

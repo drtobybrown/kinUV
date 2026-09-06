@@ -99,7 +99,7 @@ export PYTHONPATH=$PWD/src MPLBACKEND=Agg
 python scripts/plot_stage_b_vs_imaging.py
 ```
 
-Writes under `docs/reviews/artifacts/2026-08-30-final-fit/` (not the official MAP tree):
+The current products are under `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings/` (not the official MAP tree):
 
 - `model_on_10kms.fits` (K, imaging WCS; gitignored)
 - `{moments,spectra,pv_major,pv_minor}.png`

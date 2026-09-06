@@ -5,7 +5,7 @@
   "sampler": "map",
   "i_deg_frozen": 28.9,
   "i_rad_frozen": 0.5044001538263612,
-  "catalogue_source": "/arc/projects/KILOGAS/analysis/toby_sandbox/uvkin/config/uvkin_settings.yaml",
+  "catalogue_source": "kinuv.targets:KGAS007",
   "catalogue_overrides": {
     "ra_deg": 146.576065,
     "dec_deg": 2.88434,
@@ -105,5 +105,5 @@
       "pa_start_deg": 32.599999999999994
     }
   ],
-  "note": "Diagnostic new tree only. TARGET stays KGAS066 only. No 007 NUTS even if MAP beats V=0. Official MAP untouched."
+  "note": "Historical diagnostic result. Target metadata is now owned by kinuv.targets."
 }

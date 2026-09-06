@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""KGAS007 CPU NUTS worker. Wavelength vis loader. Does not steal 066-latest.
+"""KGAS007 CPU NUTS worker. Standalone kinUV loader. Does not steal 066-latest.
 
 MAP-θ identity through U must pass (|chi2-122070.76|<1 at i_rad=0.5044)
-before sampling. No G3 dest. No official 066 MAP. Wavelength loader only.
+before sampling. No G3 dest. No official 066 MAP.
 """
 
 from __future__ import annotations
@@ -24,7 +24,6 @@ _scratch.apply_scratch_env()
 
 import numpy as np
 
-from kinuv.constants import C_LIGHT_M_S, freq_to_velocity_kms
 from kinuv.forward.sb import load_sb_template
 from kinuv.infer.chart import PARAM_NAMES
 from kinuv.infer.map import image_grid_for_vis, predict_binned
@@ -38,20 +37,8 @@ from kinuv.infer.nuts import (
     sampled_z_from_physical,
 )
 from kinuv.infer.posterior import params_to_vec
-from kinuv.io.vis import (
-    N_BIN,
-    N_GUARD,
-    TRIM_MARGIN_NATIVE,
-    UV_BIN_M,
-    VisData,
-    _extend_axis,
-    _trim_and_guard_indices,
-    bin_uv_plane,
-    cube_vopt_window_kms,
-    optical_to_radio_kms,
-)
-from kinuv.likelihood.chi2 import chi2, empirical_s
-from kinuv.response.spectral import bin_channels
+from kinuv.io.vis import VisData, load_target_vis
+from kinuv.likelihood.chi2 import chi2
 from kinuv.runner.canfar import (
     ARTIFACT_G3_REL,
     RUNS_ROOT,
@@ -72,6 +59,7 @@ from kinuv.runner.log import (
 from kinuv.runner.plots import mean_params, write_leftover_at_params, write_nuts_product_plots
 from kinuv.runner.status_md import ping_status_ntfy, write_job_status_md
 from kinuv.scratch import kinuv_scratch_root
+from kinuv.targets import get_target
 from kinuv.transforms.nufft import BACKEND
 
 MAP = Path(
@@ -100,77 +88,9 @@ N_CHAINS = 4
 
 
 def _load_007(path: Path, cube_path: Path, cat_row: dict) -> tuple[VisData, dict]:
-    """007 npz is (u,v) in wavelengths, no time/baseline. Do not invent those keys."""
-    z = np.load(path, mmap_mode="r")
-    if any(k not in z.files for k in ("u", "v", "vis", "weights", "freqs")):
-        raise KeyError(f"{path} missing u/v/vis/weights/freqs")
-    if "u_m" in z.files:
-        raise RuntimeError("unexpected u_m on 007; refuse 066 copy")
-    freqs_all = np.asarray(z["freqs"], dtype=np.float64).ravel()
-    f_ref = float(np.mean(freqs_all))
-    u_m = np.asarray(z["u"], dtype=np.float64) * C_LIGHT_M_S / f_ref
-    v_m = np.asarray(z["v"], dtype=np.float64) * C_LIGHT_M_S / f_ref
-    vel_all = freq_to_velocity_kms(freqs_all)
-    v_lo_opt, v_hi_opt = cube_vopt_window_kms(cube_path)
-    v_lo_line = float(optical_to_radio_kms(v_lo_opt))
-    v_hi_line = float(optical_to_radio_kms(v_hi_opt))
-    i0, i1, g0, g1, dv_native, extra_lo, extra_hi, dvel = _trim_and_guard_indices(
-        vel_all,
-        v_lo_line,
-        v_hi_line,
-        margin=int(TRIM_MARGIN_NATIVE),
-        n_guard=int(N_GUARD),
-    )
-    sl = slice(i0, i1 + 1)
-    vis = np.asarray(z["vis"][:, sl], dtype=np.complex128)
-    weights = np.asarray(z["weights"][:, sl], dtype=np.float64)
-    freqs_trim = freqs_all[sl]
-    vel_trim = vel_all[sl]
-    freqs_native = freqs_all[g0 : g1 + 1]
-    vel_native = vel_all[g0 : g1 + 1]
-    freqs_native, vel_native = _extend_axis(
-        freqs_native, vel_native, extra_lo, extra_hi, dvel
-    )
-    u_m, v_m, vis, weights = bin_uv_plane(u_m, v_m, vis, weights, float(UV_BIN_M))
-    vis_b, w_b, vel_b, freqs_b, _ = bin_channels(
-        vis, weights, vel_trim, freqs_trim, int(N_BIN)
-    )
-    dv_kms = (
-        float(np.median(np.abs(np.diff(vel_b))))
-        if vel_b.size > 1
-        else float(N_BIN) * dv_native
-    )
-    line_free = (vel_b < v_lo_line) | (vel_b > v_hi_line)
-    s = empirical_s(vis_b, w_b, line_free)
-    ra = float(cat_row.get("ra_deg", 0.0))
-    dec = float(cat_row.get("dec_deg", 0.0))
-    data = VisData(
-        u_m=u_m,
-        v_m=v_m,
-        vis=vis_b,
-        weights=w_b,
-        freqs=freqs_b,
-        vel=vel_b,
-        freqs_native=freqs_native,
-        vel_native=vel_native,
-        n_bin=int(N_BIN),
-        dv_kms=dv_kms,
-        s=s,
-        phase_dir_rad=np.array([np.radians(ra), np.radians(dec)], dtype=np.float64),
-        line_free_mask=line_free,
-        n_guard=int(N_GUARD),
-        weights_native=weights,
-        v_lo_line=v_lo_line,
-        v_hi_line=v_hi_line,
-    )
-    meta = {
-        "npz_keys": list(z.files),
-        "uv_stored": "wavelengths",
-        "uv_ref_hz": f_ref,
-        "time_average": False,
-        "uv_bin_m": float(UV_BIN_M),
-    }
-    return data, meta
+    """Load current ms2kinuv output or the retained historical 007 NPZ."""
+    phase = np.radians([cat_row["ra_deg"], cat_row["dec_deg"]])
+    return load_target_vis(path, cube_path=cube_path, phase_dir_rad=phase)
 
 
 def map_theta_chi2(data, tmpl, grid, params, i_rad):
@@ -283,7 +203,7 @@ def main() -> int:
             "updated_at": utc_now(),
         },
     )
-    cat = rec["catalogue_overrides"]
+    cat = get_target("KGAS007").inference_overrides()
     if not NPZ.is_file():
         raise SystemExit(f"missing 007 vis {NPZ}")
     if not ICO.is_file():

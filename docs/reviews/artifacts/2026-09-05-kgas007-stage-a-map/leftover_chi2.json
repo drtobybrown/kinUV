@@ -17,7 +17,7 @@
     "v0_kms": 195.98447930318733,
     "r_t_arcsec": 0.5
   },
-  "note": "KGAS007 diagnostic Stage A leftover. TARGET stays KGAS066 only. sampler is map. No 007 NUTS. Official 066 MAP untouched. Do not quote inner dV/dr.",
+  "note": "KGAS007 Stage A MAP leftover; sampler is map. Target metadata is owned by kinuv.targets. Official KGAS066 products are untouched. Do not quote inner dV/dr.",
   "updated_at": "2026-09-05T12:11:22Z",
   "galaxy": "KGAS007",
   "diagnostic_only": true,

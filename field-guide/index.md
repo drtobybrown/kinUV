@@ -4,7 +4,7 @@ Inject at start. Budget: 80 lines. Essays: `docs/decisions/`. Rank: `DEC-066-IND
 
 ## Mailbox
 
-Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated (`pa25/failure.md`). TARGET is KGAS066+KGAS007. 007 NUTS merged (`sampler: nuts`; dest `2026-09-05-kgas007-nuts/`). Do not start G4.
+Read `STATUS.md` every turn. Parent **proposes**; two independent sub-agents write `review-a` / `review-b`. Dual `accept` → implement the named stages; no third review. User reviews **final fit plots**, not gates. Rubber-stamp is a process failure. Human science: `docs/methodology.md`. Durable history: `docs/PRODUCTION_RECORD.md`. Board: `docs/reviews/BOARD.md`. `code_freeze: false`. No new `DEC-*` id. Official MAP: `kinuv-KGAS066-uvsign-map`. Sampler label `laplace_mh` is the MH path; 066 receding product is `sampler: nuts` (`sd3ckpf2`). Approaching search terminated. TARGET is KGAS066+KGAS007. 007 NUTS merged (`sampler: nuts`; dest `2026-09-05-kgas007-nuts/`). Do not start G4.
 
 ## Gates (implementer decides)
 
@@ -41,7 +41,6 @@ Prefer the DEC. If you leave it, STATUS one-liner and continue. Do not wait for 
 | ZEROMODEL | V=0; Δχ² |
 | REPO | standalone kinUV |
 | OPS-AUTH | `kinuv-KGAS066-{sha6}-{map\|nuts}` |
-| HIER-SELFUNC | deferred Phase 5 |
 
 ## Imaging products (CANFAR)
 
@@ -51,4 +50,4 @@ Root: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/`
 
 ## Git
 
-Branch `dev`. Commit and push `origin/dev` after each propose, board tally, and stage deliverable. Conventional subject; do not skip hooks. High-frequency I/O: [`docs/diagnostics/scratch.md`](../docs/diagnostics/scratch.md) (`/scratch`, not `/arc`). CPU headless NUTS (flexible default; 4×1-chain parallel): [`docs/diagnostics/canfar-cpu-parallel.md`](../docs/diagnostics/canfar-cpu-parallel.md). GPU rejected: [`docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`](../docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md).
+Branch `dev`. Commit and push `origin/dev` after each propose, board tally, and stage deliverable. Conventional subject; do not skip hooks. High-frequency I/O: [`docs/diagnostics/scratch.md`](../docs/diagnostics/scratch.md) (`/scratch`, not `/arc`). CPU headless NUTS (flexible default; 4×1-chain parallel): [`docs/diagnostics/canfar-cpu-parallel.md`](../docs/diagnostics/canfar-cpu-parallel.md). GPU rejection and benchmark details: [`docs/PRODUCTION_RECORD.md`](../docs/PRODUCTION_RECORD.md#validation-and-benchmark-evidence).

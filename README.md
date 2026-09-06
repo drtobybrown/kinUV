@@ -1,8 +1,10 @@
 # kinUV
 
-Visibility-plane kinematic fitter for KILOGAS. First target: **KGAS066**.
+Visibility-plane kinematic fitter for KILOGAS. Current production targets: **KGAS066 and KGAS007**.
 
-**Start here (human):** [`docs/methodology.md`](docs/methodology.md). Agents: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md) → [`docs/reviews/BOARD.md`](docs/reviews/BOARD.md). Physics: [`docs/decisions/`](docs/decisions/). Image-plane check: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md). Figure style: [`docs/diagnostics/plotting.md`](docs/diagnostics/plotting.md). kinUV vs uvkin: [`docs/diagnostics/repos.md`](docs/diagnostics/repos.md). Changelog: [`CHANGELOG.md`](CHANGELOG.md).
+**Start here (human):** [`docs/methodology.md`](docs/methodology.md). Current results and closed experiments: [`docs/PRODUCTION_RECORD.md`](docs/PRODUCTION_RECORD.md). Agents: [`AGENTS.md`](AGENTS.md) → [`field-guide/index.md`](field-guide/index.md) → [`docs/architecture/STATUS.md`](docs/architecture/STATUS.md) → [`docs/reviews/BOARD.md`](docs/reviews/BOARD.md). Physics: [`docs/decisions/`](docs/decisions/). Data extraction boundary: [`docs/diagnostics/data-preparation.md`](docs/diagnostics/data-preparation.md). Image-plane check: [`docs/diagnostics/stage-b-vs-imaging.md`](docs/diagnostics/stage-b-vs-imaging.md). Figure style: [`docs/diagnostics/plotting.md`](docs/diagnostics/plotting.md).
+
+kinUV has no CASA or legacy-package dependency. Calibrated Measurement Sets are exported by the separately installed [`ms2kinuv`](../ms2kinuv/) companion; kinUV ingests its versioned NPZ tables.
 
 ## Status (066)
 

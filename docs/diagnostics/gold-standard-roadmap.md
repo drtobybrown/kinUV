@@ -1,6 +1,6 @@
 # 066 kernel sequence (human)
 
-Not a 400-galaxy runner. Not population inference (`DEC-HIER-SELFUNC` stays Phase 5). Official product: **`kinuv-KGAS066-uvsign-map`**. Propose: [`docs/reviews/2026-08-30-propose-gold-standard.md`](../reviews/2026-08-30-propose-gold-standard.md). Dual accept 2026-08-30 (major): leftover-vs-velocity is a G0 flag; flags live in `kinuv.diagnostics`; G1 is CPU JAX only.
+This is the KGAS066 kernel sequence, not a population runner. Official product: **`kinuv-KGAS066-uvsign-map`**. The accepted review is summarized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md). Leftover-vs-velocity is a G0 flag; flags live in `kinuv.diagnostics`; G1 is CPU JAX only.
 
 ## What is already true
 

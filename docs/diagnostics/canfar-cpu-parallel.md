@@ -1,6 +1,6 @@
 # CANFAR CPU-parallel headless NUTS (production)
 
-Canonical 066 NUTS path under `DEC-067-RUNNER`. GPU acceleration was benchmarked and rejected (see `docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`).
+Canonical 066 NUTS path under `DEC-067-RUNNER`. GPU acceleration was benchmarked and rejected; timings and rationale are retained in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md#validation-and-benchmark-evidence).
 
 ## Production engine
 

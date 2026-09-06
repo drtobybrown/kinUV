@@ -9,7 +9,10 @@ import numpy as np
 from kinuv.diagnostics.flags import map_quality_flags
 
 REPO = Path(__file__).resolve().parents[1]
-LEFTOVER = REPO / "docs/reviews/artifacts/2026-08-30-final-fit/leftover_chi2.npz"
+LEFTOVER = (
+    REPO
+    / "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-a-map/leftover_chi2.npz"
+)
 FLAGS_SRC = REPO / "src/kinuv/diagnostics/flags.py"
 
 OFFICIAL = {

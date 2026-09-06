@@ -11,7 +11,7 @@ Official MAP `kinuv-KGAS066-uvsign-map` was not written. Two-way benchmark: **ki
 - Mock controlled: `ran`
 - Init: kinUV Stage A catalogue seeds only (no kinUV posterior)
 - Figures: `live_fitters/pv_comparison_real.png`, `moments_comparison_real.png`, `rotation_curves_real.png`, `mock_controlled/mock_benchmark.png`
-- Geometry note: `docs/architecture/notes/2026-09-05-kinms-investigation-report.md` (sbProf; transpose `(2,1,0)`)
+- Geometry note: `docs/PRODUCTION_RECORD.md` (sbProf; transpose `(2,1,0)`)
 - Receipt: `live_fitters/kinms_best.json`
 
 ## S1 restated

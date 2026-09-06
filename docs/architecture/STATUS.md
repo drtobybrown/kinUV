@@ -1,15 +1,15 @@
 ---
 generation: 4
-phase: 066-13
+phase: production-closeout
 code_freeze: false
 next_role: implementer
-board: accepted
+board: idle
 build_licensed: true
 pending: []
-last_propose: docs/reviews/2026-09-06-propose-kgas007-c2-relaunch.md
-last_review: docs/reviews/2026-08-29-review-methodology.md
-last_review_a: docs/reviews/2026-09-06-review-a-kgas007-c2-relaunch.md
-last_review_b: docs/reviews/2026-09-06-review-b-kgas007-c2-relaunch.md
+last_propose: null
+last_review: null
+last_review_a: null
+last_review_b: null
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
@@ -18,160 +18,22 @@ canon_generation: 4
 
 ## Agent Run Status
 
-* **Phase:** 007 NUTS merged (`sampler: nuts`)
-* **Last Action:** Four-shard merge `faoik171` + c1/c3/c4; mix pass; dest `2026-09-05-kgas007-nuts/`
-* **Decisions Made:** S3 is kinUV vis vs KinMS cube only (Barolo scrubbed). quote_inner_slope false. Lock DEC-066-SB at 30 km/s. m=2 is opt-in, not production
-* **Blockers / Gates:** leftover SB-dominated on 066. quote_inner_slope false. 007 intervals_calibrated false. Do not quote inner dV/dr
-* **Next Step:** Human review of `docs/reviews/artifacts/2026-09-05-kgas007-nuts/`. Official MAP unchanged. Do not start G4
+* **Phase:** KGAS066 and KGAS007 production closeout
+* **Last Action:** kinUV was decoupled from its archived predecessors; KGAS007 target metadata and visibility compatibility loading are now kinUV-owned
+* **Decisions Made:** kinUV is the sole production fitter; `ms2kinuv` is the separate CASA ETL companion; KGAS066 official MAP remains read-only; 30 km/s Ico remains locked; receding NUTS is the sole KGAS066 posterior; approaching mode is terminated; G4 is not licensed
+* **Blockers / Gates:** posterior intervals are not calibrated; no real-data inner slope may be quoted
+* **Next Step:** run exact-workflow SBC, then re-export KGAS007 through the canonical `ms2kinuv-npz-v1` schema when its source Measurement Set is available
+
+## Current products
+
+| Target | Product | Status |
+|---|---|---|
+| KGAS066 | `results/KILOGAS066/kinuv-KGAS066-uvsign-map/` | Official Stage A MAP; PA 199.730 deg, chi2 168675.596, delta chi2 versus V=0 35552.652 |
+| KGAS066 | Stage B N=7, lambda=0 | chi2 167302.187; improvement over Stage A 1373.409 |
+| KGAS066 | NUTS `sd3ckpf2` | Mixed; max Rhat 1.004, min ESS 889; intervals uncalibrated |
+| KGAS007 | Stage A MAP | chi2 122070.763; delta chi2 versus V=0 6211.629 |
+| KGAS007 | merged NUTS | Mixed; max Rhat 1.00214, min ESS 1093; intervals uncalibrated |
 
 # Architecture mailbox
 
-**2026-09-06 (007 NUTS merge).** Four finite shards (c1 `b1mqxsov`, relaunch c2 `faoik171`, c3 `y5tspgit`, c4 `zq1olquy`). `sampler: nuts`, mix pass, n_kept=4. Mean PA 151.61°, V_0 194.87 km/s, r_t 0.482″ (off 0.5″ MAP floor). Max \(\hat{R}\) 1.002 (V_0); min ESS 1093. `quote_inner_slope: false`. `intervals_calibrated: false`. Product `docs/reviews/artifacts/2026-09-05-kgas007-nuts/`. Official MAP unchanged. No G4.
-
-**2026-09-06 (007 c2 relaunch).** Session `faoik171` run `KGAS007-20260906T003036Z-nuts-kgas007-c2` (`--kind nuts-kgas007 --chain-id 2 --skip-pull`). `pending` is that id only. c1/c3/c4 complete. Crashed `xkytxih1` kept as evidence. `KGAS066-latest` untouched. Official MAP unchanged. No G4.
-
-**2026-09-06 (007 c2 relaunch tally).** Dual accept (major): `review-a-kgas007-c2-relaunch` and `review-b-kgas007-c2-relaunch`. Execute majors: do not let watcher clear `pending` on `pending_merge`; merge requires four dirs + four sentinels + parseable `z6_shape==[600,6]` + npz `(600,6)`; launch argv stays `--kind nuts-kgas007` (not `nuts`); `pending` after launch is the new session only. Official MAP unchanged. No G4.
-
-**2026-09-06 (007 c2 relaunch propose).** Board open. Leftover execute of accepted `nuts-kgas007`. Relaunch chain 2 only (`--kind nuts-kgas007`, not `--kind nuts`). Keep crashed `xkytxih1` as evidence. Replace that id in `pending` only after the new session exists. Merge after `.trigger_complete` and uncorrupted `chain_2.json` `[600, 6]`. Official MAP unchanged. No G4.
-
-**2026-09-05 (m=2 SB execute).** Identity χ²_2D=168675.596. A=0 tax +2498.5. Best A=0.127 φ2=0 (polish) χ²=171074.6; (3)−(2)=−99.5; (3)−(1)=+2399. Production Ico unchanged. M1 model-model pass (<2 km/s). Artifacts `docs/reviews/artifacts/2026-09-05-kgas066-m2-sb/`. Official MAP unchanged. No G4.
-
-**2026-09-05 (m=2 SB tally).** Dual accept (major): `review-a-m2-surface-brightness` and `review-b-m2-surface-brightness`. Execute: three χ² and three deltas; φ=atan2(yg,xg); positive-finite annuli; inward+outward hold; 36×20 grid mandatory; identity on 2-D Ico only; no ΔlnL; no m2-map tree; no load_sb_template change. No G4. 007 pending four ids untouched.
-
-**2026-09-05 (m=2 SB propose).** Board open. I0 = azimuthal mean of official 30 km/s Ico. Free A, φ2; R2=2.5″ σ=1.5″ frozen. Opt-in only; no DEC file; no load_sb_template default change. No 066 NUTS. No unfreeze i. No G4. 007 pending four ids untouched.
-
-**2026-09-05 (Ico 10 vs 30 execute).** Identity χ²_30=168675.596 (|Δ|=0.004). Conditional χ²_10=168701.213 (Δ=+25.6). Joint 50–146 kλ Δχ²=−83.3; median R(k)=0.79; R(1/θ_30)=12.3. Optimal-flux diagnostic sign-flips (Δ=−23.4). Conventions would unlock; **lock 30 km/s anyway** (archive-only). Label “10 km/s Ico product (Briggs)”, not Δv A/B. Artifacts: `docs/reviews/artifacts/2026-09-05-kgas066-ico-10-vs-30/`. Official MAP unchanged. No G4.
-
-**2026-09-05 (Ico 10 vs 30 tally).** Dual accept (major): `review-a-ico-10-vs-30-and-figure-closeout` and `review-b-ico-10-vs-30-and-figure-closeout`. Execute majors: production `load_sb_template` \(K=(0.02)^2\) (empty-corner \(n=0\) on both stamps; review-a empty-corner path cannot run). 30 km/s identity `|chi2-168675.6|<1`. \(B=\mathrm{hypot}(*\mathrm{vis\_uv\_wavelengths})\). Lock 30 km/s in all cases this card (artifact + STATUS only). Do not edit `DEC-066-SB.md` / `sb.py`. Label “10 km/s Ico product (Briggs)”, not Δv A/B. No G4. 007 pending four ids untouched.
-
-**2026-09-05 (Ico 10 vs 30 + figure closeout propose).** Board open. Candidate is official `.../10kms/KGAS66_Ico_K_kms-1.fits` (not cube M0). Conditional χ² at official MAP θ only. Lock 30 km/s unless long-baseline Δχ² < −9 and no high-k P(k) amplification. No SB-v2. No new 066 NUTS. No G4. 007 pending four ids untouched.
-
-**2026-09-05 (SKA1 yield model).** 20,000 deg2 comoving-volume integral in `scripts/analysis/simulate_ska_survey_yield.py`. Figure `advanced_diagnostics/fig_ska_survey_kinuv_impact.png`. Raw threshold counts (no completeness): 3.51e6 detections, 2.63e6 kinUV, 1.50e5 cube at z=0.35. Not a visibility simulation. Not KGAS066. Official MAP unchanged. Do not start G4.
-
-**2026-09-05 (advanced mock diagnostics).** Four publication figures in `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/advanced_diagnostics/`. kinUV dirty residual is a script-local type-1 DFT adjoint (not production nufft1). Figure D is vis/cube χ² slices, not MCMC. Mock-only inner-slope quote. Official MAP unchanged. Do not start G4.
-
-**2026-09-05 (007 NUTS + live S3 execute).** Kind `nuts-kgas007` landed (`steal_latest` False; dest not G3; PA 151.6; `i_rad=0.5044` inside U). MAP-θ identity: 007 χ²=122070.76 on 956×66; official 066 χ²=168675.60. Dispatched `b1mqxsov` `xkytxih1` `y5tspgit` `zq1olquy` (`--skip-pull`; `KGAS066-latest` untouched). S3 live: KinMS arctan cube in `live_fitters/`; 3D-Barolo still `missing_on_path` (no conda-forge binary on host yet). Literature note already on disk. TARGET is KGAS066+KGAS007. Official MAP unchanged. Do not start G4.
-
-**2026-09-05 (007 NUTS revise tally).** Dual accept (major): `review-a-kgas007-nuts-revise` and `review-b-kgas007-nuts-revise`. Execute only after kind/worker/merge/i_rad/identity tests are green. Official MAP unchanged. Do not start G4.
-
-**2026-09-05 (007 NUTS revise re-board).** First board was **not** dual accept (`review-a` accept+major; `review-b` **reject**). Revised propose locks steal_latest/G3/`i_rad`/007 worker/merge refuse-G3. Official MAP unchanged.
-
-**2026-09-05 (007 NUTS first board).** A accept+major; B reject. No TARGET amend. No 007 NUTS dispatch.
-
-**2026-09-05 (007 NUTS + live S3 propose).** Board open. User TARGET stub (amend existing DEC-066-TARGET after accept). User waives 007 S1 for this card. Kind must be `nuts-kgas007` (not `nuts`). Isolated fitters under `toby_sandbox/external_fitters/` only. No `/arc/home/thbrown/` writes. Official MAP unchanged. Do not start G4.
-
-**2026-09-05 (066 closure execute).** S3 `docs/reviews/artifacts/2026-09-05-kgas066-s3-image-benchmark/`: Barolo `missing_on_path`, KinMS `missing`; table restates S1 vs NUTS **mean** r_t 0.2239″ (`quote_inner_slope: false`). No packages added to recovery. 007 diagnostic MAP wrote `results/KILOGAS007/kinuv-KGAS007-stage-a-map/` (and leftover PNG under `docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/`): i frozen 28.9°, both PA starts → 151.6°, V_0=196 km/s, r_t=0.5″ floor, χ²=122071, Δχ² vs V=0 = +6212, `sampler: map`. TARGET unamended. No 007 NUTS. Official MAP unchanged.
-
-**2026-09-05 (066 closure tally).** Dual accept (major): `review-a-kgas066-closure-and-kinms-benchmark` and `review-b-kgas066-closure-and-kinms-benchmark`. Execute: vis χ² is the only likelihood; KinMS only in `external/kinms_kgas66.py`; Barolo CLI subprocess; S3 leftover_gate SB-dominated; NUTS **mean** r_t ~0.2239″ not a science inner scale; 007 is a diagnostic new tree or stop; no nuts kind; no steal of KGAS066-latest; no pip into recovery; no G4. Official MAP unchanged.
-
-**2026-09-05 (066 closure + KinMS/007 MAP propose).** Approaching terminated. Receding `sd3ckpf2` is the 066 NUTS product. Board was open: external 3DBarolo+KinMS S3; KGAS007 Stage A MAP only. User TARGET stub requested (agents do not write DEC-*). Official MAP unchanged. Do not start G4.
-
-**2026-09-03 (approaching recovery done).** Session `j395zq60` SUCCEEDED. Catalogue 25.2 Δχ²=4260; MAP-θ + PA=25.2 walked to 199.73°. `pa25/failure.md` terminates the approaching search. Serial `xgepg7qy` deleted. Official MAP unchanged. Do not start G4.
-
-**2026-09-03 (approaching recovery tally).** Dual accept (major): `review-a-approaching-recovery` and `review-b-approaching-recovery`. Execute: no approaching NUTS this card; diagnostic MAP only; c1–c3 merge diagnostic; drop exploded-but-finite shards; `sampler` never `laplace_mh` on unmixed NUTS (`nuts_unmixed`); omit leftover key if unevaluated; quote median χ² at `r_t=0.5` only. Lit notes: `2026-09-03-lit-astro-pa-degeneracy.md`, `2026-09-03-lit-cs-hmc-multimodal.md`. Official MAP unchanged. Do not start G4.
-
-**2026-09-03 (approaching recovery propose).** Parallel `20260902T170918Z` all SUCCEEDED; merge `COMPLETED_UNMIXED` (R_hat PA 22). c1/c3 PA~15°, c2~64°, c4 exploded. Official MAP two-start: PA=25.2 Δχ²=4260 vs 35553. Board was open. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (PA 25.2 parallel race).** Four flexible 1-chain `nuts-pa25` jobs `KGAS066-20260902T170918Z-nuts-pa25-c{1..4}` (`a2ifbgas`, `ufbdqmfv`, `beukzk6w`, `uor0kmxt`). Serial `xgepg7qy` still Running (chain 2). Watcher merges to `pa25/` and kills serial if parallel finishes first. Manifest: `kinuv_runs/KGAS066-20260902T170918Z-pa25-parallel/manifest.json`. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (GPU rejected; CPU-parallel canonical).** CUDA eval/s 0.55 vs CPU 3.01 on 881×95 (identity ok either way). 10× wall target failed; four GPU chains killed. CUDA venv and GPU run dirs purged; runner CPU-only flexible headless. Note: `docs/architecture/notes/2026-09-02-gpu-rejection-cpu-parallel.md`. Ops: `docs/diagnostics/canfar-cpu-parallel.md`. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (GPU NUTS smoke runner).** Kind `nuts-gpu` skips latest and G3. `--gpu` requires cpu+memory and `KINUV_CHAIN_ID`. CUDA venv builder source-builds jax-finufft 1.3.1. CPU NUTS still default. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (GPU NUTS smoke tally).** Dual accept (major): `review-a-gpu-nuts-smoke` and `review-b-gpu-nuts-smoke`. Execute: nuts-gpu skips latest and G3; `--gpu` requires cpu+memory; KINUV_VENV on --env; GPU without chain-id exits 2 (one chain, no STATUS patch); jax==0.11.1 after install; 10× is max(chain)+merge vs 17440.032 s; PA 199.73; do not hide xgepg7qy. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (GPU NUTS smoke propose).** Board open. CUDA venv + G1 identity + 4 parallel GPU chains; 10× wall vs 17440 s serial CPU. Do not mutate recovery. Do not interrupt `xgepg7qy`. Propose: `docs/reviews/2026-09-02-propose-gpu-nuts-smoke.md`. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (CANFAR GPU ops).** Doc `docs/diagnostics/canfar-gpu.md`: integer `--gpu` only; pin `--cpu` and `--memory` (no flexible on GPU). Probes `okzj0cod` / `lyddomx5` / `dnm4sey1` scheduled on H100 MIG 1g.12gb. Recovery venv CPU jax 0.11.1; image astroml-cuda cuBLAS/MIG fail. Production NUTS still CPU until GPU chi2 identity propose. `xgepg7qy` still Running. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (uv-vs-image methodology landed).** Dual accept (major). Notes `docs/architecture/notes/2026-09-02-kinematic-methodology-review.md` (not an ADR). Not KinMS first sentence. No cube fitter. No 007. No G4. `xgepg7qy` still Running. Official MAP unchanged.
-
-**2026-09-02 (uv-vs-image methodology propose).** Board open. Docs-only: S1 restating + leftover SB-dominated gate. No KinMS fitter, no type-1 claim, no 007, no G4. Do not poll `xgepg7qy`. Propose: `docs/reviews/2026-09-02-propose-uv-vs-image-methodology.md`. Official MAP unchanged.
-
-**2026-09-02 (PA 25.2 submit).** Session `xgepg7qy` Running, image skaha/astroml:latest, flexible (isFixedResources false), no GPU, PA init 25.2, run `KGAS066-20260902T085027Z-nuts-pa25`. KGAS066-latest still receding. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (leftover identity).** Recomputed vis leftover on 881x95: MAP 168675.596, receding NUTS-mean 167486.764, Stage B rings 167302.187 (gap +184.6). leftover-vs-velocity True at Stage B (uv span 0.093, vel span 0.335). Gate: SB-dominated. Quoted V_c stays Stage A arctan. Artifacts: `docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (leftover + PA 25.2 tally).** Dual accept (major): `review-a-leftover-and-approaching` and `review-b-leftover-and-approaching`. Execute: KINUV_PA_INIT on --env; Stage B leftover via stage_b.predict_binned |chi2-167302.19|<1; no F^{-1} claim unless type-1; skip point_latest; artifact dir not G3; quote_inner_slope False while leftover structured. Official MAP unchanged. Do not start G4.
-
-**2026-09-02 (leftover + PA 25.2 propose).** Board open. Receding NUTS chi2=167487 vs MAP 168676 vs Stage B 167302. Approaching 25.2 not run. No GPU, no G4, no 007, official MAP unchanged. Propose: `docs/reviews/2026-09-02-propose-leftover-and-approaching.md`.
-
-**2026-09-01 (066 NUTS plots).** Corner + leftover + moments/spectra/PV at NUTS mean: `docs/reviews/artifacts/2026-08-30-g3-nuts/`. leftover still structured. Headless job will write PNGs on future runs. Official MAP unchanged. Do not start G4.
-
-**2026-09-01 (066 NUTS product).** `sd3ckpf2` SUCCEEDED. Mixing pass (R_hat<=1.004, ESS>=889). Receding PA stayed ~200.05 deg. NUTS left the MAP `r_t=0.5` arcsec wall (`r_t` mean 0.224 arcsec, `V_0` mean 255 vs MAP 268; corr 0.87). chi2 at NUTS mean 167487 vs MAP 168676 (Delta=-1189): L-BFGS box `r_t>=0.5` arcsec was costing vis chi2. Product JSON had hardcoded `r_t_at_floor: true` (MAP G0); draws are not on that floor. Leftover not refit. 16/50/84 not calibrated. Approaching PA 25.2 deg not run. Official MAP unchanged. Do not quote inner dV/dr. Do not start G4.
-
-**2026-09-01 (STATUS from the job).** User: mailbox should update when the job finishes. Cause: worker wrote `kinuv_runs/.../status.json` + `.trigger_complete` only; git `STATUS.md` was an agent follow-up, and the previous STATUS said not to block on the chain. Watcher died before the sentinel. Fix: worker + watcher patch Agent Run Status and clear YAML `pending`. Official MAP unchanged. Do not start G4.
-
-**2026-08-31 (do not balloon /arc).** User: do not copy scratch onto `/arc` wholesale. Durable on `/arc` is status, `run.log`, overwrite-copied `worker.log`, and kB chain-draw `npz`. No JAX cache, vis, cubes, or per-sample tqdm tee. Watcher overwrites `canfar-*.txt`; does not append dumps into `platform.log`. Live `sd3ckpf2` kept Running (entrypoint already in flight). Official MAP unchanged. Do not start G4.
-
-**2026-08-31 (checkpoints).** `on109zo9` died after chain 1 (`savez` appended `.npz` onto `.tmp`). Dual checkpoint scratch→`/arc` via file handle. Relaunch `sd3ckpf2` flexible `KGAS066-20260831T194009Z-nuts`. Official MAP unchanged. Do not start G4.
-
-**2026-08-31 (flexible + dated runs).** User: 64 GB fights the scheduler; flexible grows to 32 GB. Run dir `{KGASID}-{YYYYMMDDTHHMMSSZ}-nuts` plus `KGAS066-latest`. Killed `ckhi0px1` (pinned 64 GB). Session `on109zo9` flexible. Official MAP unchanged. Do not start G4.
-
-**2026-08-31 (project runs).** User: all work ends on `/arc/projects/KILOGAS/analysis/toby_sandbox`, not `$HOME`. Jobs run on ephemeral `/scratch` and checkpoint logs/draws to `toby_sandbox/kinuv_runs`. `m7pd3tib` Failed (1-chain stitch `(6,1)`); relaunch `ckhi0px1` 8 CPU / 64 GB. Official MAP unchanged. Do not start G4.
-
-**2026-08-31 (job logs).** User: platform `canfar logs` expire in ~1 hour. Persist each job onto `/arc/home/thbrown/kinuv_runs/<run_id>/`. `h2dlc07f` vanished without a product (likely OOM under flexible ≤32 GB). Relaunch `m7pd3tib` 8 CPU / 64 GB, image `skaha/astroml:latest`, no `--gpu`. Official MAP unchanged. Do not start G4.
-
-**2026-08-30 (DEC-067-RUNNER).** User: relax 7200 s interactive cap for batch; jobs > 15 min go to CANFAR headless. Session `h2dlc07f` Running, image `skaha/astroml:latest`, flexible CPU/RAM, no `--gpu` (recovery venv is CPU jax-finufft). Manifest: `/arc/home/thbrown/kinuv_runs/kgas066-nuts/`. 4×600 at MAP PA 199.73. Do not start G4. Official MAP unchanged.
-
-**2026-08-30 (G3 executed).** Dual accept (major). JAX `U(z)=0.5(chi2+shift_prior_const)-log|J|`; sampled-name `float()` off the XLA vis path; `(dx, dy)` frozen at MAP host floats. Tiny-mock 4-chain NUTS mixed (`R_hat<1.01`, ESS>200) → `sampler: nuts`. 066 `jax.grad` 0.434 s; projected 29845 s > 7200 s cap → no 066 `sampler: nuts`, no GPU. numpyro 0.21.0 `--no-deps` keeps jax 0.11.1 / jax-finufft. Artifacts: `docs/reviews/artifacts/2026-08-30-g3-nuts/`. Receding init is MAP 199.73, not seed 205.2. Do not quote S2 16/50/84 or inner `dV/dr`. Official MAP unchanged. Do not start G4.
-
-**2026-08-30 (G3 tally).** Dual accept (major): `review-a-g3-nuts` and `review-b-g3-nuts`. Execute: U not 2U; six-axis grad not flux-only; freeze (dx, dy) as host floats (no live shift_prior in U); 8-col draws; mixing on six names; pin numpyro without upgrading jax; `sampler: nuts` only after autodiff (066 only after mixing). No GPU. Official MAP unchanged.
-
-**2026-08-30 (G3 propose).** Autodiff `chi2(θ(z))` + CPU NumPyro NUTS. G2 already on `origin/dev` (`ee459af`, 17/17 this turn). Freeze `(dx, dy)` at MAP. Two PA runs (199.73 and 25.2), 4 chains. `sampler: nuts` only after autodiff. No logit of `[0.5, 15]`. No GPU. Official MAP unchanged. Propose: `docs/reviews/2026-08-30-propose-g3-nuts.md`.
-
-**2026-08-30 (G2 verified).** Already executed (`ee459af`). Re-ran `tests/test_g2_chart.py`: 17 passed, including official `|chi2-168675.6|<1`. Host `log_prob_unconstrained` is not autodiff. Do not re-land the chart. Official MAP unchanged.
-
-**2026-08-30 (spectral vsys).** User-directed: diagnose Stage B vs 10 km/s redshift. Root cause is vis-weighted MAP \(V_{\rm sys}\) (optical ~8323.6 km/s) vs CLEAN/catalogue (~8299.6), not radio/optical, `RESTFRQ`, `CRPIX3`, or Hann phase. Tests lock Hann impulse + m/s axis + rebin delta. Write path `SPECSYS=LSRK`. Spectra annotate \(\Delta v_{\rm M-D}\`. No silent fudge. Official MAP unchanged.
-
-**2026-08-30 (G2 executed).** Dual accept (major). `kinuv.infer.chart` 8-vector log/softplus/identity maps; `jax.jit` type preservation; per-axis FD Jacobian; official `|chi2-168675.6|<1` after roundtrip. `log_prob_unconstrained` is host-only. No NumPyro, no NUTS label. Official MAP unchanged.
-
-**2026-08-30 (G2 tally).** Dual accept (major): `review-a-g2-chart` and `review-b-g2-chart`. Execute: both-arm-finite softplus (no Python `if`); 8-vector JIT path; per-axis FD of `unconstrained_to_physical` (not chi2); no logit of `RT_BOUNDS`. Host `log_prob_unconstrained` is not autodiff. Do not start G3. Official MAP unchanged.
-
-**2026-08-30 (G2 propose).** Unconstrained Stage A chart + Jacobian. log flux/gas_sigma/r_t; stable softplus V_0; identity PA/vsys/dx/dy. Do not logit `RT_BOUNDS_ARCSEC=(0.5, 15)`. No NumPyro, no NUTS label. Propose: `docs/reviews/2026-08-30-propose-g2-chart.md`. Official MAP unchanged.
-
-**2026-08-30 (ops executed).** Dual accept (major) on `2026-08-30-propose-ops-scratch`. Scratch policy `docs/diagnostics/scratch.md`. Corner plotter refuses `laplace_mh` and S2 interval tables. Handoff: `docs/reviews/2026-08-30-handoff-senior.md`. No NUTS, no G2, official MAP unchanged.
-
-**2026-08-30 (ops tally).** Dual accept (major): `review-a-ops-scratch` and `review-b-ops-scratch`. Provenance gate on corners; Composer edits only Agent Run Status; no vis checkpoints.
-
-**2026-08-30 (ops propose).** User asked `/scratch` I/O, Composer 2.5 STATUS push, posterior corners, senior handoff. Propose: `docs/reviews/2026-08-30-propose-ops-scratch.md`. No NUTS; no S2 Laplace corners as 16/50/84 product. Official MAP unchanged.
-
-**2026-08-30 (G1 executed).** Dual accept (major). JAX `predict_binned(..., xla=True)` stays on device through NUFFT/Hann/`chi2`. Official Stage A `chi2=168675.6` (same `s=0.5136`). Post-warmup 3.01 eval/s vs S2 FD 0.329. Tiny `jax.grad` vs FD. Timing: `docs/reviews/artifacts/2026-08-30-g1-jax/timing.json`. No G2/G3/GPU. Official MAP unchanged.
-
-**2026-08-30 (G1 tally).** Dual accept (major): `review-a-g1-jax` and `review-b-g1-jax`. Execute: XLA sky+NUFFT+Hann+`chi2` (no host bounce); tiny `jax.grad` vs FD; frozen `s`; x64; `/tmp` cache; official `|chi2-168675.6|<1` when npz exists. Do not start G2/G3/GPU. Official MAP unchanged.
-
-**2026-08-30 (G1 propose).** User gold-standard/hygiene/GPU dump mapped onto G1 only. Propose: `docs/reviews/2026-08-30-propose-g1-jax.md`. ntfy: `kinuv_canfar_agent_thbrown`. Official MAP unchanged.
-
-**2026-08-30 (G0 executed).** Dual accept (major) on `2026-08-30-propose-gold-standard`. `kinuv.diagnostics.flags.map_quality_flags`: leftover-vs-velocity vs leftover-vs-uv, `r_t_at_floor`, PA vs 21.9, `beats_zero`. Official 066 fires leftover structure and the `r_t` floor. Roadmap rewritten as the 066 kernel sequence. Methodology + survey-readiness point at it. No JAX / NUTS / GPU this card. Next wave is G1 CPU JAX `predict_binned` (separate propose). Official MAP unchanged.
-
-**2026-08-30 (gold-standard tally).** Dual accept (major): `review-a` and `review-b` on `2026-08-30-propose-gold-standard`. Execute G0 flags + rewrite roadmap. Do not start G1.
-
-**2026-08-30 (gold-standard propose).** Architect sequence: no fake NUTS; JAX likelihood then NumPyro then Talts SBC; GPU after CPU NUTS smoke; hierarchical and 400-galaxy runner deferred; hard targets get flags until user stubs. Propose: `docs/reviews/2026-08-30-propose-gold-standard.md`. Official MAP unchanged.
-
-**2026-08-30 (tally).** Dual accept (major): `review-a` and `review-b` on `2026-08-30-propose-final-plots`. Execute plots only from official Stage A/B MAP; no refit. Official MAP read-only.
-
-**2026-08-30 (gates).** User: not babysitting; implementer decides each gate; human reviews **final fit plots** only. Physics stops are judgment, not a user ACK. Official MAP unchanged.
-
-**2026-08-30 (handshake).** User: methodology is good; relax stage stops. Parent proposes; two independent sub-agents accept/reject (major/minor) on `docs/reviews/`. Dual accept → implement/execute with no third review. User **build** runs that loop through licensed stages. Human science: `docs/methodology.md`. Board: `docs/reviews/BOARD.md`. Amended `DEC-066-AGENTS`. `build_licensed: true` (user reviews plots at the end). Official MAP unchanged (`kinuv-KGAS066-uvsign-map`).
-
-**2026-08-29 (hygiene).** `native_diagonal` raises; vis SPECRESP / `NPZ_UV_SIGN` / Ico east / `chi2` stay in kinUV only (`docs/diagnostics/repos.md`). Standard leftover + slice plotters: `kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`. Guide: `docs/diagnostics/plotting.md`. Changelog: `CHANGELOG.md`. Official MAP unchanged (`kinuv-KGAS066-uvsign-map`). No new DEC.
-
-**2026-08-29 (S2 results).** Hybrid executed (`sampler: laplace_mh`, not NUTS). Mock MH: `R_hat` 1.000-1.004, `ESS` 876-1757, accept 0.613, eval/s 0.329. Laplace SBC n=20 fails binomial 68/95 (rate68 `v0_kms`/`r_t` = 0.10; `pa_deg` = 0.30). Real-066 `T_dof = 1.0077`, `T_nvis = 2.0154`; width ratios 1.004 and 1.420. Artifacts: `docs/reviews/artifacts/2026-08-29-s2/`. Note: `docs/diagnostics/s2-coverage.md`. Official MAP unchanged (`kinuv-KGAS066-uvsign-map`).
-
-**2026-08-29 (S2).** User licensed hybrid coverage (not autodiff NUTS): `laplace_mh` on the S1 inject plus ~20 Laplace SBCs; real-066 CI table uses `T_dof = chi2 / (2 n_vis)` and sensitivity `T_nvis = chi2 / n_vis`. Propose: `docs/reviews/2026-08-29-propose-s2.md`. Stage A only. Official MAP unchanged (`kinuv-KGAS066-uvsign-map`).
-
-**2026-08-29 (S1).** ACK executed. Vis Stage A recovered inject `r_t=0.25` arcsec, `gas_sigma=8` km/s on Hann+bin 881x95; CLEAN-beam M1 slope 95 vs truth 237 km/s/arcsec, M2 56 vs 8. Leftover `chi2=168676` matches the official MAP. Artifacts: `docs/reviews/artifacts/2026-08-29-s1-mock/`. Note: `docs/diagnostics/s1-mock.md`. No NUTS.
-
-**2026-08-29 (review).** ACK with four mods (Hann+bin assert, i freeze / no `h_z`, Stage A only, XX `s`). Review: `docs/reviews/2026-08-29-review-methodology.md`. Official MAP unchanged.
-
-**2026-08-28.** Official MAP `kinuv-KGAS066-uvsign-map`: Stage A PA=199.73 deg, V0=267.7 km/s, Delta_chi2 vs V=0 = +35553 (`chi2=168676`); Stage B N=7 lambda=0 `chi2=167302` (Delta vs A = +1373). Figures: `docs/reviews/artifacts/2026-08-28-stage-b-imaging/`. Keep `f47bc9-map` (PA=21.9 deg) as the pre-sign vis-winner.
-
-Native preview: `s≈0.77`. **Fit array (066-6):** `n_row=881`, `n_chan=95`, `dv=5.080 km/s`, `N=4`, `s=0.514`.
-
-## 066 npz (local inventory)
-
-- Local: `/Users/thbrown/kilogas/DR1/visibilities/KILOGAS066.npz` (native 43240×1920)
-- CANFAR: `/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz`
-- Ico / vis-trim: `/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/`
-- Image-plane Stage B diagnostics: `.../KGAS66/10kms/`
-- YAML `obs_freq_range` clips the receding side — do not use it as the trim
+Closed review and experiment history is synthesized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md). Add only current state here; completed cards should be incorporated into the production record and removed from `docs/reviews/` after closure.

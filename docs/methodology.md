@@ -4,7 +4,7 @@ This is the science write-up. Agent process is in [`docs/reviews/BOARD.md`](revi
 
 **Your job:** look at the latest Data | Model | Residual moments / spectra / PV and leftover `chi2` in the plot folder named on STATUS. You are not sitting gates. Agents decide those and keep going.
 
-066 kernel sequence (autodiff likelihood, NUTS, SBC on the exact mock; not a 400-galaxy runner; `DEC-HIER-SELFUNC` stays Phase 5): [`docs/diagnostics/gold-standard-roadmap.md`](diagnostics/gold-standard-roadmap.md). G0 MAP flags live in `kinuv.diagnostics.flags`. G1 JAX `predict_binned(..., xla=True)` matches official Stage A `chi2=168675.6` on CPU (3.01 eval/s vs S2 0.329). G2 unconstrained chart (`kinuv.infer.chart`) logs flux / gas_sigma / `r_t` (finite at the 0.5″ MAP) and uses a stable softplus for `V_0`; it does not logit `[0.5, 15]`. Official 066 fires `r_t_at_floor` and leftover-vs-velocity (vs leftover-vs-uv). Do not quote inner `dV/dr` while `r_t` sits on the 0.5 arcsec L-BFGS floor. That box is not a science prior for later HMC.
+066 kernel sequence (autodiff likelihood, NUTS, then SBC on the exact mock; no population runner yet): [`docs/diagnostics/gold-standard-roadmap.md`](diagnostics/gold-standard-roadmap.md). G0 MAP flags live in `kinuv.diagnostics.flags`. G1 JAX `predict_binned(..., xla=True)` matches official Stage A `chi2=168675.6` on CPU (3.01 eval/s vs S2 0.329). G2 unconstrained chart (`kinuv.infer.chart`) logs flux / gas_sigma / `r_t` (finite at the 0.5″ MAP) and uses a stable softplus for `V_0`; it does not logit `[0.5, 15]`. Official 066 fires `r_t_at_floor` and leftover-vs-velocity (vs leftover-vs-uv). Do not quote inner `dV/dr` while `r_t` sits on the 0.5 arcsec L-BFGS floor. That box is not a science prior for later HMC.
 
 ## What we fit
 
@@ -36,7 +36,7 @@ The spectral operator is **Hann then bin** on native channels with guards (`kinu
 
 **Image-plane check:** Data | Model | Residual moments, spectra, and PV of Stage B vs the **10 km/s** cube (not 30 km/s). Figures: [`docs/reviews/artifacts/2026-08-28-stage-b-imaging/`](reviews/artifacts/2026-08-28-stage-b-imaging/). These plots are a check. Vis `chi2` is the fit.
 
-The 27 Aug moment maps used the pre-sign PA=21.9 deg winner (`f47bc9-map`). Keep that folder as history; do not quote it as the product.
+The 27 Aug moment maps used the superseded pre-sign PA=21.9 deg winner (`f47bc9-map`) and were archived. Do not quote them as the product.
 
 ## Figures we expect after a fit
 
@@ -50,7 +50,7 @@ Runner: `scripts/plot_fit_diagnostics.py`.
 
 ## What a "build" will do
 
-The parent proposes a scope, two independent reviewers accept or reject on the board, then the parent executes every accepted stage, **chooses each gate**, and stops at a plot folder for you. KGAS066 stays the code target until you add a TARGET stub. uvkin is not the production vis MAP.
+The parent proposes a scope, two independent reviewers accept or reject on the board, then the parent executes every accepted stage, **chooses each gate**, and stops at a plot folder for you. KGAS066 and KGAS007 are the current targets. Legacy fitters are archived; kinUV owns the production visibility likelihood.
 
 ## Where to look
 
@@ -64,5 +64,5 @@ The parent proposes a scope, two independent reviewers accept or reject on the b
 | 066 leftover D/M/R | [`docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/`](reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/) |
 | 007 diagnostic leftover | [`docs/reviews/artifacts/2026-09-05-kgas007-stage-a-map/`](reviews/artifacts/2026-09-05-kgas007-stage-a-map/) |
 | Moment maps | [`docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings/moments.png`](reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings/moments.png) |
-| S1 restating (not ADR) | [`docs/architecture/notes/2026-09-02-kinematic-methodology-review.md`](architecture/notes/2026-09-02-kinematic-methodology-review.md) |
+| Production history and benchmark synthesis | [`docs/PRODUCTION_RECORD.md`](PRODUCTION_RECORD.md) |
 | Decisions | `docs/decisions/DEC-066-INDEX.md` |

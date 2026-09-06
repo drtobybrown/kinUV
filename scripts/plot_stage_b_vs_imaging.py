@@ -49,7 +49,9 @@ MAP_DIR = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/KILOGAS066/"
     "kinuv-KGAS066-uvsign-map"
 )
-ARTIFACT = Path("docs/reviews/artifacts/2026-08-30-final-fit")
+ARTIFACT = Path(
+    "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings"
+)
 LENGTH_ARCSEC = 16.0
 
 

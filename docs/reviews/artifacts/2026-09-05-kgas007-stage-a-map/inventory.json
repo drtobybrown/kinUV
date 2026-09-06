@@ -8,13 +8,12 @@
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS7.npz": false,
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms": true,
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS007/30kms": false,
-    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/../KGAS7": true,
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/uvkin/config/uvkin_settings.yaml": true
+    "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/../KGAS7": true
   },
   "vis": "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS007.npz",
   "ico": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_Ico_K_kms-1.fits",
   "cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_clipped_cube.fits",
-  "catalogue": "/arc/projects/KILOGAS/analysis/toby_sandbox/uvkin/config/uvkin_settings.yaml",
+  "catalogue": "kinuv.targets:KGAS007",
   "catalogue_overrides": {
     "ra_deg": 146.576065,
     "dec_deg": 2.88434,
@@ -23,7 +22,7 @@
     "i_deg": 28.9
   },
   "sampler": "map",
-  "note": "TARGET stays KGAS066 only. This tree is a diagnostic. No 007 NUTS. Official 066 MAP untouched.",
+  "note": "Historical diagnostic result. Target metadata is now owned by kinuv.targets.",
   "status": "map_written",
   "delta_chi2": 6211.629482170902,
   "chi2_map": 122070.76264784014

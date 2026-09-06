@@ -1,6 +1,6 @@
 # S1 mock: vis Stage A vs CLEAN-beam moments (KGAS066)
 
-This is the inject-and-recovery test licensed by the 2026-08-29 reviewer ACK ([`docs/reviews/2026-08-29-review-methodology.md`](../reviews/2026-08-29-review-methodology.md)). Visibility χ² is the fit. The cube numbers are a beam-smearing comparator, not a second likelihood. No NUTS. No Stage B. No new DEC.
+This is the accepted inject-and-recovery test summarized in [`../PRODUCTION_RECORD.md`](../PRODUCTION_RECORD.md#validation-and-benchmark-evidence). Visibility χ² is the fit. The cube numbers are a beam-smearing comparator, not a second likelihood. No NUTS. No Stage B. No new DEC.
 
 **Runners:** [`scripts/run_s1_mock.py`](../../scripts/run_s1_mock.py), [`scripts/plot_leftover_chi2.py`](../../scripts/plot_leftover_chi2.py).
 
