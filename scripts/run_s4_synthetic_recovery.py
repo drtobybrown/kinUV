@@ -44,6 +44,8 @@ from kinuv.io.vis import load_target_vis, radio_to_optical_kms
 from kinuv.response.spectral import hann_native
 from kinuv.validation.s4 import (
     channel_noise_from_integrated_error,
+    projected_arctan_speed,
+    subbeam_turnover_recovery,
     topo_radio_to_lsrk_radio,
 )
 
@@ -130,10 +132,7 @@ def matched_disk_template(grid, truth: dict, bmaj_arcsec: float) -> np.ndarray:
 
 
 def projected_profile(parameters: dict, radius: np.ndarray) -> np.ndarray:
-    inclination = float(parameters.get("inclination_deg", parameters.get("i_deg")))
-    v0 = float(parameters.get("v0_kms", parameters.get("v0_kms_diagnostic")))
-    rt = float(parameters["r_t_arcsec"])
-    return v0 * np.sin(np.radians(inclination)) * (2.0 / np.pi) * np.arctan(radius / rt)
+    return projected_arctan_speed(parameters, radius)
 
 
 def profile_rmse(truth: dict, fitted: dict, radius: np.ndarray, weight: np.ndarray) -> float:
@@ -370,6 +369,12 @@ def run_target(
         kinuv_parameters = dict(kinuv_fit["parameters"])
         kinuv_rmse = profile_rmse(truth, kinuv_parameters, radius, radial_weight)
         kinms_rmse = profile_rmse(truth, kinms["fitted"], radius, radial_weight)
+        kinuv_subbeam = subbeam_turnover_recovery(
+            truth, kinuv_parameters, radius, radial_weight, bmaj
+        )
+        kinms_subbeam = subbeam_turnover_recovery(
+            truth, kinms["fitted"], radius, radial_weight, bmaj
+        )
         row = {
             "seed": seed,
             "kinuv": {
@@ -385,6 +390,19 @@ def run_target(
                 "nfev": kinms["nfev"],
             },
             "ratio_kinuv_over_kinms": kinuv_rmse / kinms_rmse,
+            "subbeam_turnover": {
+                "kinuv": kinuv_subbeam,
+                "kinms": kinms_subbeam,
+                "absolute_turnover_error_ratio_kinuv_over_kinms": (
+                    kinuv_subbeam["absolute_turnover_error_arcsec"]
+                    / kinms_subbeam["absolute_turnover_error_arcsec"]
+                ),
+                "inner_rmse_ratio_kinuv_over_kinms": (
+                    kinuv_subbeam["inner_projected_velocity_rmse_kms"]
+                    / kinms_subbeam["inner_projected_velocity_rmse_kms"]
+                ),
+                "gate_role": "supporting publication diagnostic; does not gate S4",
+            },
         }
         realizations.append(row)
         _write_json(realization_dir / "recovery.json", row)
@@ -393,6 +411,30 @@ def run_target(
     kinuv_all = np.asarray([row["kinuv"]["projected_velocity_rmse_kms"] for row in realizations])
     kinms_all = np.asarray([row["kinms"]["projected_velocity_rmse_kms"] for row in realizations])
     aggregate_ratio = float(np.sqrt(np.mean(kinuv_all**2)) / np.sqrt(np.mean(kinms_all**2)))
+    kinuv_rt_error = np.asarray(
+        [
+            row["subbeam_turnover"]["kinuv"]["absolute_turnover_error_arcsec"]
+            for row in realizations
+        ]
+    )
+    kinms_rt_error = np.asarray(
+        [
+            row["subbeam_turnover"]["kinms"]["absolute_turnover_error_arcsec"]
+            for row in realizations
+        ]
+    )
+    kinuv_inner = np.asarray(
+        [
+            row["subbeam_turnover"]["kinuv"]["inner_projected_velocity_rmse_kms"]
+            for row in realizations
+        ]
+    )
+    kinms_inner = np.asarray(
+        [
+            row["subbeam_turnover"]["kinms"]["inner_projected_velocity_rmse_kms"]
+            for row in realizations
+        ]
+    )
     record = {
         "schema_version": "kinuv-s4-python-truth-v1",
         "target_id": target_id,
@@ -423,6 +465,26 @@ def run_target(
             "kinuv_rms_rmse_kms": float(np.sqrt(np.mean(kinuv_all**2))),
             "kinms_rms_rmse_kms": float(np.sqrt(np.mean(kinms_all**2))),
             "ratio_kinuv_over_kinms": aggregate_ratio,
+            "subbeam_turnover": {
+                "eligible": True,
+                "truth_turnover_over_bmaj": truth["r_t_arcsec"] / bmaj,
+                "kinuv_mean_absolute_turnover_error_arcsec": float(
+                    np.mean(kinuv_rt_error)
+                ),
+                "kinms_mean_absolute_turnover_error_arcsec": float(
+                    np.mean(kinms_rt_error)
+                ),
+                "absolute_turnover_error_ratio_kinuv_over_kinms": float(
+                    np.mean(kinuv_rt_error) / np.mean(kinms_rt_error)
+                ),
+                "kinuv_inner_rms_rmse_kms": float(np.sqrt(np.mean(kinuv_inner**2))),
+                "kinms_inner_rms_rmse_kms": float(np.sqrt(np.mean(kinms_inner**2))),
+                "inner_rmse_ratio_kinuv_over_kinms": float(
+                    np.sqrt(np.mean(kinuv_inner**2))
+                    / np.sqrt(np.mean(kinms_inner**2))
+                ),
+                "gate_role": "supporting publication diagnostic; does not gate S4",
+            },
         },
         "gate": {
             "required_ratio_max": 0.90,

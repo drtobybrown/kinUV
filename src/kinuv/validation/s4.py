@@ -81,6 +81,77 @@ def projected_velocity_rmse(profiles, inclination_deg):
     return output
 
 
+def projected_arctan_speed(parameters, radius_arcsec):
+    """Projected arctan speed ``u(r)=V0 sin(i) 2/pi atan(r/Rturn)``."""
+
+    radius = np.asarray(radius_arcsec, dtype=np.float64)
+    inclination = float(
+        parameters.get("inclination_deg", parameters.get("i_deg"))
+    )
+    v0 = float(parameters.get("v0_kms", parameters.get("v0_kms_diagnostic")))
+    turnover = float(parameters["r_t_arcsec"])
+    if turnover <= 0.0:
+        raise ValueError("r_t_arcsec must be positive")
+    return (
+        v0
+        * np.sin(np.radians(inclination))
+        * (2.0 / np.pi)
+        * np.arctan(radius / turnover)
+    )
+
+
+def subbeam_turnover_recovery(
+    truth,
+    fitted,
+    radius_arcsec,
+    radial_weight,
+    bmaj_arcsec,
+):
+    """Supporting turnover and inner-rise errors for a sub-beam truth."""
+
+    radius = np.asarray(radius_arcsec, dtype=np.float64)
+    weight = np.asarray(radial_weight, dtype=np.float64)
+    if radius.shape != weight.shape or radius.ndim != 1:
+        raise ValueError("radius_arcsec and radial_weight must be matching 1-D arrays")
+    if np.any(~np.isfinite(radius)) or np.any(~np.isfinite(weight)):
+        raise ValueError("radius and weight must be finite")
+    beam = float(bmaj_arcsec)
+    if beam <= 0.0:
+        raise ValueError("bmaj_arcsec must be positive")
+    truth_turnover = float(truth["r_t_arcsec"])
+    eligible = truth_turnover < beam
+    inner = (radius <= beam) & (radius >= 0.0) & (weight > 0.0)
+    if not eligible:
+        return {
+            "eligible": False,
+            "eligibility_rule": "truth r_t_arcsec < 1.0 * BMAJ",
+            "truth_turnover_over_bmaj": truth_turnover / beam,
+        }
+    if not np.any(inner):
+        raise ValueError("the profile grid has no positive-weight radius <= BMAJ")
+    residual = projected_arctan_speed(fitted, radius[inner]) - projected_arctan_speed(
+        truth, radius[inner]
+    )
+    inner_rmse = float(
+        np.sqrt(np.sum(weight[inner] * residual**2) / np.sum(weight[inner]))
+    )
+    turnover_error = abs(float(fitted["r_t_arcsec"]) - truth_turnover)
+    return {
+        "eligible": True,
+        "eligibility_rule": "truth r_t_arcsec < 1.0 * BMAJ",
+        "bmaj_arcsec": beam,
+        "truth_turnover_arcsec": truth_turnover,
+        "truth_turnover_over_bmaj": truth_turnover / beam,
+        "fitted_turnover_arcsec": float(fitted["r_t_arcsec"]),
+        "absolute_turnover_error_arcsec": turnover_error,
+        "absolute_turnover_error_over_bmaj": turnover_error / beam,
+        "inner_projected_velocity_rmse_kms": inner_rmse,
+        "inner_radius_max_arcsec": beam,
+        "inner_radius_count": int(np.sum(inner)),
+        "gate_role": "supporting publication diagnostic; does not gate S4",
+    }
+
+
 def _component_summary(values):
     z = np.asarray(values, dtype=np.complex128).ravel()
     use = np.isfinite(z.real) & np.isfinite(z.imag)
@@ -229,5 +300,7 @@ __all__ = [
     "channel_noise_from_integrated_error",
     "common_reduced_chi2",
     "projected_velocity_rmse",
+    "projected_arctan_speed",
+    "subbeam_turnover_recovery",
     "structured_line_free_diagnostics",
 ]

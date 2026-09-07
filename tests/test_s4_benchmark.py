@@ -6,7 +6,9 @@ import pytest
 from kinuv.validation.s4 import (
     channel_noise_from_integrated_error,
     common_reduced_chi2,
+    projected_arctan_speed,
     projected_velocity_rmse,
+    subbeam_turnover_recovery,
     topo_radio_to_lsrk_radio,
 )
 
@@ -63,6 +65,34 @@ def test_two_point_velocity_profile_is_diagnostic_but_not_gate_eligible():
     recovery = projected_velocity_rmse(profiles, 30.0)
     assert recovery["gate_eligible"] is False
     assert np.isfinite(recovery["ratio_kinuv_over_kinms"])
+
+
+def test_subbeam_turnover_recovery_reports_scalar_and_inner_errors():
+    truth = {"v0_kms": 200.0, "inclination_deg": 30.0, "r_t_arcsec": 0.25}
+    fitted = {"v0_kms": 200.0, "inclination_deg": 30.0, "r_t_arcsec": 0.35}
+    radius = np.array([0.1, 0.5, 1.0, 1.5])
+    metric = subbeam_turnover_recovery(
+        truth, fitted, radius, np.ones_like(radius), bmaj_arcsec=1.0
+    )
+    expected = projected_arctan_speed(fitted, radius[:3]) - projected_arctan_speed(
+        truth, radius[:3]
+    )
+    assert metric["eligible"] is True
+    assert metric["absolute_turnover_error_arcsec"] == pytest.approx(0.1)
+    assert metric["absolute_turnover_error_over_bmaj"] == pytest.approx(0.1)
+    assert metric["inner_projected_velocity_rmse_kms"] == pytest.approx(
+        np.sqrt(np.mean(expected**2))
+    )
+    assert metric["inner_radius_count"] == 3
+
+
+def test_subbeam_turnover_recovery_is_ineligible_at_or_above_one_beam():
+    truth = {"v0_kms": 200.0, "inclination_deg": 30.0, "r_t_arcsec": 1.0}
+    metric = subbeam_turnover_recovery(
+        truth, truth, np.array([0.5, 1.0]), np.ones(2), bmaj_arcsec=1.0
+    )
+    assert metric["eligible"] is False
+    assert "absolute_turnover_error_arcsec" not in metric
 
 
 def test_s4_runner_uses_same_observed_frequency_to_invert_primary_beam():
