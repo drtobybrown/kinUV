@@ -115,29 +115,26 @@ def build_grouped_visibility_folds(
         pairs = np.column_stack([table.antenna1[rows], table.antenna2[rows]])
         n_baselines[group_id] = np.unique(pairs, axis=0).shape[0]
 
-    order = np.lexsort(
-        (
-            unique_keys[:, 2],
-            starts,
-            unique_keys[:, 1],
-            unique_keys[:, 0],
-        )
+    group_fold = np.full(n_group, -1, dtype=np.int64)
+    covariance_strata = unique_keys[:, [0, 1, 4, 5]]
+    unique_strata, stratum_inverse = np.unique(
+        covariance_strata, axis=0, return_inverse=True
     )
-    cumulative = np.cumsum(counts[order], dtype=np.int64)
-    boundaries = np.linspace(0, int(cumulative[-1]), n_folds + 1)[1:-1]
-    fold_ordered = np.searchsorted(boundaries, cumulative, side="left")
-    # A large scan can cross more than one ideal boundary. Preserve the scan
-    # and guarantee that every fold receives at least one complete group.
-    fold_ordered = np.maximum.accumulate(fold_ordered)
-    for fold_id in range(n_folds):
-        if not np.any(fold_ordered == fold_id):
-            split = np.array_split(np.arange(n_group), n_folds)
-            fold_ordered = np.empty(n_group, dtype=np.int64)
-            for assigned_fold, positions in enumerate(split):
-                fold_ordered[positions] = assigned_fold
-            break
-    group_fold = np.empty(n_group, dtype=np.int64)
-    group_fold[order] = fold_ordered
+    for stratum_id, stratum_key in enumerate(unique_strata):
+        positions = np.flatnonzero(stratum_inverse == stratum_id)
+        if positions.size < n_folds:
+            raise ValueError(
+                "each covariance stratum needs at least "
+                f"{n_folds} scan groups; stratum {stratum_key.tolist()} has "
+                f"{positions.size}"
+            )
+        order = positions[
+            np.lexsort((unique_keys[positions, 2], starts[positions]))
+        ]
+        for fold_id, block in enumerate(np.array_split(order, n_folds)):
+            group_fold[block] = fold_id
+    if np.any(group_fold < 0):
+        raise RuntimeError("internal error: unassigned visibility group")
     row_fold = group_fold[inverse]
 
     groups = tuple(

@@ -13,6 +13,15 @@ from .groups import (
     VisibilityGroup,
     build_grouped_visibility_folds,
 )
+from .covariance import (
+    CovarianceParameters,
+    CovarianceSelection,
+    fit_covariance_by_stratum,
+    fit_covariance_stratum,
+    select_grouped_covariance,
+    whitened_innovations,
+    whitening_diagnostics,
+)
 
 __all__ = [
     "MIN_NONROT_BOOTSTRAP_TRIALS",
@@ -24,4 +33,11 @@ __all__ = [
     "GroupedVisibilityFolds",
     "VisibilityGroup",
     "build_grouped_visibility_folds",
+    "CovarianceParameters",
+    "CovarianceSelection",
+    "fit_covariance_by_stratum",
+    "fit_covariance_stratum",
+    "select_grouped_covariance",
+    "whitened_innovations",
+    "whitening_diagnostics",
 ]

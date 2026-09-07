@@ -8,7 +8,7 @@ model:
   parameterization: {}
   priors: {}
 visibility:
-  schema_version: ms2kinuv-npz-v1
+  schema_version: ms2kinuv-npz-v2
   selection: {}
   transform: {}
   spectral_response: {}

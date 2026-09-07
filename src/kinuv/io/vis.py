@@ -159,8 +159,10 @@ def require_s2_provenance(table: NativeVisTable) -> None:
         raise ValueError("S2 folds must be assigned before channel averaging")
     if not str(table.visibility_unit).lower().startswith("jy"):
         raise ValueError("S2 requires calibrated visibility flux density in Jy")
-    if not str(table.weight_convention).startswith("2_"):
-        raise ValueError("S2 requires the declared w=2/sigma^2 convention")
+    if "2_over_complex_noise_variance" not in str(table.weight_convention):
+        raise ValueError(
+            "S2 requires w=2/E[|complex noise|^2]=1/sigma_component^2"
+        )
 
 
 def load_visibility_table(path) -> NativeVisTable:

@@ -37,7 +37,7 @@ def _table(n_scan=10, rows_per_scan=6):
         time_centroid=time,
         interval=np.ones(n_row),
         visibility_unit="Jy",
-        weight_convention="2_times_ms_weight_equals_2_over_sigma_squared",
+        weight_convention="ms_weight_equals_2_over_complex_noise_variance",
         extraction={
             "source_row_identity_preserved": True,
             "row_averaging": "none",

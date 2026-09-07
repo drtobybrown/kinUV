@@ -103,7 +103,9 @@ def _v2_payload():
         "frequency_reference_code": np.array(1),
         "frequency_frame": np.array("LSRK"),
         "visibility_unit": np.array("Jy"),
-        "weight_convention": np.array("2_times_ms_weight_equals_2_over_sigma_squared"),
+        "weight_convention": np.array(
+            "ms_weight_equals_2_over_complex_noise_variance"
+        ),
         "history_json": np.array('{"available": true}'),
         "smoothing_history_json": np.array("{}"),
         "extraction_json": np.array(
