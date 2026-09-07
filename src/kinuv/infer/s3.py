@@ -199,6 +199,39 @@ def initial_chart(s2_parameters, knot_radii_arcsec, natural_weights, *, vsys_see
     )
 
 
+def chart_from_parameters(
+    parameters,
+    *,
+    vsys_seed_kms,
+    dv_kms,
+    bmaj_arcsec,
+):
+    """Encode a complete saved S3 parameter record in the 16-slot chart."""
+    p = parameters
+    weights = np.asarray(p["emissivity_weights"], dtype=np.float64)
+    if weights.shape != (3,) or np.any(weights <= 0.0):
+        raise ValueError("emissivity_weights must contain three positive values")
+    weights = weights / weights.sum()
+    return np.array(
+        [
+            np.log(float(p["flux"])),
+            np.radians(float(p["pa_deg"])),
+            (float(p["vsys_kms"]) - float(vsys_seed_kms)) / float(dv_kms),
+            np.log(float(p["sigma_inner_kms"])),
+            float(p["dx_arcsec"]) / float(bmaj_arcsec),
+            float(p["dy_arcsec"]) / float(bmaj_arcsec),
+            np.cos(np.radians(float(p["inclination_deg"]))),
+            float(p["turnover_over_bmaj"]),
+            float(p["arctan_u_kms"]) / 100.0,
+            *(np.asarray(p["u_knots_kms"], dtype=np.float64) / 100.0),
+            np.log(weights[1] / weights[0]),
+            np.log(weights[2] / weights[0]),
+            np.log(float(p["sigma_outer_kms"])),
+        ],
+        dtype=np.float64,
+    )
+
+
 def chart_bounds(
     pa_seed_deg,
     dv_kms,
@@ -312,6 +345,7 @@ def build_s3_objective(
     bmaj_arcsec,
     initial_emissivity_logits,
     two_zone_uses_rings=True,
+    fixed_emissivity_weights=None,
 ):
     import jax
     import jax.numpy as jnp
@@ -324,7 +358,12 @@ def build_s3_objective(
     basis = jnp.asarray(emissivity_basis.images)
     knots = jnp.asarray(knot_radii_arcsec)
     initial_logits = jnp.asarray(initial_emissivity_logits)
-    use_emissivity = candidate != "baseline_arctan"
+    use_emissivity = candidate != "baseline_arctan" and fixed_emissivity_weights is None
+    fixed_weights = (
+        None
+        if fixed_emissivity_weights is None
+        else jnp.asarray(fixed_emissivity_weights)
+    )
     use_rings = candidate == "supported_rings" or (
         candidate == "two_zone_dispersion" and two_zone_uses_rings
     )
@@ -337,7 +376,9 @@ def build_s3_objective(
             dv_kms=data.dv_kms,
             bmaj_arcsec=bmaj_arcsec,
         )
-        if use_emissivity:
+        if fixed_weights is not None:
+            template = jnp.sum(fixed_weights[:, None, None] * basis, axis=0)
+        elif use_emissivity:
             ew = _softmax_weights(p["emissivity_logits"][0], p["emissivity_logits"][1], jnp)
             template = jnp.sum(ew[:, None, None] * basis, axis=0)
         else:
@@ -411,6 +452,7 @@ def fit_s3_candidate(
     bmaj_arcsec,
     maxiter=120,
     two_zone_uses_rings=True,
+    fixed_emissivity_weights=None,
 ):
     import jax.numpy as jnp
 
@@ -421,6 +463,8 @@ def fit_s3_candidate(
         candidate,
         two_zone_uses_rings=two_zone_uses_rings,
     )
+    if fixed_emissivity_weights is not None:
+        active = tuple(index for index in active if index not in (13, 14))
     z_start = np.asarray(z0, dtype=np.float64).copy()
     active_set = set(active)
     for index, (lo, hi) in enumerate(bounds):
@@ -440,6 +484,7 @@ def fit_s3_candidate(
         bmaj_arcsec=bmaj_arcsec,
         initial_emissivity_logits=initial_logits,
         two_zone_uses_rings=two_zone_uses_rings,
+        fixed_emissivity_weights=fixed_emissivity_weights,
     )
     _ = value_gradient(jnp.asarray(z_start))
     normalization = 1.0 / max(1, int(data.vis.size))
@@ -478,8 +523,12 @@ def fit_s3_candidate(
         bmaj_arcsec=bmaj_arcsec,
         natural_weights=natural,
     )
+    if fixed_emissivity_weights is not None:
+        params["emissivity_weights"] = np.asarray(
+            fixed_emissivity_weights, dtype=np.float64
+        ).tolist()
     prior = (params["dx_arcsec"] / 0.5) ** 2 + (params["dy_arcsec"] / 0.5) ** 2
-    if candidate != "baseline_arctan":
+    if candidate != "baseline_arctan" and fixed_emissivity_weights is None:
         logits = np.asarray(optimum[13:15])
         prior += 0.5 * float(np.sum((logits - initial_logits) ** 2))
     regularization = 0.0

@@ -5,6 +5,7 @@ import pytest
 
 from kinuv.infer.s3 import (
     build_positive_emissivity_basis,
+    chart_from_parameters,
     chart_bounds,
     initial_chart,
     supported_knot_radii,
@@ -84,6 +85,41 @@ def test_s3_chart_round_trip_and_candidate_activity():
     assert back["sigma_inner_kms"] == pytest.approx(11.0)
     assert back["sigma_outer_kms"] == pytest.approx(11.0)
     np.testing.assert_allclose(back["emissivity_weights"], natural)
+
+
+def test_saved_parameter_chart_round_trip():
+    parameters = {
+        "flux": 9.0,
+        "pa_deg": 151.0,
+        "vsys_kms": 13553.0,
+        "sigma_inner_kms": 8.0,
+        "sigma_outer_kms": 11.0,
+        "dx_arcsec": -0.03,
+        "dy_arcsec": 0.04,
+        "inclination_deg": 62.0,
+        "turnover_over_bmaj": 0.3,
+        "arctan_u_kms": 205.0,
+        "u_knots_kms": [60.0, 90.0, 85.0, 100.0],
+        "emissivity_weights": [0.2, 0.3, 0.5],
+    }
+    z = chart_from_parameters(
+        parameters, vsys_seed_kms=13500.0, dv_kms=10.0, bmaj_arcsec=1.25
+    )
+    back = unpack_chart(
+        z,
+        vsys_seed_kms=13500.0,
+        dv_kms=10.0,
+        bmaj_arcsec=1.25,
+        natural_weights=np.array([0.2, 0.3, 0.5]),
+    )
+    for name in (
+        "flux", "pa_deg", "vsys_kms", "sigma_inner_kms", "sigma_outer_kms",
+        "dx_arcsec", "dy_arcsec", "inclination_deg", "turnover_over_bmaj",
+        "arctan_u_kms",
+    ):
+        assert back[name] == pytest.approx(parameters[name])
+    np.testing.assert_allclose(back["u_knots_kms"], parameters["u_knots_kms"])
+    np.testing.assert_allclose(back["emissivity_weights"], parameters["emissivity_weights"])
     _, active_baseline = chart_bounds(200.0, 5.0, 1.0, "baseline_arctan")
     _, active_rings = chart_bounds(200.0, 5.0, 1.0, "supported_rings")
     _, active_dispersion = chart_bounds(200.0, 5.0, 1.0, "two_zone_dispersion")
