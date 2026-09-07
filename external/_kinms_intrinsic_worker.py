@@ -201,6 +201,11 @@ def _deposit_phase(
                 values.append(
                     y_weight[valid, iy_offset] * x_weight[valid, ix_offset]
                 )
+        if not values:
+            # A radial chunk can lie wholly outside a finite requested image.
+            # Its flux is already represented by the retained/excluded ledger;
+            # there is no sparse deposition contribution to assemble.
+            continue
         deposition = csr_matrix(
             (np.concatenate(values), (np.concatenate(rows), np.concatenate(columns))),
             shape=(ny * nx, stop - start),

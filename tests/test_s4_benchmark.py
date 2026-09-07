@@ -121,3 +121,13 @@ def test_grouped_prediction_bootstrap_and_frame_round_trip():
     from kinuv.io.vis import optical_to_radio_kms
 
     assert recovered == pytest.approx(float(optical_to_radio_kms(vopt_lsrk)))
+
+
+def test_continuum_worker_skips_fully_cropped_deposition_chunks():
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parents[1] / "external/_kinms_intrinsic_worker.py"
+    ).read_text(encoding="utf-8")
+    assert "if not values:" in source
+    assert "there is no sparse deposition contribution" in source
