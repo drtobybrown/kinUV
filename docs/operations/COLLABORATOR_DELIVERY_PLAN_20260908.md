@@ -18,8 +18,11 @@ license CASA reimaging, dark-matter decomposition, new radial-motion models,
 or open-ended emissivity tuning.
 
 Each target advances to NUTS as soon as its selected MAP is valid and resources
-are available; it need not wait for the other target. Phase 3 rendering can
-overlap inference. Final production promotion requires independent dual accept.
+are available; it need not wait for the other target. At that same transition,
+enqueue the complete MAP diagnostic suite. Start phase 3 synthetic rendering
+concurrently; neither rendering branch waits for warm-up or retained draws.
+Seal an early MAP-plus-synthetic meeting packet while sampling continues.
+Final production promotion requires independent dual accept.
 No new proposal/ADR round is required before implementation. Sol owns software
 design, worker scheduling, and routine numerical repairs inside this contract.
 
@@ -46,12 +49,20 @@ remaining residuals honestly; their disappearance is not guaranteed by this plan
   reduce concurrency before approaching the RAM limit. Reuse compiled operators
   where practical. Rendering and sampling share the same resource budget.
 - Use node-local `/scratch` for compilation caches and frequent checkpoints.
-  Flush recoverable chain state and bounded logs to a unique durable campaign
-  directory under `results/incoming/`. Headless workers must survive terminal
-  disconnect, retain exit codes/PIDs, and be monitored by a durable controller.
-  A background PID is not task completion.
+  Incrementally flush chain draws, adaptation state, RNG state and draw position
+  to `/scratch` throughout warm-up and sampling, not only at chain completion.
+  Copy consistent recoverable snapshots and bounded logs to a unique durable
+  campaign directory under `results/incoming/`; retain the last valid durable
+  checkpoint until its replacement is complete. Checkpoint cadence must bound
+  lost work without writing every likelihood evaluation to `/arc`.
+  Launch detached headless workers managed by a controller that also survives
+  terminal disconnect. Persist controller and worker PIDs, chain/seed identities,
+  process start times and every exit code, including failed or retried attempts.
+  After controller recovery, reconcile existing workers before launching more;
+  do not duplicate a chain. A background PID is not task completion.
 - Use ASCII-only terminal output, file logs, disabled animated progress bars,
-  and a compact heartbeat approximately once per minute. Do not send external
+  and a compact single-line heartbeat approximately once per minute. Apply these
+  rules to the controller, workers and library stdout/stderr. Do not send external
   notifications. Record seeds, environment, exact implementation SHA, resolved
   configuration and input hashes as part of the run, without a separate
   pre-flight accounting report.
@@ -108,10 +119,42 @@ Keep the accepted checkpoint as a candidate if no new converged fit improves it.
 Do not require all four starts to reach the same basin. Retain competing modes.
 
 **Automatic transition:** save selected parameters, active/free names, likelihood,
-prior specification and optimizer result; update STATUS and enqueue phase 2.
+prior specification and optimizer result; update STATUS and enqueue phase 2
+and early MAP rendering together.
 Non-finite fits, an unidentifiable primary parameter at a bound, or an invalid
 gradient cannot qualify for automatic sampling. Local solver repairs are allowed;
 do not hide failures or change the physical model to obtain a passing status.
+
+### Immediate MAP deliverables and early meeting packet
+
+As soon as each target's best valid MAP is selected, render its matched model
+cube, moment maps 0/1/2 with residuals, corrected major/minor-axis PVDs,
+aperture spectra with residual tracks, and 1D rotation curves. Use the phase 4
+style, units and provenance contract. Do not wait for NUTS or borrow posterior
+intervals from another checkpoint. Reserve a rendering worker or schedule short
+rendering jobs between chain allocations so sampling cannot starve delivery.
+
+Write this early candidate directly beneath
+`results/production/<TARGET>/meeting_candidate/<run_id>/`, using `best_model/`,
+`plots/` and `benchmarks/` inside it. This is explicitly a candidate namespace,
+not a replacement of the accepted canonical directories. Include the phase 3
+mock comparisons as soon as their concurrent rendering completes. Preserve the
+previous accepted products until independent review authorizes replacement.
+
+Once both target suites and the authenticated mock figures are ready, seal
+their manifests and compile a meeting-packet index under
+`results/production/meeting_packets/<run_id>/`. The index identifies both frozen
+MAP checkpoints, figure locations, truth/seed/source hashes and the code commit.
+Label it `MAP_ONLY_CANDIDATE`, with posterior status `RUNNING` or its actual
+state. Complete the phase 4 checksum/provenance and independent review checks
+on this MAP-only packet while the detached NUTS workers continue. On dual accept,
+it becomes an authenticated MAP-only presentation deliverable; posterior
+completion is not required for that review or delivery.
+
+Keep the sealed early packet immutable. Record subsequent chain progress in
+the controller's live status under `results/incoming/`. Later posterior products
+form a new version with their own verification and review; they do not silently
+change the earlier packet or inherit its posterior acceptance.
 
 ## Phase 2: automatic production headless NUTS
 
@@ -178,6 +221,8 @@ synthetic evidence from
 `results/validation/crossdomain-recovery-s5-subbeam-20260907/`.
 Verify their manifests and retain truth, seed and fitted-model identities.
 No CASA dependency or training-fold reimaging is permitted.
+This work starts concurrently with MAP/NUTS execution and feeds the early
+meeting packet; phase numbering is not a dependency on NUTS completion.
 
 For truths with `R_turn < BMAJ`, show the per-realization absolute turnover error
 normalized by BMAJ and projected-velocity RMSE restricted to `r <= BMAJ`, alongside
@@ -260,7 +305,10 @@ Keep large cubes/traces in durable `/arc` storage; commit code, configurations,
 compact evidence, manifests and documentation to Git, not caches or raw MS data.
 
 **Independent review board:** Sol commissions Reviewer A and Reviewer B after
-candidate outputs are sealed. Each reviews the same exact code/evidence hashes
+candidate outputs are sealed, first for the early MAP-only meeting packet and
+then for the final posterior-bearing bundle. The early review must not wait for
+NUTS; the final review may reuse unchanged verified evidence while checking all
+new posterior products. Each reviews the same exact code/evidence hashes
 and independently runs checksum and provenance audits before reading the other
 verdict. Reviewer A checks physical parameterization, C1/response consistency,
 posterior validity, synthetic arithmetic/claim scope and science completeness.
