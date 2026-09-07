@@ -1,5 +1,5 @@
 ---
-generation: 29
+generation: 30
 phase: crossdomain-recovery-s5-closed
 code_freeze: true
 next_role: consultant-astra
@@ -17,17 +17,27 @@ user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - How broadly does the demonstrated advantage extend beyond the tested thin axisymmetric arctan family?
 deadlocks: []
-canon_generation: 29
+canon_generation: 30
 ---
 
 ## Agent Run Status
 
 * **Phase:** S0--S5 are closed under the PI-authorized cross-domain recovery contract. The accepted S4 evidence commit is `354bbad`; S5 sealed it at `98f7730`.
-* **Last Action:** Sol terminated the CASA reimaging track under direct PI authority, removed its four scratch environments and three repository logs, codified `DEC-PI-S4-STANDARD-USE-BENCHMARK`, and completed the Python-native paired truth suite.
+* **Last Action:** The Plumbline workflow invariants were synchronized in the Field Guide and `AGENTS.md` at `97babbbf6abb7865ea701a11495d22b7c37d8fd0`; legacy prose-gated tests were removed.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
 * **Verification:** Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B accepted software and reproducibility at `0442542`. The final S4 dossier contains 50 verified files totaling 69,157,562 bytes. The S5 seal is `results/validation/crossdomain-recovery-s5-20260907/`. The deterministic/architecture suite passes with 263 tests and 5 skips; the separately known unstable NUTS smoke module was not run because no sampler campaign is licensed.
 * **Next Step:** Astra may define the next scientific expansion. Posterior calibration, the non-rotation bootstrap, and broader synthetic families remain separate future campaigns.
+
+## Governance workflow synchronization
+
+The exact governance implementation commit is
+`97babbbf6abb7865ea701a11495d22b7c37d8fd0`. It adds autonomous follow-through,
+anti-ceremony testing, proportional subagent sizing, and deterministic
+in-repository stage handshakes. The affected verification suite passed 34 of
+34 tests in 17.75 seconds. No scientific model, likelihood, parameter,
+threshold, target configuration, or accepted product changed. The next role is
+Consultant Astra; the durable handoff is this STATUS generation 30.
 
 ## S4 scientific recovery and S5 seal
 
