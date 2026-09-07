@@ -46,8 +46,7 @@ ROOT_10KMS = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms"
 )
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-4c1bc4-milestone1"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model"
 )
 ARTIFACT = Path(
     "docs/reviews/artifacts/2026-09-02-kgas066-leftover-and-modes/stage-b-rings"

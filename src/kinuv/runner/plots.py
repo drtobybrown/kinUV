@@ -24,7 +24,7 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 MAP_DIR = (
     PROJECT_ROOT / "results" / "production" / "KGAS066"
-    / "kinuv-KGAS066-4c1bc4-milestone1"
+    / "best_model"
 )
 ICO = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/"

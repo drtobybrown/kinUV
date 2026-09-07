@@ -37,7 +37,7 @@ CUBE_30 = Path(
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz")
 MAP_JSON = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map/stage_a_map.json"
+    "best_model/stage_a_map.json"
 )
 CHI2_OFFICIAL = 168675.6
 S_OFFICIAL = 0.5136098555284736

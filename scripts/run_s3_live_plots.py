@@ -52,8 +52,7 @@ ROOT_10KMS = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms"
 )
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model"
 )
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz")
 LENGTH_ARCSEC = 16.0

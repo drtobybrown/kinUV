@@ -437,7 +437,7 @@ def beam_ellipse(ax, bmaj_arcsec, bmin_arcsec, bpa_deg, xy):
     return ell
 
 
-def panel_letter(ax, letter, *, x=0.06, y=0.94):
+def panel_letter(ax, letter, *, x=0.06, y=0.94, fontsize=TITLE_SIZE):
     ax.text(
         x,
         y,
@@ -445,7 +445,7 @@ def panel_letter(ax, letter, *, x=0.06, y=0.94):
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=TITLE_SIZE,
+        fontsize=fontsize,
         fontweight="bold",
         color=COLOUR["text"],
         zorder=10,

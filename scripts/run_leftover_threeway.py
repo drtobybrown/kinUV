@@ -43,7 +43,7 @@ NUTS_MEAN_JSON = (
 )
 NUTS_CUBE = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-3de838-nuts/plots/model_cube.fits"
+    "best_model/model_native.fits"
 )
 CUBE_10 = Path(
     "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/"

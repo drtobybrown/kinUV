@@ -17,8 +17,7 @@ from kinuv.xp import is_jax
 
 REPO = Path(__file__).resolve().parents[1]
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-4c1bc4-milestone1"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model"
 )
 CANFAR_NPZ = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz"

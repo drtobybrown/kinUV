@@ -25,8 +25,7 @@ CUBE = Path(
     "KGAS66_clipped_cube.fits"
 )
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-4c1bc4-milestone1"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model"
 )
 DEFAULT_OUT = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/incoming/KGAS066/"

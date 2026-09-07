@@ -41,8 +41,7 @@ from kinuv.transforms.nufft import BACKEND
 REPO = Path(__file__).resolve().parents[1]
 ART = REPO / "docs/reviews/artifacts/2026-08-30-g3-nuts"
 MAP = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model"
 )
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz")
 ICO = Path(

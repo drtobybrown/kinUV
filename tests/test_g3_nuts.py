@@ -44,8 +44,7 @@ SRC_ROT = REPO / "src/kinuv/profiles/rotation.py"
 SRC_MODEL = REPO / "src/kinuv/forward/model.py"
 SRC_MAP = REPO / "src/kinuv/infer/map.py"
 MAP_DIR = Path(
-    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-4c1bc4-milestone1"
+    "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model"
 )
 CANFAR_NPZ = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz"

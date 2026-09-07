@@ -116,7 +116,7 @@ def main() -> int:
         if args.map_json
         else (
             "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-            "kinuv-KGAS066-uvsign-map/map_result.json"
+            "best_model/stage_a_map.json"
         )
     )
     if "kgas007" in kind.lower() and "KGAS066" in str(map_path):

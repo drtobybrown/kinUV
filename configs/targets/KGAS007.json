@@ -59,10 +59,10 @@
     "maxiter": 40
   },
   "kinms": {
-    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/benchmark/kinms_model_k.fits",
-    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/benchmark/kinms_fit_result.json"
+    "cube": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/benchmarks/kinms_model_k.fits",
+    "result": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/benchmarks/kinms_fit_result.json"
   },
-  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/posterior",
+  "retained_posterior": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007/best_model/posterior",
   "acceptance": {
     "rotation_gate_id": "crossdomain-nonrot-bootstrap-v1",
     "likelihood_identity_atol": 0.05,

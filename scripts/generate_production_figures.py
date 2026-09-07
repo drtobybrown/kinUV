@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate the canonical ApJ production figure suite for accepted kinUV runs.
+"""Build the canonical production hierarchy and ApJ diagnostic suite.
 
-The script consumes promoted model products and accepted S4 synthetic records.
-It performs no fit, changes no scientific parameter, and writes an additive
-``publication`` directory with its own provenance manifest.
+The script consumes an accepted model bundle and accepted S4 synthetic records.
+It performs no fit and changes no scientific parameter. It writes the complete
+``best_model/``, ``plots/``, and ``benchmarks/`` target hierarchy with hashed
+provenance and no legacy figures.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 
 import matplotlib
@@ -20,12 +22,16 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-from matplotlib.ticker import AutoMinorLocator
+from matplotlib.ticker import AutoMinorLocator, MaxNLocator
 import numpy as np
 from astropy.io import fits
+from scipy.ndimage import gaussian_filter
 
 from kinuv.diagnostics.imaging import offset_world, pv_diagram, spectral_axis_kms
-from kinuv.diagnostics.kinms_benchmark import major_axis_rotation_profile
+from kinuv.diagnostics.kinms_benchmark import (
+    fits_sky_offsets_arcsec,
+    major_axis_rotation_profile,
+)
 from kinuv.diagnostics.style import (
     COLOUR,
     CROP_ARCSEC,
@@ -84,6 +90,11 @@ def git_state() -> dict:
 
 
 def accepted_run(production_root: Path, target_id: str) -> Path:
+    standardized = production_root / target_id / "best_model" / "summary.json"
+    if standardized.is_file():
+        summary = load_json(standardized)
+        if summary.get("status") == "accepted" and summary.get("target_id") == target_id:
+            return standardized.parent
     matches = []
     for summary_path in sorted((production_root / target_id).glob("kinuv-*/summary.json")):
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -92,6 +103,55 @@ def accepted_run(production_root: Path, target_id: str) -> Path:
     if len(matches) != 1:
         raise ValueError(f"expected one accepted run for {target_id}; found {matches}")
     return matches[0]
+
+
+def source_paths(run: Path, config_path: Path, synthetic_root: Path, subbeam_root: Path) -> dict:
+    """Resolve equivalent inputs from a legacy bundle or standardized target."""
+
+    target_id = load_json(config_path)["target_id"]
+    if run.name == "best_model":
+        target_root = run.parent
+        return {
+            "config": run / "config.json",
+            "run_summary": run / "summary.json",
+            "stage_a": run / "stage_a_map.json",
+            "stage_b": run / "stage_b_map.json",
+            "plot_summary": run / "plot_summary.json",
+            "data_cube": Path(load_json(config_path)["diagnostic_cube"]),
+            "mask_cube": Path(load_json(config_path)["diagnostic_mask"]),
+            "model_cube": run / "model_on_10kms.fits",
+            "model_native": run / "model_native.fits",
+            "rotation_curve": run / "rotation_curve.npz",
+            "posterior_samples": run / "posterior/posterior_samples.json",
+            "posterior_summary": run / "posterior/summary.json",
+            "benchmark_record": target_root / "benchmarks/benchmark.json",
+            "moments": target_root / "benchmarks/moments.npz",
+            "kinms_cube": target_root / "benchmarks/kinms_model_k.fits",
+            "kinms_fit": target_root / "benchmarks/kinms_fit_result.json",
+            "synthetic": synthetic_root / target_id / "summary.json",
+            "subbeam": subbeam_root / target_id / "summary.json",
+        }
+    config = load_json(config_path)
+    return {
+        "config": run / "config.json",
+        "run_summary": run / "summary.json",
+        "stage_a": run / "stage_a_map.json",
+        "stage_b": run / "stage_b_map.json",
+        "plot_summary": run / "plots/summary.json",
+        "data_cube": Path(config["diagnostic_cube"]),
+        "mask_cube": Path(config["diagnostic_mask"]),
+        "model_cube": run / "plots/model_on_10kms.fits",
+        "model_native": run / "plots/model_native.fits",
+        "rotation_curve": run / "plots/rotation_curve.npz",
+        "posterior_samples": run / "posterior/posterior_samples.json",
+        "posterior_summary": run / "posterior/summary.json",
+        "benchmark_record": run / "benchmark/benchmark.json",
+        "moments": run / "benchmark/moments.npz",
+        "kinms_cube": run / "benchmark/kinms_model_k.fits",
+        "kinms_fit": run / "benchmark/kinms_fit_result.json",
+        "synthetic": synthetic_root / target_id / "summary.json",
+        "subbeam": subbeam_root / target_id / "summary.json",
+    }
 
 
 def load_json(path: Path) -> dict:
@@ -106,6 +166,35 @@ def load_cube(path: Path) -> tuple[np.ndarray, fits.Header]:
 def save_pair(fig, output_dir: Path, name: str) -> list[Path]:
     products = save_publication(fig, output_dir / name)
     return [products["pdf"], products["png"]]
+
+
+def source_crop_arcsec(
+    moment0: np.ndarray,
+    header,
+    centre: tuple[float, float],
+    beam_major_arcsec: float,
+) -> float:
+    """Choose a square field that contains the detected source plus one beam."""
+
+    image = np.asarray(moment0, dtype=np.float64)
+    finite = np.isfinite(image)
+    if not np.any(finite):
+        raise ValueError("moment-0 map has no finite source support")
+    threshold = 0.05 * float(np.nanmax(image))
+    support = finite & (image > threshold)
+    if not np.any(support):
+        support = finite
+    east, north = fits_sky_offsets_arcsec(header, image.shape)
+    source_radius = max(
+        float(np.max(np.abs(east[support] - centre[0]))),
+        float(np.max(np.abs(north[support] - centre[1]))),
+    )
+    full_extent = sky_extent_arcsec(header)
+    half_width = 0.48 * min(
+        abs(full_extent[1] - full_extent[0]),
+        abs(full_extent[3] - full_extent[2]),
+    )
+    return min(CROP_ARCSEC, half_width, max(3.0 * beam_major_arcsec, 1.15 * source_radius + beam_major_arcsec))
 
 
 def moment_figure(
@@ -131,12 +220,12 @@ def moment_figure(
     )
     extent = sky_extent_arcsec(header)
     centre = (float(geometry["dx_arcsec"]), float(geometry["dy_arcsec"]))
-    crop = min(CROP_ARCSEC, 0.48 * abs(extent[1] - extent[0]))
     beam = (
         float(header["BMAJ"]) * 3600.0,
         float(header["BMIN"]) * 3600.0,
         float(header["BPA"]),
     )
+    crop = source_crop_arcsec(moments["data_moment0"], header, centre, beam[0])
     vsys = float(geometry["vsys_kms"])
     rows = (
         ("moment0", r"Moment 0", r"$I_{\rm CO}\ (\mathrm{K\ km\ s^{-1}})$", False),
@@ -431,15 +520,6 @@ def rotation_figure(
         ncol=2,
         fontsize=10,
     )
-    axis.text(
-        0.98,
-        0.04,
-        "Beam-correlated cube centroids; intervals uncalibrated",
-        transform=axis.transAxes,
-        ha="right",
-        color=COLOUR["muted"],
-        fontsize=10,
-    )
     return save_pair(figure, output_dir, "rotation_curve")
 
 
@@ -539,39 +619,587 @@ def synthetic_figure(
     return save_pair(figure, output_dir, "synthetic_benchmark")
 
 
+def integrated_flux_spectrum(cube: np.ndarray, spatial_support: np.ndarray, header) -> np.ndarray:
+    """Return an aperture-integrated spectrum in Jy from a Kelvin cube."""
+
+    velocity = spectral_axis_kms(header)
+    rest_hz = float(header["RESTFRQ"])
+    c_ms = 299792458.0
+    k_b = 1.380649e-23
+    frequency_hz = rest_hz / (1.0 + float(np.nanmedian(velocity)) / 299792.458)
+    beam_area_deg2 = (
+        np.pi * float(header["BMAJ"]) * float(header["BMIN"]) / (4.0 * np.log(2.0))
+    )
+    pixel_area_deg2 = abs(float(header["CDELT1"]) * float(header["CDELT2"]))
+    jy_per_beam_per_k = (
+        2.0
+        * k_b
+        * frequency_hz**2
+        / c_ms**2
+        * beam_area_deg2
+        * (np.pi / 180.0) ** 2
+        * 1.0e26
+    )
+    kelvin_sum = np.nansum(
+        np.where(spatial_support[None, :, :], np.asarray(cube), np.nan), axis=(1, 2)
+    )
+    return kelvin_sum * jy_per_beam_per_k * pixel_area_deg2 / beam_area_deg2
+
+
+def spectral_figure(
+    target_id: str,
+    data_cube: np.ndarray,
+    model_cube: np.ndarray,
+    mask_cube: np.ndarray,
+    header,
+    geometry: dict,
+    output_dir: Path,
+) -> list[Path]:
+    """Plot the matched channel-by-channel integrated flux profile."""
+
+    apply_style(columns=2, aspect_ratio=5.2 / 7.1)
+    support = np.any(mask_cube, axis=0)
+    velocity = spectral_axis_kms(header)
+    data = integrated_flux_spectrum(data_cube, support, header)
+    model = integrated_flux_spectrum(model_cube, support, header)
+    residual = data - model
+    figure, axes = plt.subplots(
+        2,
+        1,
+        figsize=(7.1, 5.2),
+        sharex=True,
+        gridspec_kw={"height_ratios": (2.2, 1.0), "hspace": 0.06},
+    )
+    axes[0].step(velocity, data, where="mid", color=COLOUR["data"], label="Data")
+    axes[0].step(velocity, model, where="mid", color=COLOUR["model"], label="kinUV")
+    axes[0].fill_between(velocity, data, model, step="mid", color=COLOUR["model"], alpha=0.12)
+    axes[0].set_ylabel(r"Integrated flux density $S_\nu\ (\mathrm{Jy})$")
+    axes[0].legend(loc="upper right")
+    axes[0].tick_params(labelbottom=False)
+    axes[1].step(velocity, residual, where="mid", color="#9C2F2F")
+    axes[1].axhline(0.0, color=COLOUR["zero"], linewidth=1.0)
+    axes[1].set(
+        xlabel=r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$",
+        ylabel=r"Data $-$ kinUV $\ (\mathrm{Jy})$",
+    )
+    for axis in axes:
+        vsys_line(axis, float(geometry["vsys_kms"]), orientation="v")
+        axis.xaxis.set_minor_locator(AutoMinorLocator())
+        axis.yaxis.set_minor_locator(AutoMinorLocator())
+    panel_letter(axes[0], "a")
+    panel_letter(axes[1], "b")
+    figure.suptitle(f"{target_id}: aperture-integrated spectral profile", y=0.98)
+    figure.subplots_adjust(left=0.14, right=0.98, bottom=0.16, top=0.89)
+    return save_pair(figure, output_dir, "spectral_profiles")
+
+
+def _density_levels(histogram: np.ndarray) -> list[float]:
+    flat = np.sort(np.asarray(histogram, dtype=np.float64).ravel())[::-1]
+    cumulative = np.cumsum(flat)
+    if cumulative[-1] <= 0.0:
+        return []
+    cumulative /= cumulative[-1]
+    thresholds = []
+    for probability in (0.95, 0.68):
+        index = min(int(np.searchsorted(cumulative, probability)), flat.size - 1)
+        thresholds.append(float(flat[index]))
+    return sorted(set(thresholds))
+
+
+def posterior_corner_figure(
+    target_id: str,
+    posterior: dict,
+    inclination_deg: float,
+    output_dir: Path,
+) -> list[Path]:
+    """Render primary posterior covariance, showing inclination as fixed."""
+
+    names = list(posterior["param_names"])
+    draws = np.asarray(posterior["draws"], dtype=np.float64).reshape(-1, len(names))
+    vsys_draws = draws[:, names.index("vsys_kms")]
+    vsys_reference = float(np.median(vsys_draws))
+    columns = {
+        "v0_kms": draws[:, names.index("v0_kms")],
+        "r_t_arcsec": draws[:, names.index("r_t_arcsec")],
+        "pa_deg": draws[:, names.index("pa_deg")],
+        "delta_vsys_kms": vsys_draws - vsys_reference,
+        "gas_sigma_kms": draws[:, names.index("gas_sigma_kms")],
+    }
+    keys = tuple(columns)
+    labels = (
+        r"$V_{\rm flat}\ (\mathrm{km\ s^{-1}})$",
+        r"$R_{\rm turn}\ (\mathrm{arcsec})$",
+        r"$\mathrm{PA}\ (\mathrm{deg})$",
+        fr"$V_{{\rm sys,radio}}-{vsys_reference:.1f}$" + "\n" + r"$(\mathrm{km\ s^{-1}})$",
+        r"$\sigma_v\ (\mathrm{km\ s^{-1}})$",
+    )
+    limits = {}
+    for key, values in columns.items():
+        lo, hi = np.quantile(values, (0.002, 0.998))
+        pad = 0.08 * (hi - lo)
+        limits[key] = (float(lo - pad), float(hi + pad))
+
+    size = len(keys)
+    apply_style(columns=2, aspect_ratio=7.4 / 7.1)
+    figure, axes = plt.subplots(size, size, figsize=(7.1, 7.4), squeeze=False)
+    for row, y_key in enumerate(keys):
+        for column, x_key in enumerate(keys):
+            axis = axes[row, column]
+            if column > row:
+                axis.set_visible(False)
+                continue
+            x = columns[x_key]
+            if row == column:
+                axis.hist(
+                    x,
+                    bins=32,
+                    density=True,
+                    histtype="stepfilled",
+                    color=COLOUR["model"],
+                    alpha=0.40,
+                )
+                for quantile in np.quantile(x, (0.16, 0.50, 0.84)):
+                    axis.axvline(quantile, color=COLOUR["data"], linewidth=0.8)
+                axis.set_yticks([])
+            else:
+                histogram, x_edges, y_edges = np.histogram2d(
+                    x, columns[y_key], bins=34, range=(limits[x_key], limits[y_key])
+                )
+                smooth = gaussian_filter(histogram.T, sigma=1.0)
+                levels = _density_levels(smooth)
+                if levels:
+                    x_centres = 0.5 * (x_edges[:-1] + x_edges[1:])
+                    y_centres = 0.5 * (y_edges[:-1] + y_edges[1:])
+                    axis.contourf(
+                        x_centres,
+                        y_centres,
+                        smooth,
+                        levels=levels + [float(np.max(smooth)) + np.finfo(float).eps],
+                        colors=("#B8D8E8", COLOUR["model"]),
+                        alpha=0.85,
+                    )
+            axis.set_xlim(*limits[x_key])
+            if row != column:
+                axis.set_ylim(*limits[y_key])
+            axis.tick_params(labelsize=10)
+            axis.xaxis.set_major_locator(MaxNLocator(3))
+            axis.yaxis.set_major_locator(MaxNLocator(3))
+            if row < size - 1:
+                axis.tick_params(labelbottom=False)
+            else:
+                axis.set_xlabel(labels[column], fontsize=12)
+                axis.tick_params(axis="x", labelrotation=35)
+            if column > 0:
+                axis.tick_params(labelleft=False)
+            elif row > 0:
+                axis.set_ylabel(labels[row], fontsize=12)
+    figure.suptitle(
+        f"{target_id}: conditional posterior covariance; "
+        fr"$i={inclination_deg:.3f}^\circ$ fixed; intervals uncalibrated",
+        y=0.985,
+    )
+    figure.subplots_adjust(
+        left=0.18,
+        right=0.98,
+        bottom=0.18,
+        top=0.92,
+        wspace=0.10,
+        hspace=0.10,
+    )
+    return save_pair(figure, output_dir, "posterior_corner")
+
+
+def benchmark_moment_figure(
+    target_id: str,
+    moments: dict[str, np.ndarray],
+    header,
+    geometry: dict,
+    output_dir: Path,
+) -> list[Path]:
+    """Compare matched data, kinUV, and KinMS moments on one scale."""
+
+    apply_style(columns=2, aspect_ratio=9.0 / 7.1)
+    figure = plt.figure(figsize=(7.1, 9.0))
+    grid = GridSpec(
+        6,
+        5,
+        figure=figure,
+        height_ratios=(1.0, 0.10, 1.0, 0.10, 1.0, 0.10),
+        left=0.08,
+        right=0.99,
+        bottom=0.12,
+        top=0.93,
+        wspace=0.06,
+        hspace=0.25,
+    )
+    extent = sky_extent_arcsec(header)
+    centre = (float(geometry["dx_arcsec"]), float(geometry["dy_arcsec"]))
+    beam = (
+        float(header["BMAJ"]) * 3600.0,
+        float(header["BMIN"]) * 3600.0,
+        float(header["BPA"]),
+    )
+    crop = source_crop_arcsec(moments["data_moment0"], header, centre, beam[0])
+    vsys = float(geometry["vsys_kms"])
+    rows = (
+        ("moment0", "Moment 0", r"$I_{\rm CO}\ (\mathrm{K\ km\ s^{-1}})$", False),
+        ("moment1", "Moment 1", r"$v-v_{\rm sys}\ (\mathrm{km\ s^{-1}})$", True),
+        ("moment2", "Moment 2", r"$\sigma_v\ (\mathrm{km\ s^{-1}})$", False),
+    )
+    titles = ("Data", "kinUV", "KinMS", "Data - kinUV", "Data - KinMS")
+    letters = iter("abcdefghijklmno")
+    for row, (key, row_name, unit, velocity) in enumerate(rows):
+        images = [
+            moments[f"data_{key}"],
+            moments[f"kinuv_{key}"],
+            moments[f"kinms_{key}"],
+            moments[f"data_minus_kinuv_{key}"],
+            moments[f"data_minus_kinms_{key}"],
+        ]
+        if velocity:
+            images[:3] = [image - vsys for image in images[:3]]
+            common_limits = symmetric_clim(*images[:3], p=99.0)
+            common_cmap = velocity_cmap()
+        else:
+            common_limits = sequential_clim(*images[:3], p=99.0)
+            common_cmap = intensity_cmap()
+        residual_limits = symmetric_clim(*images[3:], p=97.5)
+        common_artist = residual_artist = None
+        row_axes = []
+        for column, image in enumerate(images):
+            axis = figure.add_subplot(grid[2 * row, column])
+            row_axes.append(axis)
+            limits = common_limits if column < 3 else residual_limits
+            cmap = common_cmap if column < 3 else residual_cmap()
+            artist = imshow_masked(axis, image, extent, *limits, cmap)
+            common_artist = artist if column < 3 else common_artist
+            residual_artist = artist if column >= 3 else residual_artist
+            format_sky_ax(axis, crop, centre, xlabel=False, ylabel=False)
+            axis.tick_params(labelbottom=row == 2, labelleft=column == 0)
+            if row == 0:
+                axis.set_title(titles[column], fontsize=11)
+            panel_letter(axis, next(letters), fontsize=10)
+        row_axes[0].text(
+            0.04,
+            0.05,
+            row_name,
+            transform=row_axes[0].transAxes,
+            fontsize=10,
+            bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8},
+        )
+        cbar(
+            figure,
+            common_artist,
+            unit,
+            cax=figure.add_subplot(grid[2 * row + 1, :3]),
+            orientation="horizontal",
+        )
+        cbar(
+            figure,
+            residual_artist,
+            unit,
+            cax=figure.add_subplot(grid[2 * row + 1, 3:]),
+            orientation="horizontal",
+        )
+        if row == 0:
+            beam_ellipse(
+                row_axes[0],
+                *beam,
+                (centre[0] + crop - 1.4, centre[1] - crop + 1.4),
+            )
+    figure.suptitle(f"{target_id}: matched moment comparison", y=0.98)
+    figure.supxlabel(r"East offset (arcsec)", y=0.012)
+    figure.supylabel(r"North offset (arcsec)", x=0.012)
+    return save_pair(figure, output_dir, "moments_kinuv_vs_kinms")
+
+
+def _matched_pv_rows(cubes, mask_cube, header, geometry, length_arcsec):
+    support = np.any(mask_cube, axis=0)
+    ra, dec = offset_world(
+        float(header["CRVAL1"]),
+        float(header["CRVAL2"]),
+        float(geometry["dx_arcsec"]),
+        float(geometry["dy_arcsec"]),
+    )
+    width = float(header["BMIN"]) * 3600.0
+    rows = []
+    for name, angle in (
+        ("Major axis", float(geometry["pa_deg"])),
+        ("Minor axis", float(geometry["pa_deg"]) + 90.0),
+    ):
+        profiles = []
+        offset = None
+        for cube in cubes:
+            profile, current_offset = pv_diagram(
+                np.where(support[None, :, :], cube, np.nan),
+                header,
+                ra,
+                dec,
+                angle,
+                length_arcsec,
+                width,
+            )
+            if offset is not None and not np.allclose(offset, current_offset):
+                raise ValueError("matched PVD offsets differ")
+            offset = current_offset
+            profiles.append(profile)
+        rows.append((name, angle % 360.0, offset, profiles))
+    return rows
+
+
+def benchmark_pv_figure(
+    target_id,
+    data_cube,
+    kinuv_cube,
+    kinms_cube,
+    mask_cube,
+    header,
+    geometry,
+    crop,
+    output_dir,
+) -> list[Path]:
+    """Compare matched kinUV and KinMS major/minor PVDs."""
+
+    rows = _matched_pv_rows(
+        (data_cube, kinuv_cube, kinms_cube), mask_cube, header, geometry, 2.0 * crop
+    )
+    velocity = spectral_axis_kms(header)
+    common_limits = sequential_clim(
+        *(profile for row in rows for profile in row[3]), p=99.2
+    )
+    residual_limits = symmetric_clim(
+        *(row[3][0] - model for row in rows for model in row[3][1:]), p=97.5
+    )
+    apply_style(columns=2, aspect_ratio=6.8 / 7.1)
+    figure = plt.figure(figsize=(7.1, 6.8))
+    grid = GridSpec(
+        3,
+        5,
+        figure=figure,
+        height_ratios=(1.0, 1.0, 0.07),
+        left=0.075,
+        right=0.99,
+        bottom=0.14,
+        top=0.90,
+        wspace=0.05,
+        hspace=0.10,
+    )
+    titles = ("Data", "kinUV", "KinMS", "Data - kinUV", "Data - KinMS")
+    letters = iter("abcdefghij")
+    for row_index, (name, angle, offset, profiles) in enumerate(rows):
+        images = profiles + [profiles[0] - profiles[1], profiles[0] - profiles[2]]
+        extent = (float(offset[0]), float(offset[-1]), float(velocity[0]), float(velocity[-1]))
+        common_artist = residual_artist = None
+        for column, image in enumerate(images):
+            axis = figure.add_subplot(grid[row_index, column])
+            limits = common_limits if column < 3 else residual_limits
+            cmap = intensity_cmap() if column < 3 else residual_cmap()
+            artist = imshow_masked(axis, image, extent, *limits, cmap, aspect="auto")
+            common_artist = artist if column < 3 else common_artist
+            residual_artist = artist if column >= 3 else residual_artist
+            if row_index == 0:
+                axis.set_title(titles[column], fontsize=11)
+                axis.tick_params(labelbottom=False)
+            if column == 0:
+                axis.set_ylabel(r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$")
+                axis.text(
+                    0.04,
+                    0.04,
+                    f"{name}\nPA = {angle:.1f} deg",
+                    transform=axis.transAxes,
+                    color="white",
+                    fontsize=10,
+                    bbox={"facecolor": "black", "edgecolor": "none", "alpha": 0.65},
+                )
+            else:
+                axis.tick_params(labelleft=False)
+            vsys_line(axis, float(geometry["vsys_kms"]), orientation="h")
+            panel_letter(axis, next(letters), fontsize=10)
+    cbar(
+        figure,
+        common_artist,
+        r"$T_{\rm B}\ (\mathrm{K})$",
+        cax=figure.add_subplot(grid[2, :3]),
+        orientation="horizontal",
+    )
+    cbar(
+        figure,
+        residual_artist,
+        r"$\Delta T_{\rm B}\ (\mathrm{K})$",
+        cax=figure.add_subplot(grid[2, 3:]),
+        orientation="horizontal",
+    )
+    figure.suptitle(f"{target_id}: matched PVD comparison", y=0.975)
+    figure.supxlabel(r"Offset (arcsec; receding $+$)", y=0.018)
+    return save_pair(figure, output_dir, "pvd_kinuv_vs_kinms")
+
+
+def benchmark_spectral_figure(
+    target_id,
+    data_cube,
+    kinuv_cube,
+    kinms_cube,
+    mask_cube,
+    header,
+    geometry,
+    output_dir,
+) -> list[Path]:
+    support = np.any(mask_cube, axis=0)
+    velocity = spectral_axis_kms(header)
+    data = integrated_flux_spectrum(data_cube, support, header)
+    kinuv = integrated_flux_spectrum(kinuv_cube, support, header)
+    kinms = integrated_flux_spectrum(kinms_cube, support, header)
+    apply_style(columns=2, aspect_ratio=5.2 / 7.1)
+    figure, axes = plt.subplots(
+        2,
+        1,
+        figsize=(7.1, 5.2),
+        sharex=True,
+        gridspec_kw={"height_ratios": (2.2, 1.0), "hspace": 0.06},
+    )
+    axes[0].step(velocity, data, where="mid", color=COLOUR["data"], label="Data")
+    axes[0].step(velocity, kinuv, where="mid", color=COLOUR["model"], label="kinUV")
+    axes[0].step(velocity, kinms, where="mid", color=KINMS_COLOUR, label="KinMS")
+    axes[0].set_ylabel(r"Integrated flux density $S_\nu\ (\mathrm{Jy})$")
+    axes[0].legend(loc="upper right", ncol=3)
+    axes[0].tick_params(labelbottom=False)
+    axes[1].step(velocity, data - kinuv, where="mid", color=COLOUR["model"], label="Data - kinUV")
+    axes[1].step(velocity, data - kinms, where="mid", color=KINMS_COLOUR, label="Data - KinMS")
+    axes[1].axhline(0.0, color=COLOUR["zero"], linewidth=1.0)
+    axes[1].set(
+        xlabel=r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$",
+        ylabel=r"Residual $\ (\mathrm{Jy})$",
+    )
+    axes[1].legend(loc="lower right", ncol=2, fontsize=10)
+    for axis in axes:
+        vsys_line(axis, float(geometry["vsys_kms"]), orientation="v")
+        axis.xaxis.set_minor_locator(AutoMinorLocator())
+        axis.yaxis.set_minor_locator(AutoMinorLocator())
+    panel_letter(axes[0], "a")
+    panel_letter(axes[1], "b")
+    figure.suptitle(f"{target_id}: matched integrated-spectrum comparison", y=0.98)
+    figure.subplots_adjust(left=0.14, right=0.98, bottom=0.16, top=0.89)
+    return save_pair(figure, output_dir, "spectra_kinuv_vs_kinms")
+
+
+def benchmark_rotation_figure(
+    target_id,
+    run_summary,
+    stage_a,
+    stage_b,
+    rotation,
+    moments,
+    header,
+    geometry,
+    kinms_fit,
+    beam_arcsec,
+    output_dir,
+) -> list[Path]:
+    radius = rotation["radius_arcsec"]
+    selected = run_summary["selected_model"]
+    kinuv_curve = rotation["stage_b_kms"] if selected == "stage_b" else rotation["stage_a_kms"]
+    data_r, data_v = major_axis_rotation_profile(
+        moments["data_moment0"], moments["data_moment1"], header, **geometry,
+        radius_max_arcsec=7.5, support_moment0=moments["data_moment0"]
+    )
+    kinuv_r, kinuv_v = major_axis_rotation_profile(
+        moments["kinuv_moment0"], moments["kinuv_moment1"], header, **geometry,
+        radius_max_arcsec=7.5, support_moment0=moments["data_moment0"]
+    )
+    kinms_r, kinms_v = major_axis_rotation_profile(
+        moments["kinms_moment0"], moments["kinms_moment1"], header, **geometry,
+        radius_max_arcsec=7.5, support_moment0=moments["data_moment0"]
+    )
+    apply_style(columns=2, aspect_ratio=5.5 / 7.1)
+    figure, axis = plt.subplots(figsize=(7.1, 5.5))
+    axis.axvspan(0.0, beam_arcsec, color="0.92", label=r"Inner $1\times\mathrm{BMAJ}$")
+    axis.plot(radius, kinuv_curve, color=COLOUR["model"], linewidth=2.2, label="kinUV intrinsic")
+    axis.plot(
+        radius,
+        arctan_curve(radius, kinms_fit["v0_kms"], kinms_fit["r_t_arcsec"]),
+        color=KINMS_COLOUR,
+        linewidth=2.0,
+        linestyle="--",
+        label="KinMS intrinsic",
+    )
+    axis.scatter(data_r, data_v, facecolor="white", edgecolor=COLOUR["data"], s=28, label="Data cube centroids")
+    axis.plot(kinuv_r, kinuv_v, color=COLOUR["model"], marker="o", markersize=3.5, linewidth=1.0, alpha=0.75, label="kinUV cube centroids")
+    axis.plot(kinms_r, kinms_v, color=KINMS_COLOUR, marker="s", markersize=3.2, linewidth=1.0, alpha=0.75, label="KinMS cube centroids")
+    axis.axvline(float(stage_a["r_t_arcsec"]), color=FIDUCIAL_COLOUR, linestyle=":", linewidth=1.1, label=r"Stage A $R_{\rm turn}$")
+    axis.axvline(float(kinms_fit["r_t_arcsec"]), color=KINMS_COLOUR, linestyle=":", linewidth=1.1, label=r"KinMS $R_{\rm turn}$")
+    axis.set(
+        xlabel=r"Galactocentric radius $R\ (\mathrm{arcsec})$",
+        ylabel=r"$V_{\rm c}\ (\mathrm{km\ s^{-1}})$",
+        xlim=(0.0, float(np.nanmax(radius))),
+        ylim=(0.0, None),
+        title=f"{target_id}: rotation-profile comparison",
+    )
+    axis.xaxis.set_minor_locator(AutoMinorLocator())
+    axis.yaxis.set_minor_locator(AutoMinorLocator())
+    figure.legend(loc="lower center", bbox_to_anchor=(0.5, 0.015), ncol=2, fontsize=9.5)
+    figure.subplots_adjust(left=0.13, right=0.98, top=0.90, bottom=0.31)
+    return save_pair(figure, output_dir, "rotation_curve_kinuv_vs_kinms")
+
+
 def target_products(
     config_path: Path,
-    production_root: Path,
+    source_root: Path,
+    output_root: Path,
     synthetic_root: Path,
     subbeam_root: Path,
     state: dict,
 ) -> dict:
     config = load_json(config_path)
     target_id = config["target_id"]
-    run = accepted_run(production_root, target_id)
-    output = run / "publication"
-    if output.exists():
-        raise FileExistsError(f"refusing to overwrite existing publication directory: {output}")
-    output.mkdir()
+    run = accepted_run(source_root, target_id)
+    target_root = output_root / target_id
+    if target_root.exists():
+        raise FileExistsError(f"refusing to overwrite production target: {target_root}")
+    best_model = target_root / "best_model"
+    plots_dir = target_root / "plots"
+    benchmarks_dir = target_root / "benchmarks"
+    for directory in (best_model, plots_dir, benchmarks_dir, best_model / "posterior"):
+        directory.mkdir(parents=True, exist_ok=True)
 
-    paths = {
-        "config": config_path,
-        "run_summary": run / "summary.json",
-        "stage_a": run / "stage_a_map.json",
-        "stage_b": run / "stage_b_map.json",
-        "plot_summary": run / "plots/summary.json",
-        "data_cube": Path(config["diagnostic_cube"]),
-        "mask_cube": Path(config["diagnostic_mask"]),
-        "model_cube": run / "plots/model_on_10kms.fits",
-        "moments": run / "benchmark/moments.npz",
-        "rotation_curve": run / "plots/rotation_curve.npz",
-        "kinms_fit": run / "benchmark/kinms_fit_result.json",
-        "synthetic": synthetic_root / target_id / "summary.json",
-        "subbeam": subbeam_root / target_id / "summary.json",
-    }
+    paths = source_paths(run, config_path, synthetic_root, subbeam_root)
     missing = [str(path) for path in paths.values() if not path.is_file()]
     if missing:
-        raise FileNotFoundError(f"missing publication inputs for {target_id}: {missing}")
+        raise FileNotFoundError(f"missing production inputs for {target_id}: {missing}")
+
+    best_model_copies = {
+        "config.json": paths["config"],
+        "summary.json": paths["run_summary"],
+        "stage_a_map.json": paths["stage_a"],
+        "stage_b_map.json": paths["stage_b"],
+        "plot_summary.json": paths["plot_summary"],
+        "model_native.fits": paths["model_native"],
+        "model_on_10kms.fits": paths["model_cube"],
+        "rotation_curve.npz": paths["rotation_curve"],
+        "posterior/posterior_samples.json": paths["posterior_samples"],
+        "posterior/summary.json": paths["posterior_summary"],
+    }
+    source_posterior = paths["posterior_samples"].parent
+    for name in ("config.yaml", "validation.json", "METRICS.md"):
+        candidate = source_posterior / name
+        if candidate.is_file():
+            best_model_copies[f"posterior/{name}"] = candidate
+    for name in ("environment.json", "METRICS.md", "run.log"):
+        candidate = run / name
+        if candidate.is_file():
+            best_model_copies[name] = candidate
+    for destination, source in best_model_copies.items():
+        output_path = best_model / destination
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, output_path)
+
+    benchmark_copies = {
+        "benchmark.json": paths["benchmark_record"],
+        "moments.npz": paths["moments"],
+        "kinms_model_k.fits": paths["kinms_cube"],
+        "kinms_fit_result.json": paths["kinms_fit"],
+    }
+    for destination, source in benchmark_copies.items():
+        shutil.copy2(source, benchmarks_dir / destination)
 
     run_summary = load_json(paths["run_summary"])
     stage_a = load_json(paths["stage_a"])
@@ -583,14 +1211,19 @@ def target_products(
     subbeam = load_json(paths["subbeam"])
     data_cube, header = load_cube(paths["data_cube"])
     model_cube, model_header = load_cube(paths["model_cube"])
+    kinms_cube, kinms_header = load_cube(paths["kinms_cube"])
     mask_cube, _ = load_cube(paths["mask_cube"])
-    if data_cube.shape != model_cube.shape or data_cube.shape != mask_cube.shape:
+    if not (data_cube.shape == model_cube.shape == kinms_cube.shape == mask_cube.shape):
         raise ValueError(
             f"cube mismatch for {target_id}: data={data_cube.shape}, "
-            f"model={model_cube.shape}, mask={mask_cube.shape}"
+            f"kinUV={model_cube.shape}, KinMS={kinms_cube.shape}, mask={mask_cube.shape}"
         )
-    if model_header.get("BUNIT", "").strip().lower() not in {"k", "kelvin"}:
-        raise ValueError(f"production model cube must be in kelvin: {paths['model_cube']}")
+    for label, model_path, current_header in (
+        ("kinUV", paths["model_cube"], model_header),
+        ("KinMS", paths["kinms_cube"], kinms_header),
+    ):
+        if current_header.get("BUNIT", "").strip().lower() not in {"k", "kelvin"}:
+            raise ValueError(f"{label} production model cube must be in kelvin: {model_path}")
     geometry = {
         "pa_deg": stage_a["pa_deg"],
         "inclination_deg": stage_a["inclination_deg_frozen"],
@@ -602,6 +1235,7 @@ def target_products(
         moments = {name: np.asarray(npz[name]) for name in npz.files}
     with np.load(paths["rotation_curve"]) as npz:
         rotation = {name: np.asarray(npz[name]) for name in npz.files}
+    posterior = load_json(paths["posterior_samples"])
 
     centroid_radius, centroid_speed = major_axis_rotation_profile(
         moments["data_moment0"],
@@ -617,7 +1251,7 @@ def target_products(
         n_bin=48,
         support_moment0=moments["data_moment0"],
     )
-    centroid_path = output / "rotation_centroids.npz"
+    centroid_path = plots_dir / "rotation_centroids.npz"
     np.savez(
         centroid_path,
         radius_arcsec=centroid_radius,
@@ -627,12 +1261,14 @@ def target_products(
         ),
     )
 
-    products = []
-    products.extend(moment_figure(target_id, moments, header, geometry, output))
-    products.extend(
-        pv_figure(target_id, data_cube, model_cube, mask_cube > 0.5, header, geometry, output)
+    plot_products = []
+    plot_products.extend(moment_figure(target_id, moments, header, geometry, plots_dir))
+    plot_products.extend(
+        pv_figure(
+            target_id, data_cube, model_cube, mask_cube > 0.5, header, geometry, plots_dir
+        )
     )
-    products.extend(
+    plot_products.extend(
         rotation_figure(
             target_id,
             run_summary,
@@ -643,11 +1279,75 @@ def target_products(
             centroid_speed,
             kinms_fit,
             float(config["diagnostic_beam"]["bmaj_arcsec"]),
-            output,
+            plots_dir,
         )
     )
-    products.extend(synthetic_figure(target_id, synthetic, subbeam, output))
-    products.append(centroid_path)
+    plot_products.extend(
+        spectral_figure(
+            target_id, data_cube, model_cube, mask_cube > 0.5, header, geometry, plots_dir
+        )
+    )
+    plot_products.extend(
+        posterior_corner_figure(
+            target_id, posterior, float(geometry["inclination_deg"]), plots_dir
+        )
+    )
+    plot_products.append(centroid_path)
+
+    centre = (float(geometry["dx_arcsec"]), float(geometry["dy_arcsec"]))
+    crop = source_crop_arcsec(
+        moments["data_moment0"],
+        header,
+        centre,
+        float(header["BMAJ"]) * 3600.0,
+    )
+    benchmark_products = []
+    benchmark_products.extend(
+        benchmark_moment_figure(target_id, moments, header, geometry, benchmarks_dir)
+    )
+    benchmark_products.extend(
+        benchmark_pv_figure(
+            target_id,
+            data_cube,
+            model_cube,
+            kinms_cube,
+            mask_cube > 0.5,
+            header,
+            geometry,
+            crop,
+            benchmarks_dir,
+        )
+    )
+    benchmark_products.extend(
+        benchmark_spectral_figure(
+            target_id,
+            data_cube,
+            model_cube,
+            kinms_cube,
+            mask_cube > 0.5,
+            header,
+            geometry,
+            benchmarks_dir,
+        )
+    )
+    benchmark_products.extend(
+        benchmark_rotation_figure(
+            target_id,
+            run_summary,
+            stage_a,
+            stage_b,
+            rotation,
+            moments,
+            header,
+            geometry,
+            kinms_fit,
+            float(config["diagnostic_beam"]["bmaj_arcsec"]),
+            benchmarks_dir,
+        )
+    )
+    benchmark_products.extend(
+        synthetic_figure(target_id, synthetic, subbeam, benchmarks_dir)
+    )
 
     if run_summary["selected_model"] == "stage_b":
         selection_limit = (
@@ -668,10 +1368,9 @@ def target_products(
             "",
             "These figures use the accepted production model and retained S4 synthetic fits. No fit was run during plotting.",
             "",
-            "- `moments_comparison`: masked moments 0/1/2 for data, kinUV, and data minus kinUV, with the registered restoring beam.",
-            "- `pv_diagrams`: major- and minor-axis data, kinUV, and residual PVDs through the fitted center and PA.",
-            "- `rotation_curve`: conditional-MAP kinUV curve, analytic/KinMS context, WCS-recomputed restored-cube centroid diagnostics, turnover radius, and one-beam scale.",
-            "- `synthetic_benchmark`: matched-family truth recovery, sub-beam turnover error, and inner-beam projected-velocity accuracy against KinMS.",
+            "- `best_model/`: selected fit parameters, model cubes, retained posterior checkpoint, and model manifest.",
+            "- `plots/`: moments, major/minor PVDs, conditional-MAP rotation curve, integrated spectrum, and primary-parameter covariance.",
+            "- `benchmarks/`: matched kinUV/KinMS moments, PVDs, spectra, rotation profiles, and synthetic sub-beam recovery.",
             "",
             "Image-plane products are diagnostics; the accepted scientific objective remains visibility-domain chi-square. Restored-cube centroid points are beam-correlated and are not independent measurements. Synthetic evidence is limited to the registered thin axisymmetric arctan family.",
             "",
@@ -681,17 +1380,39 @@ def target_products(
             "",
         ]
     )
-    note_path = output / "SCIENCE_DELIVERABLES.md"
+    note_path = target_root / "README.md"
     note_path.write_text(science_note, encoding="utf-8")
-    products.append(note_path)
-    manifest = {
-        "schema_version": "kinuv-production-publication-v1",
+    best_manifest = {
+        "schema_version": "kinuv-best-model-v2",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "target_id": target_id,
-        "run": str(run.resolve()),
+        "selected_model": run_summary["selected_model"],
+        "source_bundle": str(run.resolve()),
+        "git": state,
+        "files": {
+            path.relative_to(best_model).as_posix(): {
+                "bytes": path.stat().st_size,
+                "sha256": sha256(path),
+            }
+            for path in sorted(best_model.rglob("*"))
+            if path.is_file()
+        },
+    }
+    write_json(best_model / "MANIFEST.json", best_manifest)
+
+    all_files = [
+        path
+        for path in sorted(target_root.rglob("*"))
+        if path.is_file() and path != target_root / "MANIFEST.json"
+    ]
+    manifest = {
+        "schema_version": "kinuv-production-layout-v2",
+        "created_utc": datetime.now(timezone.utc).isoformat(),
+        "target_id": target_id,
+        "source_bundle": str(run.resolve()),
+        "layout": ["best_model", "plots", "benchmarks"],
         "git": state,
         "fit_performed": False,
-        "original_promotion_files_modified": False,
         "sources": {
             name: {
                 "path": str(path.resolve()),
@@ -700,13 +1421,12 @@ def target_products(
             }
             for name, path in paths.items()
         },
-        "products": {
-            path.name: {
-                "path": str(path.resolve()),
+        "files": {
+            path.relative_to(target_root).as_posix(): {
                 "bytes": path.stat().st_size,
                 "sha256": sha256(path),
             }
-            for path in products
+            for path in all_files
         },
         "science_content": {
             "moments_0_1_2": True,
@@ -719,17 +1439,33 @@ def target_products(
             "inner_beam_scale": True,
             "synthetic_kinms_comparison": True,
             "subbeam_recovery": True,
+            "integrated_spectral_profile": True,
+            "posterior_covariance": True,
+            "inclination_reported_as_fixed": True,
+            "matched_kinms_moments": True,
+            "matched_kinms_pvds": True,
+            "matched_kinms_spectra": True,
+            "matched_kinms_rotation_profile": True,
             "claim_limits_explicit": True,
         },
+        "rendering": {
+            "source_adaptive_crop_arcsec": crop,
+            "style": "vendored ApJ contract",
+            "legacy_figures_present": False,
+        },
     }
-    write_json(output / "MANIFEST.json", manifest)
-    print(f"{target_id}: wrote {len(products)} publication products to {output}")
+    write_json(target_root / "MANIFEST.json", manifest)
+    print(
+        f"{target_id}: wrote {len(plot_products)} plot products and "
+        f"{len(benchmark_products)} benchmark products to {target_root}"
+    )
     return manifest
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--production-root", type=Path, required=True)
+    parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--synthetic-root", type=Path, required=True)
     parser.add_argument("--subbeam-root", type=Path, required=True)
     parser.add_argument("--target-config", action="append", type=Path, required=True)
@@ -744,7 +1480,8 @@ def main() -> None:
     manifests = [
         target_products(
             path,
-            args.production_root,
+            args.source_root,
+            args.output_root,
             args.synthetic_root,
             args.subbeam_root,
             state,

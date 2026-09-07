@@ -28,7 +28,7 @@ from kinuv.runner.plots import write_leftover_at_params  # noqa: E402
 
 MAP = Path(
     "/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/"
-    "kinuv-KGAS066-uvsign-map/stage_a_map.json"
+    "best_model/stage_a_map.json"
 )
 NPZ = Path("/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz")
 ICO = Path(

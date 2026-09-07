@@ -521,12 +521,12 @@ def test_kgas007_merge_refuses_g3_and_066_map(tmp_path):
     g3 = tmp_path / "docs" / "reviews" / "artifacts" / "2026-08-30-g3-nuts"
     map007 = (
         Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007")
-        / "kinuv-KGAS007-e1ee1a-milestone1"
+        / "best_model"
         / "stage_a_map.json"
     )
     map066 = (
         Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066")
-        / "kinuv-KGAS066-4c1bc4-milestone1"
+        / "best_model"
         / "stage_a_map.json"
     )
     proc = subprocess.run(
@@ -698,7 +698,7 @@ def test_kgas007_merge_refuses_incomplete_shards(tmp_path):
     dest = tmp_path / "docs" / "reviews" / "artifacts" / "2026-09-05-kgas007-nuts"
     map007 = (
         Path("/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS007")
-        / "kinuv-KGAS007-e1ee1a-milestone1"
+        / "best_model"
         / "stage_a_map.json"
     )
     shards = tmp_path / "runs"
