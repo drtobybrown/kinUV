@@ -51,6 +51,30 @@ An Implementer may stop a run immediately for corruption, invalid numerics, reso
 * Prohibition on Overengineering: Astra is strictly barred from requiring secondary/redundant reference engines (e.g., ungridded slow-DFT calculations) or extreme theoretical tolerances (e.g., 1e-6 float64 closures) for localized bug fixes when a standard empirical refinement gate (e.g., <= 0.1) confirms physical convergence on real data.
 * Bias Toward Delivery: Theoretical conservatism must not stall development velocity. Architectural specifications must target the minimum viable mathematical formulation required to pass empirical gates on target datasets.
 
+### Plumbline Workflow Invariants
+
+* **Autonomous follow-through.** Once an architectural fix or recovery plan is
+  authorized, the Implementer carries it through code modification and
+  relevant test verification in one continuous turn. Do not pause to restate,
+  re-propose, or request approval for an already approved plan. Stop only at a
+  declared scientific, mathematical, resource, or authorization boundary.
+* **Anti-ceremony testing.** Test gates measure physical invariants, numerical
+  convergence, scientific calculations, and executable data interfaces. Tests
+  must not require exact documentation wording, procedural log prose, review
+  phrasing, heading names, or bureaucratic file formatting. Documentation may
+  be checked by ordinary review and generic syntax/link tooling that does not
+  freeze prose.
+* **Subagent sizing.** Reserve high-tier subagents for independent formal
+  reviews, difficult physical or mathematical derivations, and bounded audits
+  whose independence matters. Routine tests, filesystem inspection, checksum
+  verification, and ordinary edits remain with the active Implementer or use a
+  lightweight worker when concurrency materially shortens the task.
+* **Deterministic in-repository handshakes.** Every stage boundary updates
+  `docs/architecture/STATUS.md` before handoff. The entry names the exact code
+  and evidence commit hashes, controlling scalar metrics with units and gate
+  thresholds, pass/fail state, durable evidence path, and next responsible
+  role. A conversational report or process ID alone cannot close a stage.
+
 ### Empirically Right-Sized Gate Invariant
 
 The binding S2-S5 rules are recorded in

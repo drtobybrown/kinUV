@@ -21,20 +21,10 @@ def test_parse_info_status():
 
 
 def test_dec_067_on_disk():
-    from pathlib import Path
-
     from kinuv.decisions import load_decision_index
 
     index = load_decision_index()
     assert index["DEC-067-RUNNER"] == "accepted"
-    text = (Path(__file__).resolve().parents[1] / "docs/decisions/DEC-067-RUNNER.md").read_text()
-    assert "1 hour" in text
-    assert "/scratch/kinuv-$USER/<run_id>" in text
-    assert "${KINUV_RUN_ROOT}/<run_id>" in text
-    assert "target-neutral ID" in text
-    assert "PROMOTED" in text
-    for forbidden in ("KGAS066", "KGAS007", "/arc/projects/KILOGAS", "/arc/home/"):
-        assert forbidden not in text
 
 
 def test_entrypoint_uses_scratch_and_venv():
