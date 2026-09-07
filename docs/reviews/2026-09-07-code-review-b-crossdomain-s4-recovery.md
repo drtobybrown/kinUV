@@ -83,3 +83,38 @@ checkpoint rejection. Re-seal the final manifest from one reproducible run or
 from explicitly provenance-bound checkpoints, then resubmit Reviewer B.
 
 The arithmetic gates themselves do not need to be changed or relaxed.
+
+## Revision review: authenticated candidate
+
+**Verdict:** `changes-requested`<br>
+**Implementation:** `f2f6a22b6749f46da70e55f57e599f919190c9f8`<br>
+**Status packet:** `879a04b896df6a22b72437e98bb937385b0a9e68`
+
+The first submission's mixed-generation defect is repaired. Every regenerated
+synthetic product timestamp follows `f2f6a22`; all six fit configurations bind
+the exact commit, realization seed, mock-cube hash, truth-cube hash, mask hash,
+and KinMS-worker hash; and all bound values independently verify. Retained
+results are reused only when their complete worker configuration is equal to
+the newly constructed configuration. The synthetic summary and manifest both
+record a clean `dev` checkout at `f2f6a22`.
+
+The complete manifest chain verifies again: 50 of 50 final payloads totaling
+69,156,464 bytes, 49 of 49 synthetic payloads, 9 of 9 grouped payloads, and 83
+of 83 payloads in each supporting replay. All registered sizes and SHA-256
+values match. The final metrics serialize grouped bootstrap seed 4404. The
+exact `f2f6a22` checkout passes the declared deterministic suite with 263 tests
+passed and 5 skipped. The CASA-free and standalone boundaries remain intact.
+
+Two reproducibility requirements remain open in this revision:
+
+1. Each target passes the distinct 30 km/s `fit_window_cube` to
+   `load_target_vis`, so that file affects the selected visibility channels.
+   It is not one of the recorded input hashes. Hashing the target configuration
+   records its path, not the content of that external FITS input.
+2. The added test checks checkpoint code with source-text assertions. It does
+   not execute a matching-checkpoint reuse or demonstrate rejection after a
+   commit, seed, or cube-hash mismatch, as required by the first review.
+
+Add the fit-window FITS hash and behavioral checkpoint identity tests, then
+regenerate and reseal the dossier at the resulting clean implementation
+commit. No scientific metric or gate change is requested.
