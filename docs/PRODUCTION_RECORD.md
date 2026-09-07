@@ -210,3 +210,35 @@ The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_
 3. Extend paired recovery to warped, lopsided, thick, noncircular, and radially varying dispersion truths.
 4. Investigate the KGAS066 velocity-structured residual and define an outer-ring support criterion before another Stage B campaign.
 5. Define a target-selection contract before adding a multi-galaxy runner or hierarchical model.
+
+## 2026-09-08 collaborator MAP-only packet
+
+The PI-authorized bounded joint-MAP replay completed four starts for KGAS066
+and KGAS007. KGAS066 selected start 4 at visibility chi-square 166317.442848,
+an improvement of 1.810083 over its accepted S3 parent. KGAS007 selected start
+3 at 105421.994976, an improvement of 1.879685. Neither selected solution has
+an active-boundary hit. Inclinations remain 55.3343 and 33.8940 deg, so this
+campaign does not support a large hidden inclination-mode correction.
+
+The dual-accepted, immutable early presentation record is
+`results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`.
+Its index and manifest SHA-256 values are
+`64976fb021903f9576f921ab99712c8862b444891ef52456bef330a7bbad79ae`
+and `bd030b2346d696b8db58dec51c223e2b9e199add9617dce7a2eff541dc8d2a09`.
+Reviewer A and Reviewer B accept the exact packet in
+`docs/reviews/2026-09-08-collaborator-map-review-a.md` and
+`docs/reviews/2026-09-08-collaborator-map-review-b.md`.
+
+This is a conditional visibility-MAP deliverable. It imports the accepted S4/S5
+synthetic fits and scores unchanged, contains no posterior intervals, and does
+not replace the canonical accepted model tree. KGAS066 retains coherent spectral,
+PVD, and moment-1 residuals; its supporting restored-cube reduced chi-square is
+7.43049 versus 6.50510 for KinMS and its moment-1 profile RMSE is 7.75576 versus
+3.14489 km/s. Those image-plane diagnostics remain disclosed and are not the
+visibility likelihood optimized by the campaign.
+
+The first NUTS attempt failed with explicit JAX/OpenMP thread oversubscription
+and remains archived. A CPU-pinned attempt with four independently seeded chains,
+incremental warm-up checkpoints, one-minute ASCII heartbeats, and durable process
+accounting is running under `results/incoming/collaborator-delivery-20260908/nuts/`.
+Posterior completion and review will create a separate immutable record.
