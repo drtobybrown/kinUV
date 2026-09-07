@@ -165,7 +165,9 @@ unchanged. No NUTS campaign or calibrated-interval claim is licensed.
 ## Implementation outcome
 
 The localized implementation at `97548f7` and its second refinement correction
-at `c55c985` removed the discrete-dispersion failure. The r4 canonical matrix
-passes spatial, azimuthal, spectral, phase, flux, coordinate, and centroid
-checks. Radial refinement remains above both frozen thresholds for KGAS066 and
-KGAS007. S1 therefore remains open under the two-iteration escalation rule.
+at `c55c985` removed the discrete-dispersion failure. Exact commit `3a73469`
+replaced the global radial rule with composite three-point Gauss-Legendre
+quadrature aligned to the surface-brightness interpolation knots and uniform
+refinement edges. The sealed r5 matrix passes every frozen axis, flux, phase,
+coordinate, and centroid gate for KGAS066 and KGAS007. S1 closed on 2026-09-07,
+and S2 implementation began under the contracts above.

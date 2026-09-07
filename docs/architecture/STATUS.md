@@ -1,14 +1,13 @@
 ---
-generation: 18
-phase: s1-continuum-radial-refinement-blocked
-code_freeze: true
-next_role: consultant-astra
-board: s1-radial-convergence-escalated
-build_licensed: false
+generation: 19
+phase: s2-geometry-covariance-in-progress
+code_freeze: false
+next_role: implementer-sol
+board: crossdomain-recovery-s2
+build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s1-radial-quadrature-convergence
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
@@ -17,25 +16,22 @@ last_review_a: docs/reviews/2026-09-06-review-a-s1-continuum-contract.md
 last_review_b: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
-  - s1-radial-quadrature-strategy
-  - s2-covariance-and-fold-estimator-freeze
-  - s2-start-table-and-optimizer-freeze
-  - s2-campaign-config-and-target-bounds
+  - s2-compliant-visibility-export
 deadlocks: []
-canon_generation: 18
+canon_generation: 19
 ---
 
 ## Agent Run Status
 
-* **Phase:** The continuum adapter removed the dispersion instability, but S1 remains open after its second bounded iteration failed radial refinement
-* **Last Action:** Sealed the r4 target matrix at `c55c985`; spatial, azimuthal, spectral, phase, flux, PA, and centroid checks pass, while radial quadrature fails both principal thresholds
+* **Phase:** S1 is closed; S2 geometry and covariance implementation is active
+* **Last Action:** Sealed the passing r5 two-target matrix from exact implementation commit `3a734693bdd023d01490f77c8181c5d1551072bb`
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold. Governance now codifies proportional verification, direct repair authority, and the empirical `<=0.1` refinement priority for the S1-to-S2 workflow.
-* **Blockers / Gates:** radial refinement gives `|Delta chi2|=0.7568/1.0361` and relative L2 `9.27e-4/1.26e-3` for KGAS066/KGAS007; both retained target exports also block real S2 covariance and held-out scoring
-* **Next Step:** Astra selects a better radial integration rule or revises the representation; S2 has not begun
+* **Blockers / Gates:** S1 has no open gate. Both retained target exports lack the grouping provenance required for real S2 covariance selection and held-out scoring; S2 geometry, turnover, basin, and covariance infrastructure work may proceed.
+* **Next Step:** Implement the accepted S2 geometry/covariance contracts and audit work that does not require grouping metadata while both targets are re-exported through `ms2kinuv`.
 
-The Field Guide and Review Board charter are synchronized with the active
-S1/S2 transition protocol. This governance update does not close the failed S1
-radial gate, license S2 implementation, or alter any scientific threshold.
+The Field Guide and Review Board charter govern the active S2 implementation.
+The S1 closure did not alter the physical brightness profile, velocity
+prescription, target parameters, or frozen thresholds.
 
 ## S1 operator/comparator closure
 
@@ -77,6 +73,23 @@ failure. Cubic assignment-window compensation reduced the spatial-grid changes
 below both thresholds. Gauss-Legendre radial refinement improved but did not
 close the unchanged `|Delta chi2| <= 0.1` and relative-L2 `<=1e-4` gates.
 Per the two-iteration stop rule, no S2 work followed.
+
+The r5 implementation replaces the single-interval radial rule with composite
+three-point Gauss-Legendre quadrature split at every piecewise-linear
+surface-brightness knot and at uniform radial refinement edges. The nominal
+and doubled radial subdivision counts are 256 and 512. The immutable passing
+dossier is
+`results/validation/crossdomain-recovery-s1-20260907-r5/`.
+
+| r5 refinement axis | KGAS066 absolute Delta chi-square / relative L2 | KGAS007 absolute Delta chi-square / relative L2 | Status |
+|---|---:|---:|---|
+| Spatial grid | 0.07771 / 6.17e-5 | 0.002735 / 5.35e-5 | pass |
+| Radial quadrature | 1.37e-4 / 5.55e-7 | 3.94e-6 / 1.01e-7 | pass |
+| Azimuth quadrature | 1.98e-5 / 1.34e-6 | 3.68e-6 / 1.39e-7 | pass |
+| Analytic spectral subdivision | 0.0 / 8.66e-15 | 0.0 / 2.37e-14 | pass |
+
+All flux, independent-phase, signed-coordinate, and spectral-centroid gates
+also pass. S1 is **CLOSED** and S2 began on 2026-09-07.
 
 ## Corrected prospective rotation accounting
 
