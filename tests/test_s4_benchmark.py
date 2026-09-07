@@ -76,3 +76,23 @@ def test_s4_runner_uses_same_observed_frequency_to_invert_primary_beam():
     assert "hann_native(cube_yxv, axis=2)" in source
     assert '"--replay-all"' in source
     assert '"promotion_eligible": False' in source
+
+
+def test_replay_records_sparse_profile_instead_of_aborting():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "scripts/run_s4_real_benchmark.py"
+    spec = importlib.util.spec_from_file_location("s4_runner", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    record = module._diagnostic_projected_velocity_rmse(
+        {
+            "rotation_radius_data": np.array([1.0]),
+            "rotation_speed_data": np.array([10.0]),
+        },
+        30.0,
+    )
+    assert record["gate_eligible"] is False
+    assert record["ratio_kinuv_over_kinms"] is None
+    assert record["data_n_radius"] == 1

@@ -147,6 +147,23 @@ def _active_parameter_count(preferred):
     return int(preferred["hessian"]["dimension"])
 
 
+def _diagnostic_projected_velocity_rmse(profiles, inclination_deg):
+    """Return an explicit ineligible record when a cube profile is too sparse."""
+
+    try:
+        return projected_velocity_rmse(profiles, inclination_deg)
+    except ValueError as error:
+        return {
+            "gate_eligible": False,
+            "eligibility_rule": "at least three common moment-1 radial bins",
+            "reason": str(error),
+            "ratio_kinuv_over_kinms": None,
+            "data_n_radius": int(
+                np.asarray(profiles.get("rotation_radius_data", [])).size
+            ),
+        }
+
+
 def _structured_diagnostics(config, covariance_metrics):
     target_id = config["target_id"]
     covariance_row = next(
@@ -561,7 +578,7 @@ def run_target_replay(config_path, s3_root, covariance_metrics, covariance_path,
             candidate_dir / "benchmark" / "profiles.npz", allow_pickle=False
         ) as archive:
             profiles = {name: np.asarray(archive[name]) for name in archive.files}
-        recovery = projected_velocity_rmse(
+        recovery = _diagnostic_projected_velocity_rmse(
             profiles, common_geometry["inclination_deg"]
         )
         candidate_record = {
