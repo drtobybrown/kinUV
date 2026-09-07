@@ -4,6 +4,17 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-07 - cross-domain recovery S0-S5 closure
 
+- Replaced per-target run-ID directories with the canonical `best_model/`,
+  `plots/`, and `benchmarks/` hierarchy. Archived and removed every legacy
+  figure before promotion of the clean tree.
+- Added integrated-flux spectral profiles and five-dimensional sampled
+  posterior corner plots, with fixed inclination declared explicitly rather
+  than represented as a spurious posterior dimension.
+- Modernized the full kinUV/KinMS comparison suite: matched moments,
+  major/minor PVDs, spectra, real rotation profiles, and synthetic sub-beam
+  recovery now have paired ApJ PDF/PNG products.
+- Added source-adaptive moment-map framing based on detected moment-0 support
+  plus one restoring beam so compact targets fill the panels without clipping.
 - Added a zero-dependency ApJ plotting contract with vendored 3.5/7.1-inch
   dimensions, Times/STIX typography, Type 42 fonts, inward ticks, and 300 dpi
   export helpers.

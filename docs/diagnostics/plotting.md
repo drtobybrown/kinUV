@@ -8,9 +8,12 @@ Follow this for every figure. Cosmetics live in `kinuv.diagnostics.style`. Match
 - Not as a likelihood. Vis `chi2` is the fit; these figures are a check.
 - Do not add dashboard chrome, sparkline insets, or a novel title on every panel.
 
-## Standard suite (every fit)
+## Standard production suite
 
-Use `kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`. Do not invent a second leftover or slice plotter. Axis labels are ASCII (`chi2`, `gas_sigma`, `r_t`) so underscores and Greek do not break renderers.
+Use `scripts/generate_production_figures.py` for accepted products. It creates
+the full `best_model/`, `plots/`, and `benchmarks/` hierarchy in one clean
+output root. Preview-only fit diagnostics may still use
+`kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`.
 
 1. **Residual breakdown** — `plot_leftover_chi2`: `chi2` vs uv-distance and vs velocity. Flat-in-baseline + structured-in-velocity is SB misspecification, not a missing-flux bowl. Official example: `docs/reviews/artifacts/2026-08-29-s1-mock/leftover_chi2.png`.
 2. **Likelihood geometry** — `plot_chi2_slices`: 2-D `chi2` on `PA-gas_sigma`, `gas_sigma-i` (scan only), `PA-r_t`. S1 example: `s1_chi2_slices.png`. Expensive on the full fit array; do not run on every survey galaxy by default.
@@ -83,14 +86,15 @@ tick labels, and Type 42 font embedding for ApJ/AAS-compatible output.
 
 1. One figure-level title. Column headers **Data | Model | Residual** once (top row). Row labels **M0 / M1 / M2** once (left). Use `data_model_residual_grid` so Data|Model share a colourbar sitting *between* Model and Residual (do not stack two bars on the far right — labels will collide).
 2. `extent = sky_extent_arcsec(header)` then `imshow_masked(...)`.
-3. `format_sky_ax(ax, CROP_ARCSEC, centre=(dx, dy), xlabel=..., ylabel=...)`. Crop ~±12″ around the galaxy, not the full empty field. East left, north up (`xlim` must be descending).
+3. Determine the crop from finite moment-0 support above 5 percent of peak,
+   then add at least one BMAJ. Cap at 12 arcsec. East is left and north is up.
 4. Data and model share `vmin`/`vmax` per row (`sequential_clim` for M0/M2; `symmetric_clim` for M1). One colourbar for the pair, one for residual (`cbar(..., cax=...)`). Units on every colourbar label.
 5. Plot M1 as `v − vsys` (optical). Colourbar centred on 0, label `v − vsys (km/s)`.
 6. Residuals: `residual_cmap()`, symmetric, 95th-percentile clip. If an M1 residual colourbar is of order \(V_{\rm rot}\) (~200 km/s), that is a 180° PA flag — do not clip it to tens of km/s to make the map look quiet.
 7. Masked pixels are NaN → white via `imshow_masked`. Do not `nan_to_num` for display.
 8. Restoring beam: `beam_ellipse` on M0 data (or the whole data column), lower-left. `BPA` is east of north; the helper rotates in the east/north plane.
 9. Tick labels only on the left column and bottom row. Physical ticks in arcsec.
-10. `save_fig(fig, path)` — white PNG, dpi 200.
+10. `save_publication(fig, path)` writes paired vector PDF and 300-dpi PNG.
 
 ## Spectrum recipe
 
@@ -108,12 +112,16 @@ tick labels, and Type 42 font embedding for ApJ/AAS-compatible output.
 
 ## File naming
 
-Write under `docs/reviews/artifacts/YYYY-MM-DD-<slug>/` with a `README.md` that links this guide and the science note. PNG names: `moments.png`, `spectra.png`, `pv_major.png`, `pv_minor.png` (or equally specific). Do not commit `/arc` science FITS.
+Accepted direct diagnostics go under `results/production/<target>/plots/`.
+KinMS comparisons go under `results/production/<target>/benchmarks/`.
+Selected parameters, posterior checkpoints, and model cubes go under
+`results/production/<target>/best_model/`. Preview products remain under dated
+review-artifact directories. Do not commit `/arc` science FITS.
 
 ## Checklist before merging a figure
 
 - [ ] `apply_style()` used; no copied rcParams
-- [ ] East left, north up; crop ~±12″, not the full FoV
+- [ ] East left, north up; source-adaptive crop contains all detected emission plus one beam
 - [ ] Shared clim for data and model; residual separate and diverging
 - [ ] Units on every colourbar; M1 is `v − vsys` around 0
 - [ ] Masked pixels white, not zero
@@ -121,4 +129,4 @@ Write under `docs/reviews/artifacts/YYYY-MM-DD-<slug>/` with a `README.md` that 
 - [ ] vsys dashed grey on spectra and PV
 - [ ] Approaching/receding labelled along **fitted** PA
 - [ ] One legend; no C0/C1; no rainbow; no per-panel novel
-- [ ] dpi 200, white background, no overlapping labels
+- [ ] paired PDF/PNG, dpi 300, white background, no overlapping labels

@@ -17,7 +17,7 @@ The fitted gas dispersion is σ ≈ 12 km/s and the visibility fit array has Δv
 
 The Stage B sky cube (native vis channels, ~1.27 km/s, Jy/pixel, no restoring beam) lives next to the MAP JSON:
 
-`/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/plots/model_native.fits`
+`/arc/projects/KILOGAS/analysis/toby_sandbox/results/production/KGAS066/best_model/model_native.fits`
 
 `sky_cube` uses +x east. `scripts/write_model_cubes.py` flips NAXIS1 so the FITS `CDELT1 < 0` WCS is sky-true. Do not flip again on read. The Ico SB template is flipped the same way on ingest (`fits_image_east_north`) because the CASA map has `CDELT1<0`. The 066 npz Fourier kernel uses `NPZ_UV_SIGN = -1`: CASA visibilities match the WCS-true CLEAN cube with a `+2πi` kernel, not a conjugated export. `kinuv-KGAS066-f47bc9-map` is the historical vis-winner at PA=21.9° before that sign.
 

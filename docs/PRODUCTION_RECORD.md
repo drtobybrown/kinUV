@@ -75,19 +75,18 @@ This document is the durable synthesis of completed review cards, architecture n
 
 | Target | Product | Result | Interpretation |
 |---|---|---|---|
-| KGAS066 | MILESTONE-001, `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Selected Stage B chi2 167302.366; Stage A PA 199.729 deg, V0 267.670 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 35552.645; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable historical baseline. Its former Stage B oscillation gate is invalidated by S0's unit/provenance audit. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
-| KGAS007 | MILESTONE-001, `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s. Historical `max_omega=76.329` is dimensionless; its old km/s threshold label was invalid. Posterior intervals remain uncalibrated. |
+| KGAS066 | MILESTONE-001, `results/production/KGAS066/best_model/` | Selected Stage B chi2 167302.366; Stage A PA 199.729 deg, V0 267.670 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 35552.645; retained posterior max Rhat 1.00369 and min ESS 889 | Accepted immutable historical baseline. Its former Stage B oscillation gate is invalidated by S0's unit/provenance audit. Posterior intervals remain uncalibrated and the structured visibility residual flag remains set. |
+| KGAS007 | MILESTONE-001, `results/production/KGAS007/best_model/` | Selected Stage A chi2 122070.763; PA 151.601 deg, V0 195.979 km/s, rt 0.500 arcsec, delta chi2 versus blank visibilities 6211.629; retained posterior max Rhat 1.00214 and min ESS 1093 | Accepted immutable baseline. Stage B is retained but rejected because a ring reached 0 km/s. Historical `max_omega=76.329` is dimensionless; its old km/s threshold label was invalid. Posterior intervals remain uncalibrated. |
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 
-Both accepted target bundles now contain an additive `publication/` directory
-generated at code commit `c6822b1`. Each directory provides ApJ-ready
-moment-comparison, major/minor PVD, conditional-MAP rotation-curve, and
-synthetic sub-beam benchmark PDF/PNG pairs with a checksum-bound manifest.
-The cube centroids use the repaired celestial-WCS tangent-plane extractor;
-legacy pre-repair centroid arrays are excluded. Astra's science-completeness
-review accepts the suite while retaining the established limits on posterior
-calibration, real inner-slope claims, and formal rotation significance.
+The active production roots now use only `best_model/`, `plots/`, and
+`benchmarks/`. The complete ApJ diagnostic suite is generated at code commit
+`e3a54fc`: direct moments, major/minor PVDs, integrated spectra, conditional
+posterior covariance, and rotation curves live in `plots/`; matched KinMS
+moments, PVDs, spectra, rotation profiles, and synthetic recovery live in
+`benchmarks/`. Legacy figures were archived and removed from production. The
+cube centroids use the repaired celestial-WCS tangent-plane extractor.
 
 The independent KGAS007 fit assessment is recorded in
 [`diagnostics/kgas007-fit-assessment.md`](diagnostics/kgas007-fit-assessment.md).
@@ -146,8 +145,8 @@ MILESTONE-001 fixed an inclination propagation defect in Stage B and model-cube 
 | `docs/reviews/2026-09-06-code-review-b-crossdomain-s0.md` | Independent software/reproducibility acceptance of S0 commit `fb4a145`. |
 | `../../results/validation/crossdomain-recovery-s0-20260906/` | Durable S0 two-target accounting metrics and checksum manifest. |
 | `MILESTONE-001.md` | Compact milestone receipt and acceptance summary. |
-| `../../results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Accepted KGAS066 visibility, imaging, benchmark, and posterior bundle. |
-| `../../results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Accepted KGAS007 visibility, imaging, benchmark, and posterior bundle. |
+| `../../results/production/KGAS066/` | Accepted KGAS066 best model, diagnostics, and benchmark hierarchy. |
+| `../../results/production/KGAS007/` | Accepted KGAS007 best model, diagnostics, and benchmark hierarchy. |
 
 The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_20260906.tar.gz`](../../archives/kinuv_docs_legacy_20260906.tar.gz). It contains the closed review cards and removed artifacts exactly as they existed before cleanup.
 

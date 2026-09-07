@@ -23,18 +23,18 @@ kinUV/KinMS mean absolute `R_turn` error ratios are 0.02493 for KGAS066 and
 0.01438 and 0.13749. It is explicitly non-gating and leaves the S4 and target
 bundles immutable.
 
-The additive production-publication suite at code commit `c6822b1` writes four
-ApJ-ready PDF/PNG figure pairs into each accepted bundle's `publication/`
-directory. The figures cover moments 0/1/2, major/minor PVDs, conditional-MAP
-rotation curves, and synthetic sub-beam recovery. Their own manifests bind all
-inputs and outputs. Astra accepted both suites after the restored-cube
-centroids were recomputed with the repaired WCS tangent-plane convention and
-the scientific claim limits were made explicit. No fit or sampler was rerun.
+The production hierarchy was standardized at code commit `e3a54fc`. Each
+target now contains `best_model/`, `plots/`, and `benchmarks/` directly beneath
+`results/production/<target>/`. Five direct-diagnostic and five matched
+kinUV/KinMS figure pairs cover moments 0/1/2, major/minor PVDs, integrated
+spectra, conditional posterior covariance, real rotation profiles, and
+synthetic sub-beam recovery. Source-adaptive moment-map framing retains all
+detected emission plus at least one beam. No fit or sampler was rerun.
 
 | Target | Production product | Selected model | Visibility result | Posterior status |
 |---|---|---|---|---|
-| KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus blank visibilities 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
-| KGAS007 | `results/production/KGAS007/kinuv-KGAS007-e1ee1a-milestone1/` | Stage A arctan | chi2 122070.763375; delta chi2 versus blank visibilities 6211.628755 | Four retained chains; max Rhat 1.00214; min bulk ESS 1093; intervals uncalibrated |
+| KGAS066 | `results/production/KGAS066/best_model/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus blank visibilities 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
+| KGAS007 | `results/production/KGAS007/best_model/` | Stage A arctan | chi2 122070.763375; delta chi2 versus blank visibilities 6211.628755 | Four retained chains; max Rhat 1.00214; min bulk ESS 1093; intervals uncalibrated |
 
 Both two-start optimizations converged to the same physical PA mode, and both saved likelihoods reproduce exactly from the serialized selected model. KGAS007 Stage B reached a 0 km/s ring bound. Its historical `max_omega=76.329` is dimensionless (`|Delta2 V|/|Delta v_chan|`); the old 20 km/s label was invalid, so this value is retained only as rejected historical evidence and does not supply the accepted cube or rotation curve.
 
