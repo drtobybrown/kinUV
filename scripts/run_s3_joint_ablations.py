@@ -182,8 +182,10 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
             "rank": 3,
             "positive": True,
             "unit_integral_components": True,
+            "radial_partition": "quintic_smoothstep_partition_of_unity",
             "natural_weights": basis.natural_weights.tolist(),
             "radial_edges_arcsec": basis.radial_edges_arcsec.tolist(),
+            "transition_width_arcsec": basis.transition_width_arcsec,
             "r95_arcsec": basis.r95_arcsec,
         },
         "velocity_support": {

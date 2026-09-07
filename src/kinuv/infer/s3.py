@@ -52,6 +52,7 @@ class EmissivityBasis:
     natural_weights: np.ndarray
     radial_edges_arcsec: np.ndarray
     r95_arcsec: float
+    transition_width_arcsec: float
 
 
 @dataclass(frozen=True)
@@ -94,7 +95,15 @@ def _weighted_radius_quantiles(radius, weight, quantiles):
 
 
 def build_positive_emissivity_basis(template, grid, pa_rad, i_rad) -> EmissivityBasis:
-    """Split positive template emission into three normalized radial bands."""
+    """Build a positive, smooth radial partition of the template.
+
+    The former hard annular cuts let two emissivity logits create artificial
+    brightness steps at the one-third and two-third flux radii.  A quintic
+    smoothstep partition retains the same compact three-component chart while
+    making the represented sky brightness twice continuously differentiable
+    across both transitions.  The natural mixture reconstructs the clipped,
+    normalized input exactly.
+    """
 
     image = np.maximum(np.asarray(template, dtype=np.float64), 0.0)
     area = float(grid.cell_arcsec) ** 2
@@ -106,15 +115,28 @@ def build_positive_emissivity_basis(template, grid, pa_rad, i_rad) -> Emissivity
     q33, q67, r95 = _weighted_radius_quantiles(
         radius, image, (1.0 / 3.0, 2.0 / 3.0, 0.95)
     )
-    edges = np.array([0.0, q33, q67, np.inf], dtype=np.float64)
+    separation = min(float(q33), float(q67 - q33), float(r95 - q67))
+    width = max(float(grid.cell_arcsec), 0.25 * separation)
+    width = min(width, 0.45 * float(q67 - q33))
+
+    def transition(center):
+        t = np.clip((radius - (center - width)) / (2.0 * width), 0.0, 1.0)
+        return t**3 * (10.0 + t * (-15.0 + 6.0 * t))
+
+    inner_to_middle = transition(q33)
+    middle_to_outer = transition(q67)
+    windows = (
+        1.0 - inner_to_middle,
+        inner_to_middle - middle_to_outer,
+        middle_to_outer,
+    )
     components = []
     weights = []
-    for lo, hi in zip(edges[:-1], edges[1:]):
-        mask = (radius >= lo) & (radius < hi)
-        component = np.where(mask, image, 0.0)
+    for window in windows:
+        component = image * np.maximum(window, 0.0)
         fraction = float(np.sum(component) * area)
         if fraction <= 0.0:
-            raise ValueError("emissivity radial basis contains an empty band")
+            raise ValueError("emissivity radial basis contains an empty component")
         components.append(component / fraction)
         weights.append(fraction)
     natural = np.asarray(weights, dtype=np.float64)
@@ -124,6 +146,7 @@ def build_positive_emissivity_basis(template, grid, pa_rad, i_rad) -> Emissivity
         natural_weights=natural,
         radial_edges_arcsec=np.array([0.0, q33, q67], dtype=np.float64),
         r95_arcsec=float(r95),
+        transition_width_arcsec=float(width),
     )
 
 

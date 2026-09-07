@@ -35,6 +35,9 @@ def test_positive_emissivity_basis_is_normalized_and_reconstructs_clipped_templa
         atol=1.0e-12,
     )
     assert basis.natural_weights.sum() == pytest.approx(1.0)
+    assert basis.transition_width_arcsec > 0.0
+    overlap = np.sum(basis.images > 0.0, axis=0)
+    assert np.any(overlap >= 2)
     reconstructed = np.sum(
         basis.natural_weights[:, None, None] * basis.images, axis=0
     )

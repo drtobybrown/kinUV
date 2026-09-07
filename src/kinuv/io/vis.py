@@ -510,13 +510,19 @@ def load_target_vis(
     *,
     cube_path,
     phase_dir_rad=None,
+    row_mask=None,
     n_bin: int = N_BIN,
     time_bin_s: float = TIME_BIN_S,
     uv_bin_m: float = UV_BIN_M,
     trim_margin: int = TRIM_MARGIN_NATIVE,
     n_guard: int = N_GUARD,
 ) -> tuple[VisData, dict]:
-    """Prepare any configured target from canonical or historical NPZ input."""
+    """Prepare a configured target, optionally from a native-row subset.
+
+    ``row_mask`` is applied before every time/uv aggregation.  This ordering is
+    required for correlation-aware train/validation splits: no averaged output
+    row may mix native Measurement Set rows from different folds.
+    """
     table = load_visibility_table(path)
     freqs_all = table.freqs
     vel_all = freq_to_velocity_kms(freqs_all)
@@ -531,10 +537,20 @@ def load_target_vis(
         n_guard=int(n_guard),
     )
     sl = slice(i0, i1 + 1)
-    vis = table.vis[:, sl]
-    weights = table.weights[:, sl]
-    u_m = table.u_m
-    v_m = table.v_m
+    if row_mask is None:
+        rows = slice(None)
+        selected_native_rows = int(table.vis.shape[0])
+    else:
+        rows = np.asarray(row_mask, dtype=bool).ravel()
+        if rows.shape != (table.vis.shape[0],):
+            raise ValueError("row_mask must contain one value per native row")
+        selected_native_rows = int(np.sum(rows))
+        if selected_native_rows == 0:
+            raise ValueError("row_mask selects no native visibility rows")
+    vis = table.vis[rows, sl]
+    weights = table.weights[rows, sl]
+    u_m = table.u_m[rows]
+    v_m = table.v_m[rows]
     freqs_trim = freqs_all[sl]
     vel_trim = vel_all[sl]
     freqs_native = freqs_all[g0 : g1 + 1]
@@ -549,9 +565,9 @@ def load_target_vis(
             v_m,
             vis,
             weights,
-            table.time,
+            table.time[rows],
             float(time_bin_s),
-            table.baseline,
+            table.baseline[rows],
         )
     u_m, v_m, vis, weights = bin_uv_plane(
         u_m, v_m, vis, weights, float(uv_bin_m)
@@ -598,6 +614,9 @@ def load_target_vis(
         "time_average": time_average,
         "time_bin_s": float(time_bin_s) if time_average else None,
         "uv_bin_m": float(uv_bin_m),
+        "native_rows_total": int(table.vis.shape[0]),
+        "native_rows_selected": selected_native_rows,
+        "row_subset_before_aggregation": row_mask is not None,
     }
     return data, meta
 
