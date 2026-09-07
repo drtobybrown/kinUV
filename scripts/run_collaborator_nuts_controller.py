@@ -30,7 +30,15 @@ def main() -> int:
     parser.add_argument("--durable-root", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--max-workers", type=int, default=4)
+    parser.add_argument(
+        "--cpu-sets",
+        default="0-3,4-7,8-11,12-15",
+        help="comma-separated taskset CPU ranges, one per concurrent worker",
+    )
     args = parser.parse_args()
+    cpu_sets = [item.strip() for item in args.cpu_sets.split(",") if item.strip()]
+    if len(cpu_sets) < args.max_workers:
+        raise ValueError("cpu-sets must provide one affinity set per worker")
     args.durable_root.mkdir(parents=True, exist_ok=True)
     controller_log = args.durable_root / "controller.log"
     jobs = []
@@ -54,19 +62,22 @@ def main() -> int:
                 worker_root = args.durable_root / target
                 worker_root.mkdir(parents=True, exist_ok=True)
                 worker_log = (worker_root / f"chain-{chain}.stdout.log").open("ab")
-                command = [
+                worker_command = [
                     str(args.python), "scripts/run_collaborator_nuts_chain.py",
                     "--selected-map", str(job["selected"]), "--chain-id", str(chain),
                     "--seed", str(job["seed"]), "--scratch", str(args.scratch_root / target),
                     "--durable", str(worker_root), "--warmup", "1000", "--samples", "1000",
                     "--chunk", "100", "--target-accept", "0.90", "--max-tree-depth", "10",
                 ]
+                occupied = {row["cpu_set"] for row in active.values()}
+                cpu_set = next(item for item in cpu_sets if item not in occupied)
+                command = ["taskset", "-c", cpu_set, *worker_command]
                 env = os.environ.copy()
-                env.update({"OMP_NUM_THREADS": "4", "OPENBLAS_NUM_THREADS": "4", "MKL_NUM_THREADS": "4", "NUMEXPR_NUM_THREADS": "4", "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=true intra_op_parallelism_threads=4", "PYTHONUNBUFFERED": "1"})
+                env.update({"OMP_NUM_THREADS": "4", "OPENBLAS_NUM_THREADS": "4", "MKL_NUM_THREADS": "4", "NUMEXPR_NUM_THREADS": "4", "TF_NUM_INTRAOP_THREADS": "4", "TF_NUM_INTEROP_THREADS": "1", "JAX_NUM_THREADS": "4", "XLA_FLAGS": "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=4", "PYTHONUNBUFFERED": "1"})
                 process = subprocess.Popen(command, cwd=Path(__file__).resolve().parents[1], env=env, stdin=subprocess.DEVNULL, stdout=worker_log, stderr=subprocess.STDOUT, start_new_session=True)
-                job.update({"pid": process.pid, "process": process, "log_handle": worker_log, "started_utc": utc_now()})
+                job.update({"pid": process.pid, "process": process, "log_handle": worker_log, "started_utc": utc_now(), "cpu_set": cpu_set})
                 active[(target, chain)] = job
-                log.write(f"{utc_now()} launch target={target} chain={chain} seed={job['seed']} pid={process.pid}\n")
+                log.write(f"{utc_now()} launch target={target} chain={chain} seed={job['seed']} pid={process.pid} cpu_set={cpu_set}\n")
                 log.flush()
             time.sleep(10.0)
             for key, job in list(active.items()):
@@ -74,7 +85,7 @@ def main() -> int:
                 if code is None:
                     continue
                 job["log_handle"].close()
-                completed.append({name: job[name] for name in ("target", "chain", "seed", "pid", "started_utc")} | {"exit_code": code, "completed_utc": utc_now()})
+                completed.append({name: job[name] for name in ("target", "chain", "seed", "pid", "started_utc", "cpu_set")} | {"exit_code": code, "completed_utc": utc_now()})
                 del active[key]
                 log.write(f"{utc_now()} exit target={key[0]} chain={key[1]} pid={job['pid']} code={code}\n")
                 log.flush()
@@ -82,7 +93,7 @@ def main() -> int:
                 "state": "RUNNING" if jobs or active else "SUCCEEDED" if all(row["exit_code"] == 0 for row in completed) else "FAILED",
                 "controller_pid": os.getpid(), "updated_utc": utc_now(),
                 "queued": [{k: row[k] for k in ("target", "chain", "seed")} for row in jobs],
-                "active": [{k: row[k] for k in ("target", "chain", "seed", "pid", "started_utc")} for row in active.values()],
+                "active": [{k: row[k] for k in ("target", "chain", "seed", "pid", "started_utc", "cpu_set")} for row in active.values()],
                 "completed": completed,
             })
         result = 0 if all(row["exit_code"] == 0 for row in completed) else 1

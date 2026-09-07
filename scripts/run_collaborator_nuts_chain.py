@@ -146,7 +146,7 @@ def main() -> int:
     y0 = transform.active_initial_unconstrained(fixed_full)
     rng = np.random.default_rng(args.seed)
     y0 = y0 + 0.01 * rng.standard_normal(y0.shape)
-    state_doc = {"state": "RUNNING", "target": target, "chain_id": args.chain_id, "seed": args.seed, "pid": os.getpid(), "started_utc": utc_now(), "warmup": args.warmup, "samples": args.samples, "completed_draws": 0}
+    state_doc = {"state": "RUNNING", "target": target, "chain_id": args.chain_id, "seed": args.seed, "pid": os.getpid(), "started_utc": utc_now(), "warmup": args.warmup, "samples": args.samples, "completed_warmup": 0, "completed_draws": 0}
     atomic_json(durable / "status.json", state_doc)
     stop = threading.Event()
 
@@ -160,42 +160,60 @@ def main() -> int:
     try:
         import jax
         import jax.numpy as jnp
-        from numpyro.infer import MCMC, NUTS
+        from numpyro.infer import NUTS
 
         compiled = jax.jit(potential)
         initial_energy = float(compiled(jnp.asarray(y0)))
         if not np.isfinite(initial_energy):
             raise RuntimeError("non-finite NUTS energy at initialization")
         kernel = NUTS(potential_fn=compiled, target_accept_prob=args.target_accept, max_tree_depth=args.max_tree_depth, adapt_mass_matrix=True)
-        mcmc = MCMC(kernel, num_warmup=args.warmup, num_samples=args.chunk, num_chains=1, chain_method="sequential", progress_bar=False, jit_model_args=False)
         key = jax.random.PRNGKey(args.seed)
         state_doc["state"] = "WARMUP"
         atomic_json(durable / "status.json", state_doc)
-        mcmc.warmup(key, init_params=jnp.asarray(y0), collect_warmup=False, extra_fields=("diverging", "num_steps", "accept_prob", "energy"))
-        sampler_state = mcmc.last_state
-        atomic_pickle(scratch / "sampler_state.pkl", sampler_state)
-        copy_checkpoint(scratch / "sampler_state.pkl", durable / "sampler_state.pkl")
+        sampler_state = kernel.init(
+            key,
+            args.warmup,
+            init_params=jnp.asarray(y0),
+            model_args=(),
+            model_kwargs={},
+        )
+        sample_once = jax.jit(lambda current: kernel.sample(current, (), {}))
+        for warmup_index in range(args.warmup):
+            sampler_state = sample_once(sampler_state)
+            completed = warmup_index + 1
+            if completed % args.chunk == 0 or completed == args.warmup:
+                atomic_pickle(scratch / "sampler_state.pkl", sampler_state)
+                copy_checkpoint(scratch / "sampler_state.pkl", durable / "sampler_state.pkl")
+                state_doc["completed_warmup"] = completed
+                state_doc["updated_utc"] = utc_now()
+                atomic_json(durable / "status.json", state_doc)
         state_doc["state"] = "SAMPLING"
         draws = []
         extras = {name: [] for name in ("diverging", "num_steps", "accept_prob", "energy")}
-        while sum(part.shape[0] for part in draws) < args.samples:
-            mcmc.post_warmup_state = sampler_state
-            mcmc.run(sampler_state.rng_key, extra_fields=tuple(extras))
-            part = np.asarray(mcmc.get_samples(group_by_chain=False), dtype=np.float64)
-            remaining = args.samples - sum(item.shape[0] for item in draws)
-            part = part[:remaining]
-            draws.append(part)
-            raw_extra = mcmc.get_extra_fields(group_by_chain=False)
+        chunk_draws = []
+        chunk_extras = {name: [] for name in extras}
+        for draw_index in range(args.samples):
+            sampler_state = sample_once(sampler_state)
+            chunk_draws.append(np.asarray(sampler_state.z, dtype=np.float64))
+            chunk_extras["diverging"].append(np.asarray(sampler_state.diverging))
+            chunk_extras["num_steps"].append(np.asarray(sampler_state.num_steps))
+            chunk_extras["accept_prob"].append(np.asarray(sampler_state.accept_prob))
+            chunk_extras["energy"].append(np.asarray(sampler_state.energy))
+            completed = draw_index + 1
+            if completed % args.chunk != 0 and completed != args.samples:
+                continue
+            draws.append(np.stack(chunk_draws, axis=0))
             for name in extras:
-                extras[name].append(np.asarray(raw_extra[name])[:remaining])
-            sampler_state = mcmc.last_state
+                extras[name].append(np.stack(chunk_extras[name], axis=0))
+            chunk_draws = []
+            chunk_extras = {name: [] for name in extras}
             all_draws = np.concatenate(draws, axis=0)
             all_extras = {name: np.concatenate(parts, axis=0) for name, parts in extras.items()}
             atomic_npz(scratch / "draws.npz", unconstrained=all_draws, **all_extras)
             atomic_pickle(scratch / "sampler_state.pkl", sampler_state)
             copy_checkpoint(scratch / "draws.npz", durable / "draws.npz")
             copy_checkpoint(scratch / "sampler_state.pkl", durable / "sampler_state.pkl")
-            state_doc["completed_draws"] = int(all_draws.shape[0])
+            state_doc["completed_draws"] = completed
             state_doc["updated_utc"] = utc_now()
             atomic_json(durable / "status.json", state_doc)
         state_doc.update({"state": "SUCCEEDED", "exit_code": 0, "completed_utc": utc_now()})
