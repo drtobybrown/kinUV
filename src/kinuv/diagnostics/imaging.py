@@ -236,9 +236,14 @@ def masked_moments(cube_k, vel_kms, mask, dv_kms):
 
 def offset_world(ra_deg, dec_deg, dx_east_arcsec, dy_north_arcsec):
     """Phase-centre RA/Dec plus east/north offsets [arcsec]."""
-    dra = -(float(dx_east_arcsec) / 3600.0) / np.cos(np.deg2rad(float(dec_deg)))
-    ddec = float(dy_north_arcsec) / 3600.0
-    return float(ra_deg) + dra, float(dec_deg) + ddec
+    from astropy.coordinates import SkyCoord
+    import astropy.units as u
+
+    centre = SkyCoord(float(ra_deg) * u.deg, float(dec_deg) * u.deg)
+    position = centre.spherical_offsets_by(
+        float(dx_east_arcsec) * u.arcsec, float(dy_north_arcsec) * u.arcsec
+    )
+    return float(position.ra.deg), float(position.dec.deg)
 
 
 def pv_diagram(

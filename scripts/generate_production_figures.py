@@ -1462,8 +1462,155 @@ def target_products(
     return manifest
 
 
+def recovery_target_products(config_path, source_root, output_root, synthetic_root, subbeam_root, state, recovery_root):
+    """Plot one frozen S4-bound checkpoint; never combine old cubes/posteriors."""
+    from kinuv.io.vis import radio_to_optical_kms
+    from kinuv.validation.s4 import topo_radio_to_lsrk_radio
+
+    config = load_json(config_path)
+    target = config["target_id"]
+    replay_root = recovery_root / "replay"
+    replay_path = replay_root / target / "replay.json"
+    replay = load_json(replay_path)
+    checkpoint_path = recovery_root / "s3" / target / "ablations.json"
+    checkpoint = load_json(checkpoint_path)
+    if not checkpoint["accepted"] or not replay["mechanical_replay_complete"]:
+        raise ValueError("recovery checkpoint or mechanical replay is not accepted")
+    if sha256(checkpoint_path) != replay["inputs"]["s3"]["sha256"]:
+        raise ValueError("checkpoint hash differs from cube replay")
+    selected = next(item for item in replay["candidates"] if item["selected_in_s3"])
+    fit = next(item for item in checkpoint["fits"] if item["candidate"] == selected["candidate"])
+    if fit["parameters"] != selected["frozen_parameters"]:
+        raise ValueError("cube and fit parameter checkpoints differ")
+    bundle = replay_root / selected["products"]
+    source_files = {
+        "checkpoint": checkpoint_path,
+        "replay": replay_path,
+        "replay_manifest": replay_root / "MANIFEST.json",
+        "model_cube": bundle / "kinuv_model_k.fits",
+        "moments": bundle / "benchmark/moments.npz",
+        "kinms_cube": bundle / "benchmark/kinms_model_k.fits",
+        "kinms_fit": source_root / target / "benchmarks/kinms_fit_result.json",
+        "data_cube": Path(replay["inputs"]["data_cube"]["path"]),
+        "mask_cube": Path(replay["inputs"]["mask_cube"]["path"]),
+        "config": config_path,
+        "synthetic": synthetic_root / target / "summary.json",
+        "subbeam": subbeam_root / target / "summary.json",
+    }
+    replay_manifest = load_json(source_files["replay_manifest"])
+    for name in ("model_cube", "moments", "kinms_cube", "replay"):
+        path = source_files[name]
+        expected = replay_manifest["files"][path.relative_to(replay_root).as_posix()]["sha256"]
+        if sha256(path) != expected:
+            raise ValueError(f"replay source checksum failed: {path}")
+    for name, key in (("data_cube", "data_cube"), ("mask_cube", "mask_cube"), ("kinms_fit", "kinms_result")):
+        if sha256(source_files[name]) != replay["inputs"][key]["sha256"]:
+            raise ValueError(f"replay input checksum failed: {name}")
+    # Routing paths changed during production curation. Recover the exact fit
+    # configuration from its recorded commit instead of claiming new routing
+    # metadata was the configuration used for inference.
+    config_revision = replay_manifest["code_commit"]
+    frozen_config = subprocess.check_output(
+        ["git", "show", f"{config_revision}:configs/targets/{target}.json"], cwd=REPO
+    )
+    if hashlib.sha256(frozen_config).hexdigest() != replay["inputs"]["config"]["sha256"]:
+        raise ValueError("archived fit configuration checksum failed")
+    target_root = output_root / target
+    if target_root.exists():
+        raise ValueError(f"output already exists; archive before replacement: {target_root}")
+    best, plots, benchmarks = (target_root / name for name in ("best_model", "plots", "benchmarks"))
+    for path in (best, plots, benchmarks):
+        path.mkdir(parents=True)
+    for name, destination in {
+        "checkpoint": best / "checkpoint.json", "replay": best / "replay.json",
+        "model_cube": best / "model_on_science_grid.fits",
+        "kinms_fit": benchmarks / "kinms_fit_result.json", "kinms_cube": benchmarks / "kinms_model_k.fits",
+        "moments": benchmarks / "moments.npz",
+    }.items():
+        shutil.copy2(source_files[name], destination)
+    (best / "config.json").write_bytes(frozen_config)
+    p = fit["parameters"]
+    geometry = {key: float(p[key]) for key in ("pa_deg", "inclination_deg", "dx_arcsec", "dy_arcsec")}
+    geometry["vsys_kms"] = float(radio_to_optical_kms(topo_radio_to_lsrk_radio(
+        p["vsys_kms"], replay["frame"]["frequency_equivalent_correction_kms"])))
+    write_json(best / "parameters.json", {"candidate": fit["candidate"], "fitted_native_parameters": p, "diagnostic_geometry_lsrk_optical": geometry})
+    data, header = load_cube(source_files["data_cube"])
+    model, model_header = load_cube(source_files["model_cube"])
+    kinms, kinms_header = load_cube(source_files["kinms_cube"])
+    mask, _ = load_cube(source_files["mask_cube"])
+    if not (data.shape == model.shape == kinms.shape == mask.shape):
+        raise ValueError("recovery cubes and mask have different shapes")
+    for label, hdr in (("kinUV", model_header), ("KinMS", kinms_header)):
+        if hdr.get("BUNIT", "").strip().lower() not in {"k", "kelvin"}:
+            raise ValueError(f"{label} cube is not kelvin")
+        for key in ("CRVAL1", "CRVAL2", "CRPIX1", "CRPIX2", "CDELT1", "CDELT2", "CRVAL3", "CRPIX3", "CDELT3"):
+            if not np.isclose(hdr[key], header[key], rtol=0, atol=1e-9):
+                raise ValueError(f"{label} cube WCS mismatch: {key}")
+    with np.load(source_files["moments"]) as npz:
+        moments = {key: np.asarray(npz[key]) for key in npz.files}
+    beam = float(header["BMAJ"]) * 3600.0
+    kinms_doc = load_json(source_files["kinms_fit"])
+    kinms_fit = kinms_doc.get("fitted", kinms_doc)
+    moment_figure(target, moments, header, geometry, plots)
+    pv_figure(target, data, model, mask > 0.5, header, geometry, plots)
+    spectral_figure(target, data, model, mask > 0.5, header, geometry, plots)
+    benchmark_moment_figure(target, moments, header, geometry, benchmarks)
+    crop = source_crop_arcsec(moments["data_moment0"], header, (p["dx_arcsec"], p["dy_arcsec"]), beam)
+    benchmark_pv_figure(target, data, model, kinms, mask > 0.5, header, geometry, crop, benchmarks)
+    benchmark_spectral_figure(target, data, model, kinms, mask > 0.5, header, geometry, benchmarks)
+    synthetic_figure(target, load_json(source_files["synthetic"]), load_json(source_files["subbeam"]), benchmarks)
+    # Show only the selected checkpoint's intrinsic profile, with no borrowed posterior.
+    radii = np.asarray(checkpoint["velocity_support"]["knot_radii_arcsec"])
+    radius = np.linspace(0.0, radii[-1], 240)
+    if fit["candidate"] == "supported_rings":
+        speeds = np.asarray(p["u_knots_kms"])
+        u_profile = np.interp(radius, radii, speeds)
+        u_profile = np.where(radius < radii[0], speeds[0] * radius / radii[0], u_profile)
+        turnover = None
+    else:
+        turnover = p["turnover_over_bmaj"] * checkpoint["bmaj_arcsec"]
+        u_profile = arctan_curve(radius, p["arctan_u_kms"], turnover)
+    vc = u_profile / np.sin(np.deg2rad(p["inclination_deg"]))
+    np.savez(best / "rotation_curve.npz", radius_arcsec=radius, projected_speed_kms=u_profile, intrinsic_speed_kms=vc)
+    apply_style(columns=2, aspect_ratio=5.0 / 7.1)
+    fig, ax = plt.subplots(figsize=(7.1, 5.0))
+    ax.axvspan(0, beam, color="0.92", label="Inner beam scale")
+    ax.plot(radius, vc, color=COLOUR["model"], label=f"kinUV {fit['candidate'].replace('_', ' ')}")
+    ax.plot(radius, arctan_curve(radius, kinms_fit["v0_kms"], kinms_fit["r_t_arcsec"]), color=KINMS_COLOUR, ls="--", label="KinMS intrinsic")
+    if turnover is not None:
+        ax.axvline(turnover, color=COLOUR["model"], ls=":", label=r"kinUV $R_{\rm turn}$")
+    ax.set(xlabel=r"Radius $R\ (\mathrm{arcsec})$", ylabel=r"$V_{\rm c}\ (\mathrm{km\ s^{-1}})$", title=f"{target}: selected conditional MAP profiles", xlim=(0, radius[-1]), ylim=(0, None))
+    ax.legend(fontsize=11, loc="lower right")
+    fig.tight_layout()
+    save_pair(fig, plots, "rotation_curve")
+    for suffix in ("pdf", "png"):
+        shutil.copy2(plots / f"rotation_curve.{suffix}", benchmarks / f"rotation_curve_kinuv_vs_kinms.{suffix}")
+    summary = {"target_id": target, "status": "accepted_checkpoint_diagnostic", "selected_model": fit["candidate"], "source_fit": fit, "no_fit_performed": True, "posterior_available_for_selected_checkpoint": False, "accounting": replay["accounting_repairs"], "geometry": geometry}
+    write_json(best / "summary.json", summary)
+    note = f"""# {target}: accepted recovery checkpoint diagnostics
+
+The selected `{fit['candidate']}` checkpoint and its exact cube come from the S4-sealed smooth-emissivity replay. No fit, parameter tuning, or new benchmark scoring was performed. All direct and comparator plots use these same frozen parameters and matched cubes. Celestial east increases RA; slit PA is east of north. All three cubes share each selected-fit diagnostic slit and aperture.
+
+Visibility likelihood is primary. Restored science cubes are supporting diagnostics, not ground truth; cleaner image residuals do not establish more accurate intrinsic kinematics. The measured synthetic turnover-error ratio 0.02493 and inner-velocity RMSE ratio 0.01438 for KGAS066 apply to the registered axisymmetric arctan test family, not arbitrary real galaxies.
+
+No matching posterior exists for this selected checkpoint. Its historical, fixed-inclination arctan corner plot is preserved only in the superseded archive. MAP profiles have no calibrated credible intervals. No real inner slope or sub-beam turnover precision claim is promoted; the supported-ring model has no scalar turnover parameter.
+
+Visibility fitting avoids the CLEAN inversion and restoring-beam pixel covariance while retaining phase information. Exported data still have measured spectral correlation (native adjacent C1 rho approximately 0.2977), which the likelihood models. In the marginally resolved, short-baseline regime, phase obeys phi(q,v) approximately -2 pi q dot xbar(v), with q in wavelengths and xbar in radians; differential phase replaces xbar by its difference from a reference channel. Flux-weighted clumps also affect the centroid. This is complementary information, not exact morphology/kinematics independence. See [Lachaume 2003](https://arxiv.org/abs/astro-ph/0304259).
+
+The preserved replay explicitly records the same observed PB frequency in forward/inverse accounting, one native Hann response, guard disposal, and channel-edge overlap onto the official LSRK optical cube. This plotting pass does not reapply spectral or beam convolution.
+"""
+    (target_root / "README.md").write_text(note, encoding="ascii")
+    file_record = lambda path: {"bytes": path.stat().st_size, "sha256": sha256(path)}
+    write_json(best / "MANIFEST.json", {"schema_version": "kinuv-recovery-checkpoint-v1", "git": state, "selected_model": fit["candidate"], "files": {p.relative_to(best).as_posix(): file_record(p) for p in sorted(best.rglob("*")) if p.is_file()}})
+    manifest = {"schema_version": "kinuv-production-layout-v3", "target_id": target, "git": state, "fit_performed": False, "scoring_performed": False, "selected_model": fit["candidate"], "fit_config_commit": config_revision, "fit_config_sha256": hashlib.sha256(frozen_config).hexdigest(), "geometry": geometry, "accounting": replay["accounting_repairs"], "sources": {k: {"path": str(v.resolve()), **file_record(v)} for k,v in source_files.items()}, "files": {p.relative_to(target_root).as_posix(): file_record(p) for p in sorted(target_root.rglob("*")) if p.is_file()}, "rendering": {"source_adaptive_crop_arcsec": crop, "east_increases_ra": True, "pa_east_of_north": True, "legacy_figures_present": False}, "posterior_available_for_selected_checkpoint": False}
+    write_json(target_root / "MANIFEST.json", manifest)
+    print(f"{target}: generated checkpoint-consistent diagnostics ({fit['candidate']})")
+    return manifest
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--recovery-root", type=Path, required=True, help="S4-bound root containing s3/ and replay/")
     parser.add_argument("--source-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--synthetic-root", type=Path, required=True)
@@ -1478,13 +1625,14 @@ def main() -> None:
     if state["branch"] != "dev" or state["dirty"]:
         raise SystemExit("production plotting requires a clean dev checkout")
     manifests = [
-        target_products(
+        recovery_target_products(
             path,
             args.source_root,
             args.output_root,
             args.synthetic_root,
             args.subbeam_root,
             state,
+            args.recovery_root,
         )
         for path in args.target_config
     ]

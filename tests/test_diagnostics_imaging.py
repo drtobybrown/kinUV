@@ -70,12 +70,32 @@ def test_restoring_beam_kernel_unit_sum():
     assert np.isclose(k.sum(), 1.0)
 
 
-def test_offset_world_east_decreases_ra():
+def test_offset_world_east_increases_ra():
     ra, dec = offset_world(345.0, 13.0, 1.0, 0.0)
-    assert ra < 345.0
+    assert ra > 345.0
     ra2, dec2 = offset_world(345.0, 13.0, 0.0, 2.0)
     assert dec2 > 13.0
     assert np.isclose(ra2, 345.0)
+
+
+@pytest.mark.parametrize("pa_deg", [35.0, 90.0, 199.73, 289.73])
+def test_pv_slit_follows_celestial_position_angle(pa_deg):
+    """A linear east/north field has its physical derivative along the slit."""
+    from astropy.coordinates import SkyCoord
+    from astropy.wcs import WCS
+    import astropy.units as u
+    from kinuv.diagnostics.imaging import pv_diagram
+
+    header = _toy_header()
+    yy, xx = np.mgrid[:21, :21]
+    sky = WCS(header).celestial.pixel_to_world(xx, yy)
+    origin = SkyCoord(345.0 * u.deg, 13.0 * u.deg)
+    east, north = origin.spherical_offsets_to(sky)
+    field = 2.0 * east.arcsec + 3.0 * north.arcsec
+    cube = np.broadcast_to(field, (3, 21, 21)).copy()
+    pv, offsets = pv_diagram(cube, header, 345.0, 13.0, pa_deg, 4.0, 0.3)
+    expected = 2.0 * np.sin(np.deg2rad(pa_deg)) + 3.0 * np.cos(np.deg2rad(pa_deg))
+    np.testing.assert_allclose(np.polyfit(offsets, pv[0], 1)[0], expected, atol=1e-5)
 
 
 def test_spectral_axis_kms_divides_si_metres():
@@ -178,4 +198,3 @@ def test_pv_positive_offset_is_receding_north():
     pv, off = pv_diagram(cube, hdr, 345.0, 13.0, pa_deg=0.0, length_arcsec=6.0, width_arcsec=0.4)
     i_peak = int(np.nanargmax(pv[1]))
     assert off[i_peak] > 0.5
-
