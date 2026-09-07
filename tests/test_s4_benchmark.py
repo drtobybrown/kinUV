@@ -136,3 +136,24 @@ def test_continuum_worker_skips_fully_cropped_deposition_chunks():
     ).read_text(encoding="utf-8")
     assert "if not values:" in source
     assert "there is no sparse deposition contribution" in source
+
+
+def test_synthetic_s4_profile_metric_and_casa_boundary():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "scripts/run_s4_synthetic_recovery.py"
+    spec = importlib.util.spec_from_file_location("s4_synthetic", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    truth = {
+        "v0_kms": 200.0,
+        "r_t_arcsec": 0.5,
+        "inclination_deg": 30.0,
+    }
+    radius = np.linspace(0.25, 3.0, 12)
+    weight = np.ones_like(radius)
+    assert module.profile_rmse(truth, truth, radius, weight) == pytest.approx(0.0)
+    source = path.read_text(encoding="utf-8")
+    assert "casatasks" not in source
+    assert '"casa_used": False' in source
