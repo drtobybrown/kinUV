@@ -39,8 +39,12 @@ therefore closes on the unchanged two-target refinement gates, without a new
 proposal tally. The r4 attempt at `c55c985` passed every tested dimension except
 radial quadrature. The composite radial implementation at exact commit
 `3a734693bdd023d01490f77c8181c5d1551072bb` then passed every frozen S1 gate in
-the sealed r5 two-target matrix. S1 is closed and the active card has advanced
-to S2 geometry and covariance. Real grouped covariance selection remains
+the sealed r5 two-target matrix. Reviewer A and Reviewer B independently
+returned `accept` on that exact commit; see
+[`review-a`](2026-09-07-code-review-a-crossdomain-s1-closure.md) and
+[`review-b`](2026-09-07-code-review-b-crossdomain-s1-closure.md). S1 is closed
+and the active card has advanced to S2 geometry and covariance. Real grouped
+covariance selection remains
 blocked pending compliant `ms2kinuv` exports; independent S2 implementation
 and geometry/optimization audits are licensed. Full dual review remains
 required for scientific-contract changes and production promotion.
