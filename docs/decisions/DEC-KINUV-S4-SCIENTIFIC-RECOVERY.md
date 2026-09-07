@@ -1,6 +1,6 @@
 ---
 id: DEC-KINUV-S4-SCIENTIFIC-RECOVERY
-status: accepted-for-implementation
+status: accepted
 date: 2026-09-07
 authority: Astra-under-current-Project-PI-directive
 scope: prospective-S4-recovery-and-S5-promotion

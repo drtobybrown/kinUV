@@ -63,3 +63,16 @@ def test_two_point_velocity_profile_is_diagnostic_but_not_gate_eligible():
     recovery = projected_velocity_rmse(profiles, 30.0)
     assert recovery["gate_eligible"] is False
     assert np.isfinite(recovery["ratio_kinuv_over_kinms"])
+
+
+def test_s4_runner_uses_same_observed_frequency_to_invert_primary_beam():
+    from pathlib import Path
+
+    source = (
+        Path(__file__).resolve().parents[1] / "scripts/run_s4_real_benchmark.py"
+    ).read_text(encoding="utf-8")
+    assert "pb_frequency_hz = float(np.median(data.freqs_native))" in source
+    assert "nu_hz=pb_frequency_hz" in source
+    assert "hann_native(cube_yxv, axis=2)" in source
+    assert '"--replay-all"' in source
+    assert '"promotion_eligible": False' in source

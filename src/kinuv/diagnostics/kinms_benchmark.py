@@ -57,6 +57,23 @@ def aperture_spectrum(cube, mask3d) -> np.ndarray:
     return np.nansum(np.where(footprint[None, :, :], a, np.nan), axis=(1, 2))
 
 
+def fits_sky_offsets_arcsec(header, shape) -> tuple[np.ndarray, np.ndarray]:
+    """Return east/north tangent offsets for an unflipped FITS image grid."""
+
+    from astropy.wcs import WCS
+
+    ny, nx = map(int, shape)
+    yy, xx = np.mgrid[0:ny, 0:nx]
+    wcs = WCS(header).celestial
+    reference = wcs.pixel_to_world(
+        float(header["CRPIX1"]) - 1.0,
+        float(header["CRPIX2"]) - 1.0,
+    )
+    coordinates = wcs.pixel_to_world(xx, yy)
+    east, north = reference.spherical_offsets_to(coordinates)
+    return np.asarray(east.arcsec), np.asarray(north.arcsec)
+
+
 def major_axis_rotation_profile(
     moment0,
     moment1,
@@ -68,17 +85,16 @@ def major_axis_rotation_profile(
     dx_arcsec: float = 0.0,
     dy_arcsec: float = 0.0,
     slit_half_width_arcsec: float = 0.5,
-    radius_max_arcsec: float = 8.0,
+    radius_max_arcsec: float | None = None,
     n_bin: int = 48,
+    support_moment0=None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Robust moment-1 rotation profile for image-domain comparison only."""
+    """Moment-1 profile on one candidate-independent sky support."""
     m0 = np.asarray(moment0, dtype=np.float64)
     m1 = np.asarray(moment1, dtype=np.float64)
-    ny, nx = m0.shape
-    x = (np.arange(nx) + 1.0 - float(header["CRPIX1"])) * float(header["CDELT1"]) * 3600.0
-    y = (np.arange(ny) + 1.0 - float(header["CRPIX2"])) * float(header["CDELT2"]) * 3600.0
-    east = -x if float(header["CDELT1"]) < 0.0 else x
-    xe, yn = np.meshgrid(east - dx_arcsec, y - dy_arcsec, indexing="xy")
+    east, north = fits_sky_offsets_arcsec(header, m0.shape)
+    xe = east - float(dx_arcsec)
+    yn = north - float(dy_arcsec)
     xg, yg = sky_to_galaxy(
         xe, yn, np.radians(float(pa_deg)), np.radians(float(inclination_deg))
     )
@@ -88,14 +104,23 @@ def major_axis_rotation_profile(
     vc = np.divide(
         m1 - float(vsys_kms), denom, out=np.full_like(m1, np.nan), where=np.abs(denom) > 0.15
     )
-    threshold = 0.05 * float(np.nanmax(m0))
-    use = (
-        np.isfinite(vc)
-        & np.isfinite(m0)
-        & (m0 > threshold)
+    support = m0 if support_moment0 is None else np.asarray(support_moment0, dtype=np.float64)
+    if support.shape != m0.shape:
+        raise ValueError("support_moment0 must match moment maps")
+    threshold = 0.05 * float(np.nanmax(support))
+    common = (
+        np.isfinite(support)
+        & (support > threshold)
         & (np.abs(yg) <= float(slit_half_width_arcsec))
     )
-    edges = np.linspace(0.0, float(radius_max_arcsec), int(n_bin) + 1)
+    use = common & np.isfinite(vc)
+    if radius_max_arcsec is None:
+        extent = float(np.nanmax(radius[common])) if np.any(common) else float("nan")
+    else:
+        extent = float(radius_max_arcsec)
+    if not np.isfinite(extent) or extent <= 0.0:
+        raise ValueError("profile support has no positive radial extent")
+    edges = np.linspace(0.0, extent, int(n_bin) + 1)
     out_r: list[float] = []
     out_v: list[float] = []
     for lo, hi in zip(edges[:-1], edges[1:]):
@@ -284,6 +309,7 @@ def write_cube_benchmark(
             moments[name]["moment0"], moments[name]["moment1"], header,
             pa_deg=pa_deg, inclination_deg=inclination_deg, vsys_kms=vsys_kms,
             dx_arcsec=dx_arcsec, dy_arcsec=dy_arcsec,
+            support_moment0=moments["data"]["moment0"],
         )
         for name in cubes
     }
@@ -339,6 +365,6 @@ def write_cube_benchmark(
 
 
 __all__ = [
-    "aperture_spectrum", "cube_metrics", "jy_beam_to_kelvin",
+    "aperture_spectrum", "cube_metrics", "fits_sky_offsets_arcsec", "jy_beam_to_kelvin",
     "major_axis_rotation_profile", "write_cube_benchmark",
 ]
