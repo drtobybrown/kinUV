@@ -1,7 +1,7 @@
 {
   "schema_version": "kinuv-production-target-v2",
   "target_id": "KGAS066",
-  "visibility_npz": "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.npz",
+  "visibility_npz": "/arc/projects/KILOGAS/analysis/toby_sandbox/visibilities/KILOGAS066.v2.npz",
   "template_ico": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/KGAS66_Ico_K_kms-1.fits",
   "fit_window_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/30kms/KGAS66_clipped_cube.fits",
   "diagnostic_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS66/10kms/KGAS66_clipped_cube.fits",
