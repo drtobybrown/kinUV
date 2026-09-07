@@ -6,6 +6,7 @@
   "fit_window_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/30kms/KGAS7_clipped_cube.fits",
   "diagnostic_cube": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_clipped_cube.fits",
   "diagnostic_mask": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_mask_cube.fits",
+  "diagnostic_ico_error": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_Ico_K_kms-1_err.fits",
   "phase_center_deg": [146.576065, 2.88434],
   "geometry": {
     "inclination_deg": 28.9,
