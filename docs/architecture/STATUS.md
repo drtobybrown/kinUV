@@ -1,17 +1,17 @@
 ---
-generation: 31
+generation: 32
 phase: crossdomain-recovery-s5-closed
 code_freeze: true
 next_role: consultant-astra
-board: crossdomain-recovery-s4-scientific-recovery
+board: production-figure-science-completeness
 build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md
-last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s4-recovery.md
-last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s4-recovery.md
+last_review: docs/reviews/2026-09-07-astra-production-figure-completeness.md
+last_review_a: docs/reviews/2026-09-07-astra-production-figure-completeness.md
 last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4-recovery.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
@@ -23,11 +23,30 @@ canon_generation: 31
 ## Agent Run Status
 
 * **Phase:** S0--S5 are closed under the PI-authorized cross-domain recovery contract. The accepted S4 evidence commit is `354bbad`; S5 sealed it at `98f7730`.
-* **Last Action:** Commit `9f09bfa03110725e00fedd1aaf1e04f8ad650281` added the non-blocking S5 sub-beam turnover diagnostic. The checksum-bound addendum is `results/validation/crossdomain-recovery-s5-subbeam-20260907/`; it reuses accepted S4 fits and does not reopen S4.
+* **Last Action:** Commit `c6822b10e274513d4b59f728ecfe5af99b75a885` added the standalone ApJ production plotting contract and generated the final publication suites for KGAS066 and KGAS007. No fit, sampler, or scientific parameter changed.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
-* **Verification:** Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B accepted software and reproducibility at `0442542`. The final S4 dossier contains 50 verified files totaling 69,157,562 bytes. The S5 seal is `results/validation/crossdomain-recovery-s5-20260907/`. The additive sub-beam manifest verifies all seven files; its metrics and manifest SHA-256 values are `c8f7441fb51f2b6b66a467eb75f9f5d8880f78c8297430aec2a5c5489eea5197` and `ea2c7048d37a0272b27e0f048a130d2de070abf5b17288a62dd17554fbdccf04`. The current deterministic/architecture suite passes with 259 tests and 5 skips when the separately known unstable NUTS smoke module is excluded because no sampler campaign is licensed.
+* **Verification:** Astra accepted both current publication suites after inspecting all eight PNGs and their scientific provenance. The KGAS066 and KGAS007 publication manifests contain 13 hashed sources and 10 hashed products each; their SHA-256 values are `1935e1342ce4ec61d13d931775542526bffdef715dd42cdf4f81616c3e32eb30` and `e388766a88fc7cc68a545826c2d42d89866f460f95d9974bde7a39dc09e0eaab`. The exact plotting commit passes 261 tests with 5 skips; the focused style/S4 suite passes 17 tests.
 * **Next Step:** Astra may define the next scientific expansion. Posterior calibration, the non-rotation bootstrap, and broader synthetic families remain separate future campaigns.
+
+## Production publication figures
+
+Each accepted target now has an additive `publication/` directory containing
+the four required PDF/PNG figure pairs: moments 0/1/2 data/model/residuals,
+major/minor PVDs, the conditional-MAP rotation curve, and the matched-family
+synthetic sub-beam benchmark. Each directory also contains
+`rotation_centroids.npz`, `SCIENCE_DELIVERABLES.md`, and `MANIFEST.json`.
+KGAS066 contains 1,388,690 bytes and KGAS007 contains 1,219,914 bytes across
+11 files per directory, including the manifest.
+
+The real-cube centroids were recomputed from retained moments with the current
+celestial-WCS tangent-plane extractor; the pre-coordinate-repair
+`benchmark/profiles.npz` products are not publication inputs. The deliverable
+notes explicitly limit the real curves to conditional MAP diagnostics, retain
+the uncalibrated-interval warning, and leave real sub-beam turnover and formal
+rotation claims pending the fitted non-rotating-disk complete-refit bootstrap.
+Astra's independent science-completeness verdict is
+[`2026-09-07-astra-production-figure-completeness`](../reviews/2026-09-07-astra-production-figure-completeness.md).
 
 ## S5 sub-beam turnover diagnostic
 

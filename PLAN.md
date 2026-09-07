@@ -18,6 +18,12 @@ The additive `crossdomain-recovery-s5-subbeam-20260907` record now supplies the
 publication diagnostic for `R_turn < BMAJ`; it reuses the accepted S4 fits and
 has no gating role.
 
+The final ApJ production figure suite is complete at code commit `c6822b1`.
+Each accepted target bundle has an additive `publication/` directory with the
+four required PDF/PNG figure pairs, current-WCS cube centroids, explicit claim
+limits, and a checksum-bound manifest. Astra's science-completeness review
+accepts both suites. No production fit was rerun.
+
 1. **Calibrate rotation significance.** Complete the fitted non-rotating emitting-disk bootstrap before promoting a formal rotation-detection probability.
 2. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes exact-workflow coverage before calibrated interval claims.
 3. **Broaden the recovery frontier.** Test warped, lopsided, thick, noncircular, and radially varying dispersion truths under fixed evaluation samples. Preserve the accepted thin axisymmetric arctan result as the baseline.

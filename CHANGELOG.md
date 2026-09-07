@@ -4,6 +4,13 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
 
 ## 2026-09-07 - cross-domain recovery S0-S5 closure
 
+- Added a zero-dependency ApJ plotting contract with vendored 3.5/7.1-inch
+  dimensions, Times/STIX typography, Type 42 fonts, inward ticks, and 300 dpi
+  export helpers.
+- Generated the four required publication figure pairs for KGAS066 and
+  KGAS007 under their accepted production bundles. Recomputed restored-cube
+  centroids with the repaired celestial-WCS coordinate contract, added hashed
+  per-target provenance, and received Astra science-completeness acceptance.
 - Closed S4 after kinUV beat the information-advantaged canonical KinMS
   comparator on every held-out visibility fold for KGAS066 and KGAS007.
 - Added a CASA-free paired truth suite using Python-native analytic cubes and

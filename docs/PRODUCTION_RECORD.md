@@ -80,6 +80,15 @@ This document is the durable synthesis of completed review cards, architecture n
 
 The production target set is KGAS066 plus KGAS007. G4 and population inference have not been authorized.
 
+Both accepted target bundles now contain an additive `publication/` directory
+generated at code commit `c6822b1`. Each directory provides ApJ-ready
+moment-comparison, major/minor PVD, conditional-MAP rotation-curve, and
+synthetic sub-beam benchmark PDF/PNG pairs with a checksum-bound manifest.
+The cube centroids use the repaired celestial-WCS tangent-plane extractor;
+legacy pre-repair centroid arrays are excluded. Astra's science-completeness
+review accepts the suite while retaining the established limits on posterior
+calibration, real inner-slope claims, and formal rotation significance.
+
 The independent KGAS007 fit assessment is recorded in
 [`diagnostics/kgas007-fit-assessment.md`](diagnostics/kgas007-fit-assessment.md).
 It finds a strong visibility-domain rotation candidate and constrained PA. The

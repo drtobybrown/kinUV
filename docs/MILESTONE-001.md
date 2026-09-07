@@ -23,6 +23,14 @@ kinUV/KinMS mean absolute `R_turn` error ratios are 0.02493 for KGAS066 and
 0.01438 and 0.13749. It is explicitly non-gating and leaves the S4 and target
 bundles immutable.
 
+The additive production-publication suite at code commit `c6822b1` writes four
+ApJ-ready PDF/PNG figure pairs into each accepted bundle's `publication/`
+directory. The figures cover moments 0/1/2, major/minor PVDs, conditional-MAP
+rotation curves, and synthetic sub-beam recovery. Their own manifests bind all
+inputs and outputs. Astra accepted both suites after the restored-cube
+centroids were recomputed with the repaired WCS tangent-plane convention and
+the scientific claim limits were made explicit. No fit or sampler was rerun.
+
 | Target | Production product | Selected model | Visibility result | Posterior status |
 |---|---|---|---|---|
 | KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus blank visibilities 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
