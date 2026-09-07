@@ -69,6 +69,11 @@ pins four workers to CPU sets `0-3`, `4-7`, `8-11`, and `12-15`. Attempt 2 uses
 controller PID 1700497, four independent seeds per target, 1000 warm-up and
 1000 retained draws, target acceptance 0.90, and maximum tree depth 10. Its
 live evidence is under `results/incoming/collaborator-delivery-20260908/nuts/`.
+Commit `fc67307` adds the detached postprocessing handoff. Controller PID
+2451633 waits for all eight retained-chain exit codes, then creates rank-based
+posterior summaries, trace/covariance products, and a separately versioned
+posterior candidate under `results/incoming/collaborator-delivery-20260908/`.
+It does not promote that candidate or alter the dual-accepted MAP-only packet.
 
 ## 2026-09-07 diagnostic coordinate and checkpoint repair
 
