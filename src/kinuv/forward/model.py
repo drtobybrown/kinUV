@@ -126,6 +126,7 @@ def intrinsic_sky_cube(
     r_knots_arcsec=None,
     v_knots_kms=None,
     velocity_profile=None,
+    dispersion_profile=None,
 ):
     """Intrinsic pre-PB flux-density cube ``(ny, nx, n_chan)`` in Jy/pixel.
 
@@ -168,8 +169,15 @@ def intrinsic_sky_cube(
         v_knots_kms=v_knots_kms,
         velocity_profile=velocity_profile,
     )
+    sigma = (
+        xp.asarray(gas_sigma_kms)
+        if dispersion_profile is None
+        else xp.asarray(dispersion_profile(radius))
+    )
+    if sigma.ndim == 2:
+        sigma = sigma[:, :, None]
     phi = _gaussian_channel_average(
-        vel[None, None, :], v_los[:, :, None], gas_sigma_kms, dv
+        vel[None, None, :], v_los[:, :, None], sigma, dv
     )
     d_omega = grid.cell_arcsec**2
     return flux * shifted[:, :, None] * d_omega * phi
@@ -193,6 +201,7 @@ def sky_cube(
     r_knots_arcsec=None,
     v_knots_kms=None,
     velocity_profile=None,
+    dispersion_profile=None,
 ):
     """Primary-beam attenuated kinUV native cube in Jy/pixel."""
     intrinsic = intrinsic_sky_cube(
@@ -211,6 +220,7 @@ def sky_cube(
         r_knots_arcsec=r_knots_arcsec,
         v_knots_kms=v_knots_kms,
         velocity_profile=velocity_profile,
+        dispersion_profile=dispersion_profile,
     )
     return attenuate_intrinsic_cube(intrinsic, grid, freqs_hz)
 
@@ -243,6 +253,7 @@ def predict_vis(
     r_knots_arcsec=None,
     v_knots_kms=None,
     velocity_profile=None,
+    dispersion_profile=None,
 ):
     """Native-channel model visibilities ``(n_row, n_chan)`` complex128.
 
@@ -264,6 +275,7 @@ def predict_vis(
         r_knots_arcsec=r_knots_arcsec,
         v_knots_kms=v_knots_kms,
         velocity_profile=velocity_profile,
+        dispersion_profile=dispersion_profile,
     )
     return sample_intrinsic_cube_native(
         cube,

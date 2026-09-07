@@ -33,6 +33,12 @@
     "projected_velocity_bounds_kms": [0.0, 500.0],
     "n_deterministic_starts": 12
   },
+  "s3": {
+    "emissivity_basis_rank": 3,
+    "projected_velocity_knot_count": 4,
+    "projected_velocity_gain_min_chi2": 10.0,
+    "maxiter": 120
+  },
   "stage_a": {
     "maxiter": 80,
     "parameter_seed": {

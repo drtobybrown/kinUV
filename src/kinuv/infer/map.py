@@ -162,7 +162,15 @@ def image_grid_for_vis(data: VisData):
 
 @requires("DEC-066-SPECRESP", "DEC-066-PB", "DEC-066-SHIFT", "DEC-066-GRID")
 def predict_binned(
-    data: VisData, params: dict[str, float], template, grid, *, i_rad=None, xla=False
+    data: VisData,
+    params: dict[str, float],
+    template,
+    grid,
+    *,
+    i_rad=None,
+    xla=False,
+    velocity_profile=None,
+    dispersion_profile=None,
 ):
     """Native ``predict_vis`` (guards in) → Hann+bin to the fit array."""
     if xla:
@@ -196,6 +204,8 @@ def predict_binned(
             v0_kms=params["v0_kms"],
             r_t_arcsec=params["r_t_arcsec"],
             i_rad=i_use,
+            velocity_profile=velocity_profile,
+            dispersion_profile=dispersion_profile,
         )
         if not is_jax(model_native):
             raise RuntimeError("xla predict_binned host-bounced before Hann")
@@ -231,6 +241,8 @@ def predict_binned(
         v0_kms=params["v0_kms"],
         r_t_arcsec=params["r_t_arcsec"],
         i_rad=i_use,
+        velocity_profile=velocity_profile,
+        dispersion_profile=dispersion_profile,
     )
     vel_trim = data.vel_native[n_g:-n_g]
     freqs_trim = data.freqs_native[n_g:-n_g]
