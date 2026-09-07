@@ -1,32 +1,32 @@
 ---
-generation: 22
-phase: s2-geometry-optimization-active
+generation: 23
+phase: s3-joint-ablations-active
 code_freeze: false
 next_role: implementer-sol
-board: crossdomain-recovery-s2-geometry
+board: crossdomain-recovery-s3
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s2-geometry-covariance
+  - s3-joint-ablations
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
-last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s1-closure.md
-last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s1-closure.md
-last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s1-closure.md
+last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s2.md
+last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s2.md
+last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s2.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 22
+canon_generation: 23
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 is closed; S2 provenance and covariance gates pass; the geometry multi-start campaign is active
-* **Last Action:** Verified both landed Measurement Sets, exported polarization-combined native-row v2 products, formed fold-safe time/scan groups, selected C1 on grouped predictive likelihood, and implemented the generic exact-gradient S2 geometry runner
+* **Phase:** S0--S2 are closed; S3 joint one-factor ablations are active
+* **Last Action:** Closed S2 after independent science/numerics and software/reproducibility reviews accepted exact implementation commit `8248a05`
 * **Decisions Made:** The likelihood stays on native TOPO frequencies; the measured TOPO-to-LSRK drift is 0.037 km/s for KGAS066 and 0.064 km/s for KGAS007, below the PI-authorized 1.0 km/s reporting gate. The PI override in `DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES` replaces universal multi-start identity with consensus in the top likelihood cluster.
-* **Blockers / Gates:** No S2 input blocker remains. Geometry optimization and outer-fold scoring are not yet closed.
-* **Next Step:** Complete the 72 fixed-turnover and 12 released-turnover fits per target, assess the top-likelihood consensus cluster and boundary pressure, then submit the exact commit and dossier to Reviewer A and Reviewer B.
+* **Blockers / Gates:** No S2 blocker remains. S3 must test joint emissivity, supported projected-velocity knots, and only then two-zone dispersion without changing the validated C1 covariance or visibility selection.
+* **Next Step:** Run one-factor S3 candidates with all S2 nuisance parameters jointly optimized, retain only identifiable supported parameters, and carry baseline, antenna, time, and real/imaginary residual checks into the S4 outer-fold evidence.
 
 The extraction implementation is on `dev` at `246bc19` in ms2kinuv and its
 kinUV ingestion boundary is at `d177f58`. The casacore-backed ms2kinuv suite
@@ -49,9 +49,35 @@ C1 is selected for both targets: native adjacent-channel rho is 0.29770 and
 0.29769, respectively. Whitened mean, variance, and lag-one gates pass; maximum
 remaining lag-one correlation is 0.02922 for KGAS066 and 0.02930 for KGAS007.
 
-The Field Guide and Review Board charter govern the active S2 implementation.
+The Field Guide and Review Board charter govern the active S3 implementation.
 The S1 closure did not alter the physical brightness profile, velocity
 prescription, target parameters, or frozen thresholds.
+
+## S2 geometry and covariance closure
+
+S2 is **CLOSED** at exact implementation commit `8248a05`. Reviewer A accepted
+the science and numerical evidence in
+`docs/reviews/2026-09-07-code-review-a-crossdomain-s2.md`; Reviewer B accepted
+the software and reproducibility evidence in
+`docs/reviews/2026-09-07-code-review-b-crossdomain-s2.md`. The immutable
+geometry dossiers are
+`results/validation/crossdomain-recovery-s2-geometry-20260907-r3-066/` and
+`results/validation/crossdomain-recovery-s2-geometry-20260907-r3-007/`.
+
+Both targets retain all 72 fixed-turnover and 12 released-turnover fits.
+KGAS066 has eight mutually consistent starts in the top likelihood cluster;
+KGAS007 has all twelve. The selected projected speeds are 184.003 and
+96.263 km/s, the turnover ratios are 0.28619 and 0.42123 BMAJ, and the
+per-complex projected gradients are `7.044e-5` and `7.003e-5`. No selected
+parameter is on a bound. The reported intrinsic speeds and inclinations remain
+diagnostics because the registered inclination prior is isotropic.
+
+C1 is selected in every held-out group for both targets. Native adjacent-channel
+correlations are 0.297702 and 0.297688; the maximum whitened residual lag is
+0.02930. The independently reproduced within-run TOPO-to-LSRK drifts are
+0.037134 and 0.064040 km/s, safely below the PI-authorized 1 km/s gate. S4 must
+add baseline-, antenna-, time-, and real/imaginary cross-component residual
+checks before any held-out superiority claim.
 
 ## S1 operator/comparator closure
 
