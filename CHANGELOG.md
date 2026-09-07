@@ -2,6 +2,16 @@
 
 Durable results, rejected alternatives, benchmark values, and retained artifact paths are recorded in [`docs/PRODUCTION_RECORD.md`](docs/PRODUCTION_RECORD.md). Git history and the compressed legacy-doc bundle preserve the original review exchanges.
 
+## 2026-09-07 - diagnostic coordinate and checkpoint repair
+
+- Corrected east/RA and off-cardinal PVD slit orientation, with physical tests.
+- Bound active figures to exact accepted S4-replay cubes and matching selected
+  checkpoints; archived historical unmatched posterior/corner products.
+- Regenerated moments, PVDs, spectra and consistent rotation figures for both
+  targets without fitting or changing accepted S0--S5 gates.
+- Recorded measured synthetic advantages with their tested-family scope and
+  the short-baseline approximation for interferometric centroid phase.
+
 ## 2026-09-07 - cross-domain recovery S0-S5 closure
 
 - Replaced per-target run-ID directories with the canonical `best_model/`,

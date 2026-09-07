@@ -19,10 +19,13 @@ publication diagnostic for `R_turn < BMAJ`; it reuses the accepted S4 fits and
 has no gating role.
 
 The canonical production hierarchy is `results/production/<target>/` with
-`best_model/`, `plots/`, and `benchmarks/`. Commit `e3a54fc` generates five
-direct-diagnostic and five kinUV/KinMS comparison PDF/PNG pairs per target,
-including integrated spectra and conditional posterior covariance. Every file
-is checksum-bound and no production fit was rerun.
+`best_model/`, `plots/`, and `benchmarks/`. Diagnostic repair `fdcbf165cdd8b1f9b6d89d71cfd5353ce4ac9e7c`
+corrects celestial slit orientation and selects the exact S4-bound smooth-S3
+checkpoints, instead of mixing historical cubes and posteriors. Both target
+suites have four direct and five comparator PDF/PNG pairs; no corresponding
+posterior exists. S0--S5 gates and accepted evidence are unchanged. No new fit
+or score was run. See STATUS and PRODUCTION_RECORD for verified archive and
+product identities and Astra's science-completeness acceptance.
 
 1. **Calibrate rotation significance.** Complete the fitted non-rotating emitting-disk bootstrap before promoting a formal rotation-detection probability.
 2. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes exact-workflow coverage before calibrated interval claims.

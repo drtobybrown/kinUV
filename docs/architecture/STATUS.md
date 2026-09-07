@@ -1,56 +1,90 @@
 ---
-generation: 33
+generation: 34
 phase: crossdomain-recovery-s5-closed
 code_freeze: true
 next_role: consultant-astra
-board: production-layout-and-diagnostics
+board: diagnostic-coordinate-and-checkpoint-repair
 build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - exact-workflow-posterior-calibration
-last_propose: human-directive-production-cleanup-20260907
-last_review: docs/reviews/2026-09-07-production-layout-qa.md
+last_propose: human-directive-diagnostic-coordinate-repair-20260907
+last_review: docs/reviews/2026-09-07-recovery-diagnostic-qa.md
 last_review_a: docs/reviews/2026-09-07-astra-production-figure-completeness.md
 last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4-recovery.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - How broadly does the demonstrated advantage extend beyond the tested thin axisymmetric arctan family?
 deadlocks: []
-canon_generation: 33
+canon_generation: 34
 ---
 
 ## Agent Run Status
 
 * **Phase:** S0--S5 are closed under the PI-authorized cross-domain recovery contract. The accepted S4 evidence commit is `354bbad`; S5 sealed it at `98f7730`.
-* **Last Action:** Commit `e3a54fcdd2d61e9bf283374cd4b35043c9921fb7` replaced the run-ID layout with canonical `best_model/`, `plots/`, and `benchmarks/` directories and expanded the modern diagnostic suite. No fit, sampler, or scientific parameter changed.
+* **Last Action:** Diagnostic-only coordinate/provenance repair at `fdcbf165cdd8b1f9b6d89d71cfd5353ce4ac9e7c`. Both active targets now display exact S4-bound smooth-S3 checkpoints and matched cubes. No fit, new score, or gate change.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
-* **Verification:** Each target manifest verifies 43 files, including 20 modern PDF/PNG figures. KGAS066 and KGAS007 manifest SHA-256 values are `9a0fa7f569fa526dd4d23f8e6f4c9aaad6fbb21aafd204ca32534fc3557a285b` and `a96e9927c9b201ad8bd2949f5141ee262807c75a9e00d17ef2eb9e56fd8a4951`. The generator reproduced the hierarchy from standardized inputs at the exact implementation commit. The deterministic suite passes 261 tests with 5 skips.
+* **Verification:** 36 focused physical imaging/style/S4 tests passed. Both active manifests verify 30 files; 44 original files per target were checksum-verified in archives before replacement. Exact hashes and Astra science check are recorded below.
 * **Next Step:** Astra may define the next scientific expansion. Posterior calibration, the non-rotation bootstrap, and broader synthetic families remain separate future campaigns.
 
-## Production layout and diagnostic closure
+## 2026-09-07 diagnostic coordinate and checkpoint repair
 
-The only active target-level directories are `best_model/`, `plots/`, and
-`benchmarks/`. `best_model/` retains selected parameters, native and matched
-model cubes, the posterior checkpoint, and a local manifest. `plots/` contains
-five PDF/PNG pairs for moments, major/minor PVDs, rotation, aperture-integrated
-spectra, and sampled-parameter covariance. `benchmarks/` contains five
-PDF/PNG pairs comparing kinUV with KinMS in moments, major/minor PVDs,
-integrated spectra, real rotation profiles, and synthetic sub-beam recovery.
+The PI licensed this bounded diagnostic repair after discovering that the PVD
+helper reversed astronomical east. Implementation `fdcbf165cdd8b1f9b6d89d71cfd5353ce4ac9e7c` uses celestial
+spherical offsets with east increasing RA and PA east of north. Off-cardinal
+slit tests measure the expected physical derivative; 36 focused imaging,
+style, and S4 tests pass. The former KGAS066 major/minor slits were displaced
+by 39.457741 deg modulo 180 and cannot diagnose radial motions.
 
-Moment framing is determined from the 5-percent moment-0 support plus one BMAJ,
-capped at 12 arcsec. The registered crop is 12.0 arcsec for KGAS066 and
-7.5111 arcsec for KGAS007. The posterior plot shows the five sampled primary
-dimensions; inclination is stated as fixed because it has no posterior
-dimension. Intervals remain explicitly uncalibrated.
+Active products now consume the exact selected checkpoints and matched cubes
+from `results/validation/crossdomain-recovery-s4-remediation-20260907-r1/`,
+which the sealed S4 dossier explicitly binds. KGAS066 uses
+`two_zone_dispersion`; KGAS007 uses `supported_rings`. Checkpoint parameters,
+cube hashes, observed-frequency PB accounting, one native Hann response,
+channel edges, and native-TOPO to optical-LSRK conversion are retained.
+The exact fit configuration is recovered from replay commit `efe5433` and
+verified against its saved SHA; later configuration path changes are routing
+metadata. The deprecated active posterior routes were removed at `e5639e5`;
+the exact routing configs used for this plot pass are preserved in the archive.
+No optimization, inference, new scoring, or new gate was performed.
 
-The complete pre-layout bundles were archived before removal. KGAS066's
-12,814,556-byte archive has SHA-256
-`fe7e653a8535a3243163873b378bd22e3f97d847a5c8a216af39a7e1defa7e0a`;
-KGAS007's 10,122,422-byte archive has SHA-256
-`8bcb012c2891c50afc915cda5dc17469fe35086517b267e848a60b84c7344f99`.
-No legacy PNG or PDF remains anywhere under `results/production/`.
+`best_model/` contains that checkpoint, parameters, exact restored model cube,
+configuration and provenance. Four direct PDF/PNG pairs cover moments,
+major/minor PVDs, spectra and the selected rotation profile; five benchmark
+pairs cover matched moments, PVDs, spectra, rotation and retained synthetic
+recovery. There is no posterior for these selected checkpoints. The older
+fixed-inclination arctan posterior and corner are historical archive products,
+not covariance of the displayed model. Every active manifest verifies 30 files.
+
+Astra inspected both targets' moment footprints, PVD geometry and spectra,
+including matched KinMS comparisons, and accepted science completeness and
+the bounded replacement. Moment framing encloses the detected emission:
+12.0 arcsec half-width for KGAS066 and 7.450614 arcsec for KGAS007.
+S0--S5 remain closed; residual image structure remains visible as a diagnostic.
+
+| Target | Production manifest SHA-256 | Archived previous tree | Archive bytes |
+|---|---|---|---:|
+| KGAS066 | `f60c01822bb7a589f9e12a48e49bb15fea8856ad78ad9ab798a7305c8d60a279` | `results/archive/KGAS066/20260907_pre-checkpoint-diagnostics.tar.gz` | 12848967 |
+| KGAS007 | `813b22cbfe4a769b096d392680f63f37257ded2b17bedc347b27bf0288eea1d6` | `results/archive/KGAS007/20260907_pre-checkpoint-diagnostics.tar.gz` | 10136900 |
+
+Each archive was verified against all 44 original file hashes before removing
+the superseded tree. The external archive manifest records full archive and
+unchanged checkpoint/cube hashes.
+
+The scientific claim is visibility-domain inference and the measured synthetic
+advantage within the registered family. For KGAS066 the retained turnover-error
+and inner projected-velocity RMSE ratios are 0.02493 and 0.01438. Restored
+real cubes are supporting diagnostics, not known truth. Spatial beam convolution
+does not itself smooth across channels. Visibility modeling retains phase-derived centroid constraints without
+requiring CLEAN inversion; for short baselines of a marginally
+resolved source, `phi(q,v) approximately -2 pi q dot xbar(v)`, with q in
+wavelengths and xbar in radians. Differential phase uses the centroid difference
+from a reference channel ([Lachaume 2003](https://arxiv.org/abs/astro-ph/0304259)).
+Clumps influence flux-weighted centroids too; this is complementary information,
+not exact morphology/kinematics independence. Native channels retain measured
+adjacent correlation (C1 rho approximately 0.2977), modeled in the likelihood.
 
 ## S5 sub-beam turnover diagnostic
 

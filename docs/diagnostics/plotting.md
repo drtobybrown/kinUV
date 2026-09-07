@@ -12,7 +12,12 @@ Follow this for every figure. Cosmetics live in `kinuv.diagnostics.style`. Match
 
 Use `scripts/generate_production_figures.py` for accepted products. It creates
 the full `best_model/`, `plots/`, and `benchmarks/` hierarchy in one clean
-output root. Preview-only fit diagnostics may still use
+output root. Supply `--recovery-root` pointing to the S4-bound directory with
+`s3/` and `replay/`; `--source-root` supplies only the canonical KinMS fit
+record. The renderer verifies selected parameter equality, cube/input hashes,
+and WCS before plotting. It retrieves the exact fit config at the replay
+commit. Never attach a historical posterior from another model to the selected
+checkpoint. Astronomical east increases RA and receding PA is east of north. Preview-only fit diagnostics may still use
 `kinuv.diagnostics.figures` and `scripts/plot_fit_diagnostics.py`.
 
 1. **Residual breakdown** — `plot_leftover_chi2`: `chi2` vs uv-distance and vs velocity. Flat-in-baseline + structured-in-velocity is SB misspecification, not a missing-flux bowl. Official example: `docs/reviews/artifacts/2026-08-29-s1-mock/leftover_chi2.png`.

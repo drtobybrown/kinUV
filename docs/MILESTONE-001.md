@@ -1,5 +1,13 @@
 # MILESTONE-001 — canonical post-refactor baseline
 
+This is the historical milestone record. Its complete standardized bundles,
+including fixed-inclination posterior products, are preserved in
+`results/archive/<target>/20260907_pre-checkpoint-diagnostics.tar.gz`.
+Active `results/production/<target>/` now displays the exact S4-bound smooth-S3
+checkpoints; see `docs/PRODUCTION_RECORD.md` and STATUS for current paths,
+coordinate repair, checksums, and the absence of a matching current posterior.
+
+
 Promoted by Astra directive on 2026-09-06. This milestone establishes one accepted, immutable product bundle for each canonical target after the visibility-likelihood and dark-matter decoupling refactor.
 
 ## 2026-09-07 validation addendum
