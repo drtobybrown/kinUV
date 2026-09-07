@@ -1,34 +1,40 @@
 ---
-generation: 20
-phase: s2-covariance-identifiability-blocked
-code_freeze: true
-next_role: consultant-astra
-board: crossdomain-recovery-s2-input-blocked
-build_licensed: false
+generation: 21
+phase: s2-input-upload-pending
+code_freeze: false
+next_role: implementer-sol
+board: crossdomain-recovery-s2-extraction
+build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - s2-geometry-covariance
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
-last_review: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
-last_review_a: docs/reviews/2026-09-06-review-a-s1-continuum-contract.md
-last_review_b: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
+last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s1-closure.md
+last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s1-closure.md
+last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s1-closure.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
-  - s2-compliant-visibility-export
-deadlocks:
-  - s2-covariance-identifiability-missing-ms-provenance
-canon_generation: 20
+  - s2-measurement-set-upload-completion
+deadlocks: []
+canon_generation: 21
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 is closed; S2 halted at the covariance-identifiability input gate
-* **Last Action:** Audited both retained visibility exports and searched the available project, scratch, and home trees for calibrated Measurement Sets
+* **Phase:** S1 is closed; S2 extraction is ready and waiting for the authorized Measurement Set upload to finish
+* **Last Action:** Committed fold-safe `ms2kinuv-npz-v2` ingestion, native scan-block folds, grouped C0/C1 predictive selection, whitening gates, and an immutable S2 evidence runner
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold. Governance now codifies proportional verification, direct repair authority, and the empirical `<=0.1` refinement priority for the S1-to-S2 workflow.
-* **Blockers / Gates:** S1 has no open gate. S2 cannot identify covariance strata or construct five disjoint correlation-aware folds: KGAS007 has no row-group metadata, KGAS066 has only time and encoded baseline, and no source Measurement Set is available in the audited filesystem roots.
-* **Next Step:** Astra supplies calibrated source Measurement Sets or provenance-complete `ms2kinuv` exports for both targets; Sol then resumes S2 without changing the frozen covariance or fold gates.
+* **Blockers / Gates:** S1 has no open gate. S2 code and its extraction environment are ready. The first uploaded archive remains incomplete and the second is absent, so no source MS has yet been extracted or read.
+* **Next Step:** Verify each stable upload, extract it safely, inventory standard MS selections, produce checksum-bound v2 NPZs, and run the grouped covariance dossier without changing the frozen gates.
+
+The implementation is on `dev` at `eea58a6` in kinUV and `8a312cd` in
+ms2kinuv. The full kinUV suite passes with `249 passed, 8 skipped`; the
+casacore-backed ms2kinuv suite passes all 15 tests. The isolated extraction
+environment uses python-casacore 3.8.1. Standard MS weights are retained as
+`w=1/sigma_component^2=2/E[|complex noise|^2]`; they are not doubled during
+export.
 
 The Field Guide and Review Board charter govern the active S2 implementation.
 The S1 closure did not alter the physical brightness profile, velocity
