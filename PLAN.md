@@ -10,14 +10,14 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Execute S4 paired selection.** S3 closed at `b2ac6bc` with dual acceptance. Apply the PI-authorized aggregate gates: at least 10 percent lower projected-velocity RMSE than frozen stock KinMS and improved overall reduced chi-square on both real targets. Include baseline, antenna, time, and real/imaginary residual diagnostics.
-2. **Apply the explicit S4 stop rule.** If either target misses the KinMS recovery threshold or KGAS066 regresses, preserve the complete evidence and escalate to Astra without promoting S5.
-3. **Seal S5 evidence after an S4 pass.** Verify exact manifests, clean-checkout reproducibility, review tallies, and the accepted production record without launching an unlicensed posterior campaign.
+1. **Resolve the S4 architectural escalation.** The checksum-bound `r3` benchmark fails both PI gates for KGAS066 and leaves the favorable KGAS007 velocity diagnostic ineligible with only two common radial bins. Astra must diagnose the cross-domain mismatch and set the next physical/model-selection direction from `docs/decisions/ESC-KINUV-S4-CROSSDOMAIN-SUPERIORITY.md`.
+2. **Keep S5 closed.** Do not promote, retune target parameters, relax the registered S4 gates, or begin S5 until a new Astra directive resolves the explicit stop condition.
+3. **Preserve and tighten the S4 evidence.** Retain the exact implementation commit `5d08507`, the 23-file manifest, the common-domain products, and both independent failed-gate reviews as the baseline for the next recovery design. Bind the covariance input path and hash directly before structured residual diagnostics are reused in a later promotion record.
 4. **Calibrate intervals separately.** Any later posterior campaign applies R-hat and ESS promotion gates only to primary kinematic and geometric parameters; exact-workflow SBC remains required before calibrated interval claims.
 
 ## Exit criteria for the next production increment
 
-- S0--S5 MAP/recovery gates pass with dual review and Consultant sign-off; S1 and S2 are closed and S3 is active.
+- S0--S5 MAP/recovery gates pass with dual review and Consultant sign-off; S1--S3 are closed, S4 is failed and escalated, and S5 has not started.
 - Exact-workflow SBC meets a separately declared coverage criterion only for a calibrated-interval claim.
 - MILESTONE-001 remains reproducible from the frozen target configurations and run manifests.
 - A clean checkout reproduces MAP identity chi2 and validates retained NUTS summaries from manifests.

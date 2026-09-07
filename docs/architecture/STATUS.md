@@ -1,32 +1,65 @@
 ---
-generation: 24
-phase: s4-paired-benchmark-active
-code_freeze: false
-next_role: implementer-sol
-board: crossdomain-recovery-s4
+generation: 25
+phase: s4-failed-escalated
+code_freeze: true
+next_role: consultant-astra
+board: crossdomain-recovery-s4-escalation
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s4-paired-selection
+  - s4-recovery-architecture
   - exact-workflow-posterior-calibration
-last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
-last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s3.md
-last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s3.md
-last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s3.md
+last_propose: docs/decisions/ESC-KINUV-S4-CROSSDOMAIN-SUPERIORITY.md
+last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s4.md
+last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s4.md
+last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
-open_questions: []
-deadlocks: []
-canon_generation: 24
+open_questions:
+  - How should the S3 visibility-selected model be changed so that KGAS066 also improves the registered real-cube projected-velocity and reduced-chi-square metrics?
+deadlocks:
+  - S4 failed both PI superiority gates for KGAS066; S5 is prohibited pending Astra direction.
+canon_generation: 25
 ---
 
 ## Agent Run Status
 
-* **Phase:** S0--S3 are closed; S4 paired recovery and real-cube comparison are active
-* **Last Action:** Closed S3 after both review seats accepted exact implementation commit `b2ac6bc` and its checksum-bound two-target dossier
+* **Phase:** S0--S3 are closed; S4 failed the PI superiority gate and is escalated; S5 has not started
+* **Last Action:** Sealed the failed S4 comparison at exact implementation commit `5d08507` after the checksum-bound two-target run completed
 * **Decisions Made:** The likelihood stays on native TOPO frequencies; the measured TOPO-to-LSRK drift is 0.037 km/s for KGAS066 and 0.064 km/s for KGAS007, below the PI-authorized 1.0 km/s reporting gate. The PI override in `DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES` replaces universal multi-start identity with consensus in the top likelihood cluster.
-* **Blockers / Gates:** S4 must show at least 10% lower projected-velocity RMSE than frozen stock KinMS and improve overall reduced chi-square on both real targets. Failure or KGAS066 regression is an explicit escalation boundary.
-* **Next Step:** Render the two S3-selected models through the frozen diagnostic operator, score them and stock KinMS on the same official cubes/masks, and run the structured visibility-residual diagnostics required by the S2 reviewers.
+* **Blockers / Gates:** KGAS066 has a projected-velocity RMSE ratio of 1.27020 and a reduced-chi-square ratio of 1.14291, so both PI gates fail and the non-regression requirement is violated. KGAS007 improves reduced chi-square, but its favorable velocity ratio is ineligible because only two common radial bins survive.
+* **Next Step:** Astra must diagnose the cross-domain failure and define a revised physical/model-selection direction. The Implementer must not begin S5, tune target parameters, or relax the S4 gates.
+
+## S4 failed-gate escalation
+
+S4 is **FAILED AND ESCALATED** at exact implementation commit `5d08507`. The
+checksum-bound dossier is
+`results/validation/crossdomain-recovery-s4-20260907-r3/`; all 23 manifest
+entries match their registered sizes and SHA-256 hashes. The complete test
+suite passed with 263 tests and 8 skips. The formal record is
+`docs/decisions/ESC-KINUV-S4-CROSSDOMAIN-SUPERIORITY.md`.
+Reviewer A and Reviewer B independently accepted the dossier as valid
+failed-gate evidence at commits `a0b0f0a` and `4882189`, respectively; neither
+verdict closes S4 or authorizes S5.
+
+| Target | kinUV reduced chi-square | KinMS reduced chi-square | ratio | kinUV velocity RMSE | KinMS velocity RMSE | ratio | Gate |
+|---|---:|---:|---:|---:|---:|---:|---|
+| KGAS066 | 7.43475 | 6.50510 | 1.14291 | 16.3203 km/s | 12.8486 km/s | 1.27020 | fail both; regression |
+| KGAS007 | 2.04657 | 2.27507 | 0.89956 | 2.5049 km/s | 4.0872 km/s | 0.61286 | chi-square pass; velocity ineligible with two bins |
+
+The S3-selected KGAS066 model recovers 97.75 percent of the registered cube
+flux, compared with 92.76 percent for KinMS, and materially improves on the
+older milestone kinUV cube. Its common-domain residual RMS and projected
+velocity profile nevertheless remain worse than KinMS, so flux conservation
+alone cannot establish superiority. KGAS007 improves both the common cube RMS
+and reduced chi-square; the restored cube does not provide the three common
+moment-1 radial bins required for an eligible velocity claim.
+
+Structured native line-free residual diagnostics are present for folds,
+baselines, antennas, and real/imaginary components. Global component-mean
+z-scores are within 0.13 in absolute value and global real/imaginary
+correlations are below `2.4e-4`; localized baseline summaries remain available
+for diagnosis. These diagnostics do not override the failed promoted metrics.
 
 The extraction implementation is on `dev` at `246bc19` in ms2kinuv and its
 kinUV ingestion boundary is at `d177f58`. The casacore-backed ms2kinuv suite
