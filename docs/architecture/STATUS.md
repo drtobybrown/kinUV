@@ -1,32 +1,32 @@
 ---
-generation: 23
-phase: s3-joint-ablations-active
+generation: 24
+phase: s4-paired-benchmark-active
 code_freeze: false
 next_role: implementer-sol
-board: crossdomain-recovery-s3
+board: crossdomain-recovery-s4
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s3-joint-ablations
+  - s4-paired-selection
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-KINUV-S1-CONTINUUM-AND-S2-CONTRACTS.md
-last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s2.md
-last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s2.md
-last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s2.md
+last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s3.md
+last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s3.md
+last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s3.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions: []
 deadlocks: []
-canon_generation: 23
+canon_generation: 24
 ---
 
 ## Agent Run Status
 
-* **Phase:** S0--S2 are closed; S3 joint one-factor ablations are active
-* **Last Action:** Closed S2 after independent science/numerics and software/reproducibility reviews accepted exact implementation commit `8248a05`
+* **Phase:** S0--S3 are closed; S4 paired recovery and real-cube comparison are active
+* **Last Action:** Closed S3 after both review seats accepted exact implementation commit `b2ac6bc` and its checksum-bound two-target dossier
 * **Decisions Made:** The likelihood stays on native TOPO frequencies; the measured TOPO-to-LSRK drift is 0.037 km/s for KGAS066 and 0.064 km/s for KGAS007, below the PI-authorized 1.0 km/s reporting gate. The PI override in `DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES` replaces universal multi-start identity with consensus in the top likelihood cluster.
-* **Blockers / Gates:** No S2 blocker remains. S3 must test joint emissivity, supported projected-velocity knots, and only then two-zone dispersion without changing the validated C1 covariance or visibility selection.
-* **Next Step:** Run one-factor S3 candidates with all S2 nuisance parameters jointly optimized, retain only identifiable supported parameters, and carry baseline, antenna, time, and real/imaginary residual checks into the S4 outer-fold evidence.
+* **Blockers / Gates:** S4 must show at least 10% lower projected-velocity RMSE than frozen stock KinMS and improve overall reduced chi-square on both real targets. Failure or KGAS066 regression is an explicit escalation boundary.
+* **Next Step:** Render the two S3-selected models through the frozen diagnostic operator, score them and stock KinMS on the same official cubes/masks, and run the structured visibility-residual diagnostics required by the S2 reviewers.
 
 The extraction implementation is on `dev` at `246bc19` in ms2kinuv and its
 kinUV ingestion boundary is at `d177f58`. The casacore-backed ms2kinuv suite
@@ -49,7 +49,7 @@ C1 is selected for both targets: native adjacent-channel rho is 0.29770 and
 0.29769, respectively. Whitened mean, variance, and lag-one gates pass; maximum
 remaining lag-one correlation is 0.02922 for KGAS066 and 0.02930 for KGAS007.
 
-The Field Guide and Review Board charter govern the active S3 implementation.
+The Field Guide and Review Board charter govern the active S4 implementation.
 The S1 closure did not alter the physical brightness profile, velocity
 prescription, target parameters, or frozen thresholds.
 
@@ -78,6 +78,27 @@ correlations are 0.297702 and 0.297688; the maximum whitened residual lag is
 0.037134 and 0.064040 km/s, safely below the PI-authorized 1 km/s gate. S4 must
 add baseline-, antenna-, time-, and real/imaginary cross-component residual
 checks before any held-out superiority claim.
+
+## S3 joint-ablation closure
+
+S3 is **CLOSED** at exact implementation commit `b2ac6bc`. Reviewer A accepted
+the science and numerical evidence in
+`docs/reviews/2026-09-07-code-review-a-crossdomain-s3.md`; Reviewer B accepted
+the software and reproducibility evidence in
+`docs/reviews/2026-09-07-code-review-b-crossdomain-s3.md`. The checksum-bound
+dossier is `results/validation/crossdomain-recovery-s3-20260907-r3/`, and the
+full suite passed with 259 tests and 8 skips.
+
+KGAS066 gains 223.193 chi-square from the positive rank-three emissivity basis,
+rejects four velocity knots at a 4.821 gain, and retains a two-zone dispersion
+addition with a further 152.500 gain. Its selected projected arctan amplitude
+is 183.633 km/s, with inner and outer dispersions 7.473 and 9.878 km/s.
+KGAS007 gains 12.692 from emissivity, retains four supported projected-speed
+knots at a 32.875 gain, and rejects the two-zone dispersion addition. Its knots
+are 59.083, 88.334, 83.139, and 95.502 km/s. Both knot Hessian blocks are full
+rank on the registered local scale. The model-family chi-square differences
+are retention criteria, not likelihood-ratio significance claims; S4 decides
+predictive superiority.
 
 ## S1 operator/comparator closure
 

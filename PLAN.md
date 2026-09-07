@@ -10,11 +10,10 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Execute S3 one-factor candidates.** S2 closed at `8248a05` with dual acceptance. Test joint emissivity, supported projected-velocity knots, and only then a two-zone dispersion model while retaining joint nuisance optimization.
-2. **Close S3 through independent review.** Freeze the exact implementation commit and checksum-bound ablation dossier, obtain Reviewer A and Reviewer B verdicts, and record the tally.
-3. **Execute S4 paired selection.** Apply the PI-authorized aggregate gates: at least 10 percent lower projected-velocity RMSE than frozen stock KinMS and improved overall reduced chi-square on both real targets. Include baseline, antenna, time, and real/imaginary residual diagnostics.
-4. **Seal S5 evidence.** Verify exact manifests, clean-checkout reproducibility, review tallies, and the accepted production record without launching an unlicensed posterior campaign.
-5. **Calibrate intervals separately.** Any later posterior campaign applies R-hat and ESS promotion gates only to primary kinematic and geometric parameters; exact-workflow SBC remains required before calibrated interval claims.
+1. **Execute S4 paired selection.** S3 closed at `b2ac6bc` with dual acceptance. Apply the PI-authorized aggregate gates: at least 10 percent lower projected-velocity RMSE than frozen stock KinMS and improved overall reduced chi-square on both real targets. Include baseline, antenna, time, and real/imaginary residual diagnostics.
+2. **Apply the explicit S4 stop rule.** If either target misses the KinMS recovery threshold or KGAS066 regresses, preserve the complete evidence and escalate to Astra without promoting S5.
+3. **Seal S5 evidence after an S4 pass.** Verify exact manifests, clean-checkout reproducibility, review tallies, and the accepted production record without launching an unlicensed posterior campaign.
+4. **Calibrate intervals separately.** Any later posterior campaign applies R-hat and ESS promotion gates only to primary kinematic and geometric parameters; exact-workflow SBC remains required before calibrated interval claims.
 
 ## Exit criteria for the next production increment
 
