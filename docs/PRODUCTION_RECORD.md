@@ -28,6 +28,15 @@ KGAS007, giving kinUV/KinMS ratios of 0.01180 and 0.04569 against the required
 standard-use data boundary; it does not establish performance for arbitrary
 warps, noncircular flows, thickness, or calibrated posterior coverage.
 
+The additive S5 sub-beam diagnostic at
+`results/validation/crossdomain-recovery-s5-subbeam-20260907/` isolates the
+beam-smeared rotation rise without refitting. Both truths have `R_turn < BMAJ`.
+For KGAS066, kinUV/KinMS ratios are 0.02493 for mean absolute turnover-radius
+error and 0.01438 for inner `r <= BMAJ` projected-velocity RMSE. For KGAS007,
+the corresponding ratios are 0.27665 and 0.13749. The result is supporting
+publication evidence; it does not alter the accepted S4 gate or expand the
+matched-family scope claim.
+
 Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B
 accepted software, provenance, and isolation at `0442542`. Their records retain
 the earlier `changes-requested` rounds that caught unauthenticated checkpoints,

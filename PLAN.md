@@ -14,6 +14,9 @@ The cross-domain recovery program is complete through S5 under
 [`DEC-PI-S4-STANDARD-USE-BENCHMARK`](docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).
 The historical S4 failure remains preserved. Reviewer A and Reviewer B accept
 the corrected S4 evidence, and the S5 verification seal is immutable.
+The additive `crossdomain-recovery-s5-subbeam-20260907` record now supplies the
+publication diagnostic for `R_turn < BMAJ`; it reuses the accepted S4 fits and
+has no gating role.
 
 1. **Calibrate rotation significance.** Complete the fitted non-rotating emitting-disk bootstrap before promoting a formal rotation-detection probability.
 2. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes exact-workflow coverage before calibrated interval claims.

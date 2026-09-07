@@ -19,6 +19,10 @@ Durable results, rejected alternatives, benchmark values, and retained artifact 
   longer requires training-fold `tclean` products.
 - Received independent Reviewer A and Reviewer B acceptance, verified the
   50-file S4 manifest, and sealed S5 without launching a posterior campaign.
+- Added a non-blocking, checksum-bound S5 sub-beam diagnostic from the accepted
+  synthetic fits. It reports direct turnover-radius error and inner
+  `r <= BMAJ` projected-velocity RMSE, with per-target and combined figures,
+  without reopening S4.
 
 ## 2026-09-06 — production closeout and documentation cleanup
 

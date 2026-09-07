@@ -1,5 +1,5 @@
 ---
-generation: 30
+generation: 31
 phase: crossdomain-recovery-s5-closed
 code_freeze: true
 next_role: consultant-astra
@@ -17,17 +17,34 @@ user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - How broadly does the demonstrated advantage extend beyond the tested thin axisymmetric arctan family?
 deadlocks: []
-canon_generation: 30
+canon_generation: 31
 ---
 
 ## Agent Run Status
 
 * **Phase:** S0--S5 are closed under the PI-authorized cross-domain recovery contract. The accepted S4 evidence commit is `354bbad`; S5 sealed it at `98f7730`.
-* **Last Action:** The Plumbline workflow invariants were synchronized in the Field Guide and `AGENTS.md` at `97babbbf6abb7865ea701a11495d22b7c37d8fd0`; legacy prose-gated tests were removed.
+* **Last Action:** Commit `9f09bfa03110725e00fedd1aaf1e04f8ad650281` added the non-blocking S5 sub-beam turnover diagnostic. The checksum-bound addendum is `results/validation/crossdomain-recovery-s5-subbeam-20260907/`; it reuses accepted S4 fits and does not reopen S4.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
-* **Verification:** Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B accepted software and reproducibility at `0442542`. The final S4 dossier contains 50 verified files totaling 69,157,562 bytes. The S5 seal is `results/validation/crossdomain-recovery-s5-20260907/`. The deterministic/architecture suite passes with 263 tests and 5 skips; the separately known unstable NUTS smoke module was not run because no sampler campaign is licensed.
+* **Verification:** Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B accepted software and reproducibility at `0442542`. The final S4 dossier contains 50 verified files totaling 69,157,562 bytes. The S5 seal is `results/validation/crossdomain-recovery-s5-20260907/`. The additive sub-beam manifest verifies all seven files; its metrics and manifest SHA-256 values are `c8f7441fb51f2b6b66a467eb75f9f5d8880f78c8297430aec2a5c5489eea5197` and `ea2c7048d37a0272b27e0f048a130d2de070abf5b17288a62dd17554fbdccf04`. The current deterministic/architecture suite passes with 259 tests and 5 skips when the separately known unstable NUTS smoke module is excluded because no sampler campaign is licensed.
 * **Next Step:** Astra may define the next scientific expansion. Posterior calibration, the non-rotation bootstrap, and broader synthetic families remain separate future campaigns.
+
+## S5 sub-beam turnover diagnostic
+
+Both accepted synthetic truths meet the declared `R_turn < BMAJ` condition.
+For KGAS066, `R_turn/BMAJ=0.28846`; kinUV's mean absolute turnover error is
+0.000996 arcsec versus 0.039977 arcsec for KinMS, a ratio of 0.02493. The
+inner-beam projected-velocity RMSE is 0.13830 versus 9.61877 km/s, a ratio of
+0.01438. For KGAS007, `R_turn/BMAJ=0.43853`; turnover errors are 0.020044
+versus 0.072452 arcsec, a ratio of 0.27665, and inner-beam RMSE values are
+0.63702 versus 4.63336 km/s, a ratio of 0.13749.
+
+The reporter uses only the accepted S4 fitted parameters and stored 24-bin
+profile grid. It performs no optimization, changes no target parameter, and
+does not modify the dual-approved S4 gate. Per-target inner profiles and the
+combined summary figure are retained with the metrics and manifest. This
+STATUS generation 31 is the deterministic in-repository handoff for code
+commit `9f09bfa`.
 
 ## Governance workflow synchronization
 

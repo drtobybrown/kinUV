@@ -15,6 +15,14 @@ both target samplings. Reviewer A accepted at `98f7730`; Reviewer B accepted at
 the milestone architecture and comparison boundary; it does not recalibrate
 the retained posterior intervals or alter the production files.
 
+An additive S5 diagnostic at
+`results/validation/crossdomain-recovery-s5-subbeam-20260907/` demonstrates
+sub-beam turnover recovery using the accepted fitted realizations. The
+kinUV/KinMS mean absolute `R_turn` error ratios are 0.02493 for KGAS066 and
+0.27665 for KGAS007; inner `r <= BMAJ` projected-velocity RMSE ratios are
+0.01438 and 0.13749. It is explicitly non-gating and leaves the S4 and target
+bundles immutable.
+
 | Target | Production product | Selected model | Visibility result | Posterior status |
 |---|---|---|---|---|
 | KGAS066 | `results/production/KGAS066/kinuv-KGAS066-4c1bc4-milestone1/` | Stage B, seven rings | chi2 167302.365796; Stage A delta chi2 versus blank visibilities 35552.645475 | Four retained chains; max Rhat 1.00369; min bulk ESS 889; intervals uncalibrated |
