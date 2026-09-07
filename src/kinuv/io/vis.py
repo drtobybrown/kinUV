@@ -523,7 +523,7 @@ def load_target_vis(
     required for correlation-aware train/validation splits: no averaged output
     row may mix native Measurement Set rows from different folds.
     """
-    table = load_visibility_table(path)
+    table = path if isinstance(path, NativeVisTable) else load_visibility_table(path)
     freqs_all = table.freqs
     vel_all = freq_to_velocity_kms(freqs_all)
     v_lo_opt, v_hi_opt = cube_vopt_window_kms(cube_path)

@@ -96,3 +96,28 @@ def test_replay_records_sparse_profile_instead_of_aborting():
     assert record["gate_eligible"] is False
     assert record["ratio_kinuv_over_kinms"] is None
     assert record["data_n_radius"] == 1
+
+
+def test_grouped_prediction_bootstrap_and_frame_round_trip():
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "scripts/run_s4_grouped_prediction.py"
+    spec = importlib.util.spec_from_file_location("s4_grouped", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    rows = [
+        {"delta_chi2": value, "n_real_components": 100}
+        for value in (40.0, 50.0, 60.0, 45.0, 55.0)
+    ]
+    result = module._bootstrap_delta(rows, seed=2, draws=2000)
+    assert result["delta_chi2_per_real_component"] == pytest.approx(0.5)
+    assert result["lower_95_percent"] > 0.0
+
+    correction = 10.9850680313608
+    vopt_lsrk = 8300.0
+    topo = module._lsrk_optical_to_topo_radio(vopt_lsrk, correction)
+    recovered = topo_radio_to_lsrk_radio(topo, correction)
+    from kinuv.io.vis import optical_to_radio_kms
+
+    assert recovered == pytest.approx(float(optical_to_radio_kms(vopt_lsrk)))
