@@ -129,7 +129,7 @@ def matched_disk_template(grid, truth: dict, bmaj_arcsec: float) -> np.ndarray:
 
 
 def projected_profile(parameters: dict, radius: np.ndarray) -> np.ndarray:
-    inclination = float(parameters["inclination_deg"])
+    inclination = float(parameters.get("inclination_deg", parameters.get("i_deg")))
     v0 = float(parameters.get("v0_kms", parameters.get("v0_kms_diagnostic")))
     rt = float(parameters["r_t_arcsec"])
     return v0 * np.sin(np.radians(inclination)) * (2.0 / np.pi) * np.arctan(radius / rt)
@@ -145,6 +145,11 @@ def _kinms_fit(config: dict, cube: Path, mask: Path, truth_cube: Path, work: Pat
     mask = mask.resolve()
     truth_cube = truth_cube.resolve()
     work = work.resolve()
+    retained = work / "kinms_fit_result.json"
+    if retained.is_file():
+        result = json.loads(retained.read_text(encoding="utf-8"))
+        if result.get("success"):
+            return result
     correction = float(config["spectral_frame"]["frequency_correction_equivalent_kms"])
     truth = config["_truth"]
     vsys_lsrk = float(topo_radio_to_lsrk_radio(truth["vsys_kms"], correction))
@@ -385,6 +390,7 @@ def main() -> int:
     parser.add_argument("--target-config", action="append", type=Path, required=True)
     parser.add_argument("--covariance-metrics", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
     args.output = args.output.resolve()
     state = _git_state()
@@ -392,7 +398,7 @@ def main() -> int:
         raise RuntimeError("S4 synthetic recovery requires a clean exact commit on dev")
     if not KINMS_PYTHON.is_file() or not KINMS_WORKER.is_file():
         raise FileNotFoundError("frozen stock KinMS worker environment is unavailable")
-    if args.output.exists() and any(args.output.iterdir()):
+    if args.output.exists() and any(args.output.iterdir()) and not args.resume:
         raise FileExistsError(args.output)
     args.output.mkdir(parents=True)
     covariance = json.loads(args.covariance_metrics.read_text(encoding="utf-8"))
