@@ -315,9 +315,15 @@ def fit_s2_start(
         )
     _ = value_gradient(jnp.asarray(z0))
 
-    def scipy_value_gradient(z):
+    optimization_scale = 1.0 / max(1, int(data.vis.size))
+
+    def raw_value_gradient(z):
         value, gradient = value_gradient(jnp.asarray(z))
         return float(value), np.asarray(gradient, dtype=np.float64)
+
+    def scipy_value_gradient(z):
+        value, gradient = raw_value_gradient(z)
+        return optimization_scale * value, optimization_scale * gradient
 
     opt = minimize(
         scipy_value_gradient,
@@ -325,9 +331,9 @@ def fit_s2_start(
         method="L-BFGS-B",
         jac=True,
         bounds=bounds,
-        options={"maxiter": int(maxiter), "ftol": 1.0e-12, "gtol": 1.0e-6, "maxls": 30},
+        options={"maxiter": int(maxiter), "ftol": 1.0e-15, "gtol": 1.0e-8, "maxls": 40},
     )
-    value, gradient = scipy_value_gradient(opt.x)
+    value, gradient = raw_value_gradient(opt.x)
     params = unpack_s2(
         opt.x,
         vsys_seed_kms=vsys_seed_kms,
