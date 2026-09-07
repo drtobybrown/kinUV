@@ -453,6 +453,7 @@ def fit_s3_candidate(
     maxiter=120,
     two_zone_uses_rings=True,
     fixed_emissivity_weights=None,
+    log_kinematic_coordinates=False,
 ):
     import jax.numpy as jnp
 
@@ -489,31 +490,62 @@ def fit_s3_candidate(
     _ = value_gradient(jnp.asarray(z_start))
     normalization = 1.0 / max(1, int(data.vis.size))
 
+    log_indices = set()
+    if log_kinematic_coordinates:
+        uses_rings = candidate == "supported_rings" or (
+            candidate == "two_zone_dispersion" and two_zone_uses_rings
+        )
+        log_indices.update(range(9, 13) if uses_rings else (7, 8))
+
+    def to_solver(z):
+        q = np.asarray(z, dtype=np.float64).copy()
+        for index in log_indices:
+            if q[index] <= 0.0:
+                raise ValueError(f"{S3_PARAMETER_NAMES[index]} must be positive")
+            q[index] = np.log(q[index])
+        return q
+
+    def from_solver(q):
+        z = np.asarray(q, dtype=np.float64).copy()
+        for index in log_indices:
+            z[index] = np.exp(z[index])
+        return z
+
+    solver_bounds = list(bounds)
+    for index in log_indices:
+        lo, hi = solver_bounds[index]
+        solver_bounds[index] = (np.log(max(float(lo), 1.0e-6)), np.log(float(hi)))
+
     def raw(z):
         value, gradient = value_gradient(jnp.asarray(z))
         return float(value), np.asarray(gradient, dtype=np.float64)
 
     best_seen = {"value": float("inf"), "z": z_start.copy()}
 
-    def scaled(z):
+    def scaled(q):
+        z = from_solver(q)
         value, gradient = raw(z)
         if value < best_seen["value"]:
             best_seen["value"] = value
             best_seen["z"] = np.asarray(z, dtype=np.float64).copy()
-        return normalization * value, normalization * gradient
+        solver_gradient = gradient.copy()
+        for index in log_indices:
+            solver_gradient[index] *= z[index]
+        return normalization * value, normalization * solver_gradient
 
     opt = minimize(
         scaled,
-        z_start,
+        to_solver(z_start),
         method="L-BFGS-B",
         jac=True,
-        bounds=bounds,
+        bounds=solver_bounds,
         options={"maxiter": int(maxiter), "ftol": 1.0e-15, "gtol": 1.0e-8, "maxls": 40},
     )
+    scipy_optimum = from_solver(opt.x)
     optimum = (
         best_seen["z"]
         if best_seen["value"] < float(opt.fun) / normalization
-        else np.asarray(opt.x, dtype=np.float64)
+        else scipy_optimum
     )
     value, gradient = raw(optimum)
     params = unpack_chart(

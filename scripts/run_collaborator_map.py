@@ -166,6 +166,7 @@ def main() -> int:
         maxiter=args.maxiter,
         two_zone_uses_rings=two_zone_uses_rings,
         fixed_emissivity_weights=fixed_weights,
+        log_kinematic_coordinates=True,
     )
     payload = {
         "schema_version": "kinuv-collaborator-map-start-v1",
