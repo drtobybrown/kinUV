@@ -400,7 +400,7 @@ def main() -> int:
         raise FileNotFoundError("frozen stock KinMS worker environment is unavailable")
     if args.output.exists() and any(args.output.iterdir()) and not args.resume:
         raise FileExistsError(args.output)
-    args.output.mkdir(parents=True)
+    args.output.mkdir(parents=True, exist_ok=args.resume)
     covariance = json.loads(args.covariance_metrics.read_text(encoding="utf-8"))
     targets = [run_target(path, covariance, args.output) for path in args.target_config]
     accepted = all(row["gate"]["passed"] for row in targets)
