@@ -61,6 +61,9 @@ MS2KINUV_V2_KEYS = (
     "polarization_id",
     "polarization_index",
     "correlation_type",
+    "source_polarization_indices",
+    "source_correlation_types",
+    "polarization_combination_json",
     "frequency_reference_code",
     "frequency_frame",
     "visibility_unit",
@@ -129,6 +132,9 @@ class NativeVisTable:
     polarization_id: int | None = None
     polarization_index: int | None = None
     correlation_type: int | None = None
+    source_polarization_indices: np.ndarray | None = None
+    source_correlation_types: np.ndarray | None = None
+    polarization_combination: dict | None = None
     frequency_reference_code: int | None = None
     frequency_frame: str | None = None
     visibility_unit: str | None = None
@@ -251,12 +257,19 @@ def load_visibility_table(path) -> NativeVisTable:
                 "frequency_reference_code",
             ):
                 provenance[key] = int(np.asarray(z[key]).item())
+            provenance["source_polarization_indices"] = np.asarray(
+                z["source_polarization_indices"], dtype=np.int64
+            ).ravel()
+            provenance["source_correlation_types"] = np.asarray(
+                z["source_correlation_types"], dtype=np.int64
+            ).ravel()
             for key in ("frequency_frame", "visibility_unit", "weight_convention"):
                 provenance[key] = str(np.asarray(z[key]).item())
             for key, output_key in (
                 ("history_json", "history"),
                 ("smoothing_history_json", "smoothing_history"),
                 ("extraction_json", "extraction"),
+                ("polarization_combination_json", "polarization_combination"),
             ):
                 provenance[output_key] = json.loads(str(np.asarray(z[key]).item()))
     n_row, n_chan = vis.shape
@@ -294,6 +307,11 @@ def load_visibility_table(path) -> NativeVisTable:
             raise ValueError("channel_width_hz must match freqs")
         if provenance["channel_edges_hz"].shape != (n_chan, 2):
             raise ValueError("channel_edges_hz must have shape (n_chan, 2)")
+        if provenance["source_polarization_indices"].size == 0 or (
+            provenance["source_polarization_indices"].shape
+            != provenance["source_correlation_types"].shape
+        ):
+            raise ValueError("source polarization indices and types must align")
         if np.any(weights[provenance["flags"]] != 0.0):
             raise ValueError("flagged cells must have zero weight")
         if not np.all(np.isfinite(weights)) or np.any(weights < 0.0):

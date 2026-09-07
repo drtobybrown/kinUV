@@ -100,6 +100,11 @@ def _v2_payload():
         "polarization_id": np.array(0),
         "polarization_index": np.array(0),
         "correlation_type": np.array(9),
+        "source_polarization_indices": np.array([0]),
+        "source_correlation_types": np.array([9]),
+        "polarization_combination_json": np.array(
+            '{"mode": "single", "estimator": "identity"}'
+        ),
         "frequency_reference_code": np.array(1),
         "frequency_frame": np.array("LSRK"),
         "visibility_unit": np.array("Jy"),
