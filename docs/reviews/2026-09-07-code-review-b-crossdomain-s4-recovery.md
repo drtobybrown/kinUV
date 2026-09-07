@@ -118,3 +118,42 @@ Two reproducibility requirements remain open in this revision:
 Add the fit-window FITS hash and behavioral checkpoint identity tests, then
 regenerate and reseal the dossier at the resulting clean implementation
 commit. No scientific metric or gate change is requested.
+
+## Final revision review
+
+**Verdict:** `accept`<br>
+**Resolution code:** `baf7047e3f3ea9145ea0efdbc196ebb1f414dc16`<br>
+**Clean evidence commit:** `354bbad8fb721871f82bb374ac9cfa62606067f4`
+
+Both remaining findings are closed. The synthetic records now include the
+distinct 30 km/s fit-window cube for each target, and both external FITS hashes
+match their current bytes. The checkpoint test executes a successful identity
+match and rejects changed commit, seed, and cube-hash contracts. The focused
+S4, hot-path architecture, standalone, and comparator suite passes with 34
+tests.
+
+The dossier was regenerated from an empty output after the clean evidence
+commit. Its earliest synthetic payload follows `354bbad`, and the summary and
+both manifests stamp that exact clean `dev` state. All six KinMS fit
+configurations independently match commit `354bbad`, their declared seeds, and
+the SHA-256 values of the corresponding mock cube, truth cube, mask, and worker.
+Every recorded source input, including target config, covariance metrics,
+visibility NPZ, fit-window cube, diagnostic cube, diagnostic mask, integrated
+intensity error, runner, and KinMS worker, exists and rehashes exactly.
+
+The supplied final checksums verify:
+
+* `metrics.json`: `4317fd28e33a255a9ecfa8805a960ece1de9402620736ccac3af8ad8198f9f28`
+* `MANIFEST.json`: `e75ea038501cdd995ee99e19cf2883259b385e25a18418622e8294d68d3727db`
+
+The complete chain remains exact: 50 of 50 final payloads, 49 of 49 synthetic
+payloads, 9 of 9 grouped payloads, and 83 of 83 payloads in each supporting
+replay, with no size or checksum mismatch. Bootstrap seed 4404 is serialized.
+The grouped confidence bounds and synthetic RMSE ratios are unchanged from the
+prior submission. CASA scratch and log artifacts remain absent, and no CASA or
+legacy-package import enters the runners or kinUV source.
+
+Reviewer B therefore accepts S4 recovery for software correctness,
+reproducibility, evidence integrity, and architectural isolation. The earlier
+`changes-requested` entries remain above as the audit trail for the rejected
+candidates.
