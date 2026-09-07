@@ -1,7 +1,7 @@
 # S4 scientific recovery review packet
 
-**Candidate implementation:** `f0d3067562e3b65b07a6a748ad869ea6656f9c0e`  
-**Binding comparison:** `DEC-PI-S4-STANDARD-USE-BENCHMARK`  
+**Candidate implementation:** `f2f6a22b6749f46da70e55f57e599f919190c9f8`<br>
+**Binding comparison:** `DEC-PI-S4-STANDARD-USE-BENCHMARK`<br>
 **Dossier:** `results/validation/crossdomain-recovery-s4-final-20260907/`
 
 ## Promotion evidence
@@ -32,8 +32,15 @@ are below the required 0.90.
   `results/validation/crossdomain-recovery-s4-remediation-20260907-r1/`.
 * The grouped visibility audit is
   `results/validation/crossdomain-recovery-s4-remediation-20260907-r2/grouped/`.
-* The final dossier contains 50 checksum-bound files totaling 69,145,565
+* The final dossier contains 50 checksum-bound files totaling 69,156,464
   bytes. All referenced source manifests were revalidated while sealing it.
+* Reviewer B rejected the first submission at `72a7d35` because resume could
+  mix an older KinMS checkpoint into a newer stamped dossier. The revised
+  runner authenticates commit, realization seed, runner, worker, cube, truth,
+  and mask before reuse. Target config, covariance, visibility, diagnostic
+  inputs, and bootstrap seed 4404 are serialized. The entire dossier was then
+  deleted and all six fits rerun from scratch at the candidate commit; every
+  scientific metric reproduced exactly.
 * The deterministic and architecture suite passes: 263 passed, 5 skipped.
   The known unstable NUTS smoke module is outside this authorized MAP/recovery
   run and was not executed.

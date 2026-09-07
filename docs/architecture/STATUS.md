@@ -1,6 +1,6 @@
 ---
-generation: 27
-phase: s4-recovery-dual-review
+generation: 28
+phase: s4-recovery-provenance-rereview
 code_freeze: true
 next_role: review-board
 board: crossdomain-recovery-s4-scientific-recovery
@@ -8,7 +8,7 @@ build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s4-dual-review
+  - s4-provenance-rereview
   - exact-workflow-posterior-calibration
 last_propose: docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md
 last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s4.md
@@ -16,19 +16,19 @@ last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s4.md
 last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
-  - Will both independent reviewers accept the final S4 evidence and standard-use comparator contract?
+  - Will both independent reviewers accept the authenticated f2f6a22 evidence revision?
 deadlocks: []
-canon_generation: 27
+canon_generation: 28
 ---
 
 ## Agent Run Status
 
-* **Phase:** S0--S3 remain closed. S4 implementation and empirical gates are complete at `f0d3067`; the checksum-bound final dossier awaits independent Reviewer A and Reviewer B verdicts. S5 remains frozen until dual acceptance.
+* **Phase:** S0--S3 remain closed. S4 implementation and empirical gates are complete at `f2f6a22`; the authenticated checksum-bound dossier awaits re-review. S5 remains frozen until dual acceptance.
 * **Last Action:** Sol terminated the CASA reimaging track under direct PI authority, removed its four scratch environments and three repository logs, codified `DEC-PI-S4-STANDARD-USE-BENCHMARK`, and completed the Python-native paired truth suite.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
-* **Verification:** All 50 final dossier files (69,145,565 bytes) and their source manifests verify. The deterministic/architecture suite passes with 263 tests and 5 skips; the separately known unstable NUTS smoke module was not run because no sampler campaign is licensed.
-* **Next Step:** Reviewer A audits science and numerical validity; Reviewer B audits software and reproducibility. Dual acceptance closes S4 and unfreezes S5 sealing.
+* **Verification:** Reviewer A accepted the initial science case at `41efbe5`. Reviewer B correctly rejected its mixed-checkpoint provenance at `72a7d35`. Sol added authenticated resume, source hashes, and the bootstrap seed at `f2f6a22`, deleted the old dossier, and reproduced every metric from scratch at that clean commit. All 50 revised files (69,156,464 bytes) and their source manifests verify. The deterministic/architecture suite passes with 263 tests and 5 skips; the separately known unstable NUTS smoke module was not run because no sampler campaign is licensed.
+* **Next Step:** Both reviewers re-evaluate the `f2f6a22` revision. Dual acceptance closes S4 and unfreezes S5 sealing.
 
 ## S4 scientific recovery submitted for review
 
@@ -40,6 +40,15 @@ The final dossier is
 records without changing either source dossier. The original grouped summary's
 `promotion_eligible: false` field is explicitly superseded because it encoded
 the now-rejected CASA reimaging prerequisite.
+
+The first submitted dossier was rejected for reproducibility because resumed
+KinMS checkpoints were not authenticated to the stamped commit and inputs.
+The revised runner binds every checkpoint to the runner commit, realization
+seed, worker hash, mock-cube hash, truth-cube hash, and mask hash. It also
+records target configuration, covariance, visibility, diagnostic product, and
+runner hashes, and serializes grouped bootstrap seed 4404. The old final
+dossier was removed and all six external fits were rerun from an empty output
+directory at `f2f6a22`; the scientific values reproduced exactly.
 
 The repaired replay established that the historical KGAS066 cube score was
 inherited by the baseline and was not caused by S3 kinematic flexibility.
