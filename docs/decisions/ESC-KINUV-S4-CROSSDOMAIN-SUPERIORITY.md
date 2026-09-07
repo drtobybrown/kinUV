@@ -1,12 +1,19 @@
 ---
 id: ESC-KINUV-S4-CROSSDOMAIN-SUPERIORITY
-status: escalated-to-astra
+status: resolved-by-astra-recovery-licensed
 date: 2026-09-07
 authority_requested: Astra
 implementation_commit: 5d08507d2b9fa048a7760d57eedd7cbff722238c
 artifact: results/validation/crossdomain-recovery-s4-20260907-r3
+resolution: DEC-KINUV-S4-SCIENTIFIC-RECOVERY
 ---
 # S4 cross-domain superiority escalation
+
+Architectural resolution (2026-09-07): the current PI-directed handoff is
+[`DEC-KINUV-S4-SCIENTIFIC-RECOVERY`](DEC-KINUV-S4-SCIENTIFIC-RECOVERY.md).
+It licenses a fresh recovery attempt with scientifically revised metric
+domains. The original failed measurements and escalation rationale below are
+preserved as history; neither S4 nor S5 is retrospectively closed.
 
 ## Decision requested
 

@@ -4,6 +4,19 @@ The board tracks one active proposal and its independent reviews. Scientific val
 
 ## Active card
 
+`crossdomain-recovery-s4-scientific-recovery`: S1--S3 retain their historical
+dual acceptance. Reviewers A/B accepted the reproducibility of the failed S4
+`5d08507` dossier in their 2026-09-07 S4 reviews; neither accepted superiority.
+Under the current PI directive, Astra now licenses Sol's bounded recovery in
+[`DEC-KINUV-S4-SCIENTIFIC-RECOVERY`](../decisions/DEC-KINUV-S4-SCIENTIFIC-RECOVERY.md).
+Sol coordinates independent reviews after implementation. Reviewers must
+distinguish reproducible metric arithmetic from valid sky coordinates,
+response accounting, common support, and un-leaked scientific prediction.
+No fresh S4 acceptance or S5 authorization exists yet. Apply the new
+prospective metric domains while retaining the historical failed scores.
+
+### Historical progression through S2 intake
+
 `crossdomain-recovery-s1`: Astra formally approved
 [`DEC-KINUV-CROSSDOMAIN-RECOVERY`](../decisions/DEC-KINUV-CROSSDOMAIN-RECOVERY.md)
 and licensed S0/S1 on 2026-09-06. S0 closed after independent Reviewer A and

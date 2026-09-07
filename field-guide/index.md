@@ -68,6 +68,11 @@ The binding S2-S5 rules are recorded in
   velocity RMSE against registered truth and improved overall reduced
   chi-square on both real canonical benchmarks. Per-region residual dominance
   is diagnostic.
+  The PI-directed prospective S4 domain and eligibility definitions are in
+  `docs/decisions/DEC-KINUV-S4-SCIENTIFIC-RECOVERY.md`: known-truth recovery
+  and real held-out visibility prediction control promotion; masked restored-
+  cube moment-1 curves and scalar voxel scores remain supporting diagnostics.
+  Historical failed records are not retroactively promoted.
 * Reviewers must return `changes-requested` on an asymptotic or unphysical gate
   whose strictness is unsupported by resolution, calibration, noise, or the
   promoted scientific claim.
