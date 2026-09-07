@@ -11,6 +11,7 @@ reviewed_commit: f0d3067562e3b65b07a6a748ad869ea6656f9c0e
 reviewed_range: 3462efd05481aa8ae4c51d8e21c5cc5badf505c2..17dc9d7b576b2fede281a935d3b69a23e6d25fa8
 rereviewed_commit: f2f6a22b6749f46da70e55f57e599f919190c9f8
 status_packet_commit: 879a04b896df6a22b72437e98bb937385b0a9e68
+stable_evidence_commit: 354bbad8fb721871f82bb374ac9cfa62606067f4
 verdict: accept
 ---
 # Independent code review A: cross-domain S4 scientific recovery
@@ -160,3 +161,37 @@ review-packet documentation, so it does not alter those metrics.
 **Final re-review verdict: Accept.** The authenticated rerun preserves the
 previous scientific conclusion and removes the stale-checkpoint ambiguity.
 The claim limits in this review remain binding.
+
+## Stable-evidence final re-review
+
+I performed a final science re-review against exact stable evidence commit
+`354bbad8fb721871f82bb374ac9cfa62606067f4` and its newly regenerated
+dossier. The two intervening implementation changes are reproducibility-only:
+the exact checkpoint-contract comparison is factored into the directly
+testable `retained_kinms_result` helper, and the fit-window cube that controls
+visibility selection is added to the authenticated input hashes. Neither
+change alters truth generation, likelihood evaluation, fitting, projected
+profile calculation, aggregation, or a scientific gate.
+
+The regenerated `metrics.json` SHA-256 is
+`4317fd28e33a255a9ecfa8805a960ece1de9402620736ccac3af8ad8198f9f28`
+and the top-level `MANIFEST.json` SHA-256 is
+`e75ea038501cdd995ee99e19cf2883259b385e25a18418622e8294d68d3727db`,
+exactly matching the submitted identities. The top manifest identifies
+`354bbad`, contains 50 entries, and verifies completely; the nested synthetic
+manifest identifies the same commit and all 49 entries verify. Every target
+input hash matches its source, including the newly recorded fit-window cubes,
+and all six KinMS checkpoint contracts name `354bbad` with the correct seed,
+cube, mask, truth, and worker identities.
+
+The science results are exactly unchanged from both earlier reviews. Synthetic
+kinUV/KinMS projected-speed RMSE ratios remain `0.01180266879454277` for
+KGAS066 and `0.04569431293329279` for KGAS007. Real held-out gains remain
+`0.04265073718804183` and `0.00456082894209484` chi-square per real
+component, with lower 95% bounds `0.03178592352114772` and
+`0.0029030375555849555`. The bootstrap contract remains 20,000 draws with
+seed `4404`. All previously recorded scientific scope limits remain unchanged.
+
+**Stable-evidence verdict: Accept.** The final provenance fixes do not change
+the physical comparison or its result. The `354bbad` dossier satisfies the S4
+science gate within the exact-family and standard-use limits stated above.
