@@ -8,12 +8,13 @@ kinUV is a standalone visibility-domain modeling and inference engine. This guid
 
 When records disagree, apply this order:
 
-1. Astra's current written directive.
-2. Accepted architectural and scientific decisions in `docs/decisions/`.
-3. This field guide.
-4. The active campaign proposal and its frozen configuration.
-5. `docs/architecture/STATUS.md` and `docs/reviews/BOARD.md`.
-6. `PLAN.md`, diagnostics, and implementation notes.
+1. The Project PI's current written directive.
+2. Astra's current written directive within the PI-defined boundary.
+3. Accepted architectural and scientific decisions in `docs/decisions/`.
+4. This field guide.
+5. The active campaign proposal and its frozen configuration.
+6. `docs/architecture/STATUS.md` and `docs/reviews/BOARD.md`.
+7. `PLAN.md`, diagnostics, and implementation notes.
 
 Historical campaign decisions remain evidence for their original products. They do not silently become defaults for another target or campaign.
 
@@ -23,7 +24,8 @@ Agent names describe authority, not a particular vendor or model release. The sa
 
 | Role | Typical capability | Owns | Must not do |
 |---|---|---|---|
-| **Principal Project Authority: Astra** | Human project authority | Mission, publication authority, exceptions, final dispute resolution | Be made a routine gate sitter |
+| **Project PI** | Human authority | Mission, publication authority, gate overrides, final dispute resolution | Be displaced by an agent-authored threshold |
+| **Principal Architect: Astra** | Lead scientific authority | Mission architecture, physical strategy, scientific gates within the PI boundary | Re-impose a gate superseded by the PI |
 | **Consultant: Lead Architect / frontier model** | Highest available reasoning capability | Scientific strategy, parameterization, physical priors, model class, declared gate criteria, residual-risk acceptance, scientific promotion sign-off | Run an unreviewed production campaign or delegate away scientific accountability |
 | **Senior Registrar** | Senior coordinating agent | Canon, proposal registration, configuration freeze, provenance, review tally, state transitions, promotion dossier | Relax a scientific criterion or reinterpret a failed gate as a pass |
 | **Implementer** | Execution model such as Composer or GPT-5.6 | Code, tests, diagnostics, profiling, refactoring, batch execution, bounded operational decisions inside the accepted specification | Change priors, likelihoods, sign conventions, model class, or promotion thresholds without change control |
@@ -48,6 +50,27 @@ An Implementer may stop a run immediately for corruption, invalid numerics, reso
 * Trust the Implementer: Once a physical direction is set, Senior Implementer agents (e.g., GPT-5.6 Sol) hold full authority over software design, numerical quadrature choices, algorithm efficiency, and code organization.
 * Prohibition on Overengineering: Astra is strictly barred from requiring secondary/redundant reference engines (e.g., ungridded slow-DFT calculations) or extreme theoretical tolerances (e.g., 1e-6 float64 closures) for localized bug fixes when a standard empirical refinement gate (e.g., <= 0.1) confirms physical convergence on real data.
 * Bias Toward Delivery: Theoretical conservatism must not stall development velocity. Architectural specifications must target the minimum viable mathematical formulation required to pass empirical gates on target datasets.
+
+### Empirically Right-Sized Gate Invariant
+
+The binding S2-S5 rules are recorded in
+`docs/decisions/DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES.md`.
+
+* S2 multi-start acceptance requires consensus in the top-ranked,
+  lowest-chi-square cluster. It does not require every initialization to reach
+  one identical point. All starts and failures remain visible.
+* Native-to-reporting spectral-frame variation below 1.0 km/s is sufficient
+  when the conversion and its variation are preserved in provenance.
+* For posterior campaigns, R-hat <= 1.05 and ESS >= 400 apply to primary
+  kinematic and geometric parameters. Peripheral nuisance mixing becomes a
+  veto only when it changes a primary result or promoted prediction.
+* Cross-domain superiority requires at least 10 percent lower projected-
+  velocity RMSE against registered truth and improved overall reduced
+  chi-square on both real canonical benchmarks. Per-region residual dominance
+  is diagnostic.
+* Reviewers must return `changes-requested` on an asymptotic or unphysical gate
+  whose strictness is unsupported by resolution, calibration, noise, or the
+  promoted scientific claim.
 
 ## 3. Configuration boundary
 

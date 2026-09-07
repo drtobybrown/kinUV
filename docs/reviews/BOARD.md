@@ -59,16 +59,12 @@ against the project-authorized `2--10%` calibration scale and thermal noise;
 the composite radial rule then reduced it below `6e-7`. The pragmatic `1e-3`
 relaxation was therefore available but unused.
 
-The S2 cascade performed its input gate immediately after S1. Neither retained
-visibility export carries the execution-block, scan, SPW, polarization,
-antenna-pair, channel-edge, calibration-history, and aggregation-lineage
-contract needed to identify C0/C1 strata and five disjoint correlation-aware
-folds. One canonical export additionally lacks time and baseline metadata. No calibrated
-Measurement Set was found in the available project, scratch, or home roots.
-The board records `changes-requested` on any proposal to infer these variables
-from row order or uv coordinates. S2 remains blocked until both targets have
-provenance-complete `ms2kinuv` exports; S3--S5 cannot validly tally before that
-dependency closes.
+The former S2 input blocker was cleared on 2026-09-07. Both canonical targets
+now have native-row `ms2kinuv-npz-v2` exports containing the required standard
+Measurement Set partition, baseline, time, spectral, polarization, weight, and
+lineage fields. Five fold-safe time/scan partitions are populated for each
+target. Grouped line-free validation selected C1 for both targets and passed
+the registered whitening gates. Geometry optimization remains active.
 
 ## Roles and files
 
@@ -110,6 +106,29 @@ This mandate governs the upcoming S2 and S3 proposal cycles and all later
 stages. Reviewers enforce scientific acceptance gates while preserving the
 Implementer's authority over software design, numerical methods, efficiency,
 and code organization.
+
+## PI gate-right-sizing prerogative
+
+[`DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES`](../decisions/DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES.md)
+is binding for S2 through S5. Reviewer A and Reviewer B have an explicit duty
+to flag and reject thresholds that are stricter than the resolution, noise,
+calibration, or promoted scientific claim warrants. A primary numerical method
+that demonstrates sub-1 percent empirical physical closure passes without an
+asymptotic float64 requirement.
+
+For S2, reviewers assess consensus in the top-ranked likelihood cluster and do
+not require every start to find one identical solution. Native-to-reporting
+spectral-frame drift below 1.0 km/s is sufficient when the conversion and drift
+are preserved in provenance. For S3, the R-hat <= 1.05 and ESS >= 400 gate
+applies to primary kinematic and geometric parameters. For S4, reviewers apply
+the aggregate projected-velocity and real-data reduced-chi-square gates; local
+spatial or spectral residual dominance is diagnostic rather than mandatory.
+
+Reviewers must return `changes-requested` if Astra attempts to restore a
+superseded asymptotic or unphysical threshold without a new explicit PI
+directive. This prerogative complements the board's duty to reject hidden data
+selection, altered weights, unreported optimizer failures, or unsupported
+scientific claims.
 
 ## Independence
 
