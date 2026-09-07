@@ -12,6 +12,27 @@
     "pa_seed_deg": 212.6,
     "vsys_optical_seed_kms": 14229.0
   },
+  "spectral_frame": {
+    "likelihood_frame": "TOPO",
+    "reporting_frame": "LSRK",
+    "frequency_correction_equivalent_kms": -16.7874776307812,
+    "frequency_correction_peak_to_peak_kms": 0.06404030659932403,
+    "conversion_reference": "casacore measures at each native MS integration, phase direction, and antenna ITRF position",
+    "reporting_rule": "convert fitted native frequencies to LSRK before deriving reported velocities"
+  },
+  "diagnostic_beam": {
+    "source": "/arc/projects/KILOGAS/products/v1.3/original/by_galaxy/KGAS7/10kms/KGAS7_clipped_cube.fits",
+    "bmaj_arcsec": 1.25419589582904,
+    "bmin_arcsec": 0.94788459210636,
+    "bpa_deg": 86.01506928257
+  },
+  "s2": {
+    "inclination_prior": "uniform_cosine",
+    "inclination_reporting": "projected_velocity_only",
+    "turnover_over_bmaj_grid": [0.05, 0.1, 0.2, 0.4, 0.8, 1.6],
+    "projected_velocity_bounds_kms": [0.0, 500.0],
+    "n_deterministic_starts": 12
+  },
   "stage_a": {
     "maxiter": 80,
     "parameter_seed": {

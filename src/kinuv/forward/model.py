@@ -143,7 +143,7 @@ def intrinsic_sky_cube(
     sb = xp.asarray(template)
     if sb.shape != (grid.ny, grid.nx):
         raise ValueError(f"template {sb.shape} != grid {(grid.ny, grid.nx)}")
-    i_use = inclination_rad() if i_rad is None else float(i_rad)
+    i_use = inclination_rad() if i_rad is None else i_rad
     if is_jax(freqs_hz):
         raise TypeError("sky_cube freqs_hz must be NumPy; dv is a host scalar")
     freqs_host = np.asarray(freqs_hz, dtype=np.float64)
@@ -157,8 +157,8 @@ def intrinsic_sky_cube(
         y = xp.asarray(y)
     xe, yn = xp.meshgrid(x, y, indexing="xy")
     v_los = los_velocity(
-        xe - float(dx_arcsec),
-        yn - float(dy_arcsec),
+        xe - xp.asarray(dx_arcsec),
+        yn - xp.asarray(dy_arcsec),
         pa_rad,
         i_use,
         vsys_kms,

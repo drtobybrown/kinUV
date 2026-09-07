@@ -10,12 +10,12 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Finish S2 extraction.** Wait for both authorized Measurement Set uploads to become stable, verify and extract them, then generate provenance-complete `ms2kinuv-npz-v2` inputs without replacing historical evidence in place.
-2. **Execute S2 geometry and optimization audits.** Once the input gate closes, implement the accepted inclination, beam-reference, LOS-support, parameter-chart, turnover-grid, multi-start, and projected-gradient contracts.
-3. **Validate the implemented S2 covariance infrastructure.** The registered C0/C1 candidates, grouped predictive scoring, native-row embargoes, and fail-closed provenance validation are committed at `eea58a6`; exercise them on both new exports.
-4. **Complete S2 covariance validation.** Run grouped covariance selection and held-out scoring on the compliant exports.
+1. **Complete S2 geometry and optimization.** The provenance and covariance gates pass. Finish the two-target turnover grid, twelve-start released fits, top-likelihood consensus assessment, boundary audit, and grouped outer-fold scoring.
+2. **Close S2 through independent review.** Freeze the exact implementation commit and checksum-bound geometry dossier, obtain Reviewer A and Reviewer B verdicts, and record the tally.
+3. **Execute S3 one-factor candidates.** Test joint emissivity, supported projected-velocity knots, and only then a two-zone dispersion model while retaining joint nuisance optimization.
+4. **Execute S4 paired selection.** Apply the PI-authorized aggregate gates: at least 10 percent lower projected-velocity RMSE than frozen stock KinMS and improved overall reduced chi-square on both real targets.
 5. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
-6. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
+6. **Calibrate intervals separately.** Any posterior campaign applies R-hat and ESS promotion gates to primary kinematic and geometric parameters; exact-workflow SBC remains required before calibrated interval claims.
 
 ## Exit criteria for the next production increment
 

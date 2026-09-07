@@ -38,7 +38,7 @@ def fourier_shift(image, dx_arcsec, dy_arcsec, cell_arcsec, pad_n=None):
         uy = jnp.fft.fftfreq(pad, d=cell)[:, None]
         ux = jnp.fft.fftfreq(pad, d=cell)[None, :]
         phase = jnp.exp(
-            -2.0j * jnp.pi * (ux * float(dx_arcsec) + uy * float(dy_arcsec))
+            -2.0j * jnp.pi * (ux * jnp.asarray(dx_arcsec) + uy * jnp.asarray(dy_arcsec))
         )
         shifted = jnp.fft.fftshift(jnp.fft.ifft2(ft * phase)).real
         return shifted[y0 : y0 + ny, x0 : x0 + nx]

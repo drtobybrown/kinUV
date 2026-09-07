@@ -1,9 +1,9 @@
 ---
-generation: 21
-phase: s2-input-upload-pending
+generation: 22
+phase: s2-geometry-optimization-active
 code_freeze: false
 next_role: implementer-sol
-board: crossdomain-recovery-s2-extraction
+board: crossdomain-recovery-s2-geometry
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
@@ -15,26 +15,39 @@ last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s1-closure.md
 last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s1-closure.md
 last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s1-closure.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
-open_questions:
-  - s2-measurement-set-upload-completion
+open_questions: []
 deadlocks: []
-canon_generation: 21
+canon_generation: 22
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 is closed; S2 extraction is ready and waiting for the authorized Measurement Set upload to finish
-* **Last Action:** Committed fold-safe `ms2kinuv-npz-v2` ingestion, native scan-block folds, grouped C0/C1 predictive selection, whitening gates, and an immutable S2 evidence runner
-* **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold. Governance now codifies proportional verification, direct repair authority, and the empirical `<=0.1` refinement priority for the S1-to-S2 workflow.
-* **Blockers / Gates:** S1 has no open gate. S2 code and its extraction environment are ready. The first uploaded archive remains incomplete and the second is absent, so no source MS has yet been extracted or read.
-* **Next Step:** Verify each stable upload, extract it safely, inventory standard MS selections, produce checksum-bound v2 NPZs, and run the grouped covariance dossier without changing the frozen gates.
+* **Phase:** S1 is closed; S2 provenance and covariance gates pass; the geometry multi-start campaign is active
+* **Last Action:** Verified both landed Measurement Sets, exported polarization-combined native-row v2 products, formed fold-safe time/scan groups, selected C1 on grouped predictive likelihood, and implemented the generic exact-gradient S2 geometry runner
+* **Decisions Made:** The likelihood stays on native TOPO frequencies; the measured TOPO-to-LSRK drift is 0.037 km/s for KGAS066 and 0.064 km/s for KGAS007, below the PI-authorized 1.0 km/s reporting gate. The PI override in `DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES` replaces universal multi-start identity with consensus in the top likelihood cluster.
+* **Blockers / Gates:** No S2 input blocker remains. Geometry optimization and outer-fold scoring are not yet closed.
+* **Next Step:** Complete the 72 fixed-turnover and 12 released-turnover fits per target, assess the top-likelihood consensus cluster and boundary pressure, then submit the exact commit and dossier to Reviewer A and Reviewer B.
 
-The implementation is on `dev` at `eea58a6` in kinUV and `8a312cd` in
-ms2kinuv. The full kinUV suite passes with `249 passed, 8 skipped`; the
-casacore-backed ms2kinuv suite passes all 15 tests. The isolated extraction
-environment uses python-casacore 3.8.1. Standard MS weights are retained as
+The extraction implementation is on `dev` at `246bc19` in ms2kinuv and its
+kinUV ingestion boundary is at `d177f58`. The casacore-backed ms2kinuv suite
+passes all 16 tests. Standard MS weights are retained as
 `w=1/sigma_component^2=2/E[|complex noise|^2]`; they are not doubled during
 export.
+
+## S2 input and covariance evidence
+
+The canonical inputs are `visibilities/KILOGAS066.v2.npz` and
+`visibilities/KILOGAS007.v2.npz`; their checksums and Measurement Set lineage
+are recorded in `visibilities/MANIFEST.json`. Both exports retain native rows,
+standard partition IDs, antenna pairs, timestamps, channel centers and edges,
+flags, weights, and XX/YY-to-Stokes-I combination lineage.
+
+The immutable covariance dossier is
+`results/validation/crossdomain-recovery-s2-20260907-r1/`. Five disjoint folds
+contain 8 time blocks for KGAS066 and 9 for KGAS007, with a 12.096 s embargo.
+C1 is selected for both targets: native adjacent-channel rho is 0.29770 and
+0.29769, respectively. Whitened mean, variance, and lag-one gates pass; maximum
+remaining lag-one correlation is 0.02922 for KGAS066 and 0.02930 for KGAS007.
 
 The Field Guide and Review Board charter govern the active S2 implementation.
 The S1 closure did not alter the physical brightness profile, velocity

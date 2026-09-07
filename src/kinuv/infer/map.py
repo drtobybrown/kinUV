@@ -171,7 +171,7 @@ def predict_binned(
 
         tmpl = jnp.asarray(template)
         n_g = int(data.n_guard)
-        i_use = inclination_rad() if i_rad is None else float(i_rad)
+        i_use = inclination_rad() if i_rad is None else i_rad
         xp = numpy_or_jax(
             params["flux"],
             params["pa_deg"],
