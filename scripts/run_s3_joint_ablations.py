@@ -206,6 +206,8 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
     write_json_atomic(checkpoint, record)
 
     z = initial
+    candidate_charts = {}
+    two_zone_uses_rings = True
     for candidate in CANDIDATES:
         if candidate == "supported_rings":
             arctan_u = 100.0 * z[8]
@@ -214,6 +216,27 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
                 arctan_u * (2.0 / np.pi) * np.arctan(knot_radii / rt) / 100.0
             )
         if candidate == "two_zone_dispersion":
+            rings_row = next(
+                row for row in record["fits"] if row["candidate"] == "supported_rings"
+            )
+            emissivity_row = next(
+                row for row in record["fits"] if row["candidate"] == "joint_emissivity"
+            )
+            ring_gain_now = emissivity_row["chi2"] - rings_row["chi2"]
+            knot_hessian_now = rings_row["hessian"]["velocity_knots"]
+            knot_boundaries_now = [
+                name
+                for name in rings_row["boundary_parameters"]
+                if name.startswith("u_knot")
+            ]
+            two_zone_uses_rings = (
+                ring_gain_now >= 10.0
+                and knot_hessian_now["rank_relative_1e-8"] == 4
+                and not knot_boundaries_now
+                and rings_row["projected_gradient_inf"] <= 1.0e-3
+            )
+            if not two_zone_uses_rings:
+                z = candidate_charts["joint_emissivity"].copy()
             z[15] = z[3]
         result, z = fit_s3_candidate(
             data,
@@ -228,7 +251,9 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
             vsys_seed_kms=vsys_seed,
             bmaj_arcsec=bmaj,
             maxiter=maxiter,
+            two_zone_uses_rings=two_zone_uses_rings,
         )
+        candidate_charts[candidate] = z.copy()
         record["fits"].append(result.to_dict())
         write_json_atomic(checkpoint, record)
         emit(
@@ -248,7 +273,8 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
     dispersion = by_name["two_zone_dispersion"]
     emissivity_gain = baseline["chi2"] - emissivity["chi2"]
     ring_gain = emissivity["chi2"] - rings["chi2"]
-    dispersion_gain = rings["chi2"] - dispersion["chi2"]
+    dispersion_parent = rings if two_zone_uses_rings else emissivity
+    dispersion_gain = dispersion_parent["chi2"] - dispersion["chi2"]
     knot_hessian = rings["hessian"]["velocity_knots"]
     knot_boundaries = [name for name in rings["boundary_parameters"] if name.startswith("u_knot")]
     emissivity_retained = emissivity_gain > 4.0
@@ -262,15 +288,18 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
         "log_sigma_inner", "log_sigma_outer"
     }.intersection(dispersion["boundary_parameters"])
     dispersion_retained = (
-        rings_retained
-        and dispersion_gain > 2.0
+        dispersion_gain > 2.0
         and not dispersion_boundaries
         and dispersion["projected_gradient_inf"] <= 1.0e-3
     )
     preferred = (
         "two_zone_dispersion"
         if dispersion_retained
-        else "supported_rings" if rings_retained else "joint_emissivity" if emissivity_retained else "baseline_arctan"
+        else "supported_rings"
+        if rings_retained
+        else "joint_emissivity"
+        if emissivity_retained
+        else "baseline_arctan"
     )
     gates = {
         "s2_likelihood_replay_absolute_error_le_0p1": abs(replay_chi2 - expected_chi2) <= 0.1,
@@ -278,9 +307,19 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
         "all_candidate_gradients_le_1e_3": all(
             row["projected_gradient_inf"] <= 1.0e-3 for row in record["fits"]
         ),
-        "supported_ring_gain_ge_10": ring_gain >= 10.0,
-        "velocity_knot_subspace_identified": knot_hessian["rank_relative_1e-8"] == 4,
-        "velocity_knots_interior": not knot_boundaries,
+        "extended_profile_retention_rule_applied": rings_retained
+        == (
+            ring_gain >= 10.0
+            and knot_hessian["rank_relative_1e-8"] == 4
+            and not knot_boundaries
+            and rings["projected_gradient_inf"] <= 1.0e-3
+        ),
+        "velocity_knot_diagnostic_complete": knot_hessian["dimension"] == 4,
+        "preferred_candidate_interior": not next(
+            row["boundary_parameters"]
+            for row in record["fits"]
+            if row["candidate"] == preferred
+        ),
     }
     record.update(
         {
@@ -290,6 +329,7 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
                 "supported_rings_delta_chi2": ring_gain,
                 "supported_rings_retained": rings_retained,
                 "two_zone_dispersion_delta_chi2": dispersion_gain,
+                "two_zone_dispersion_parent": dispersion_parent["candidate"],
                 "two_zone_dispersion_retained_by_aic": dispersion_retained,
                 "preferred_candidate": preferred,
             },

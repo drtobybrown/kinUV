@@ -84,7 +84,16 @@ def test_s3_chart_round_trip_and_candidate_activity():
     _, active_baseline = chart_bounds(200.0, 5.0, 1.0, "baseline_arctan")
     _, active_rings = chart_bounds(200.0, 5.0, 1.0, "supported_rings")
     _, active_dispersion = chart_bounds(200.0, 5.0, 1.0, "two_zone_dispersion")
+    _, active_dispersion_arctan = chart_bounds(
+        200.0,
+        5.0,
+        1.0,
+        "two_zone_dispersion",
+        two_zone_uses_rings=False,
+    )
     assert active_baseline == tuple(range(9))
     assert 7 not in active_rings and 8 not in active_rings
     assert set(range(9, 15)).issubset(active_rings)
     assert 15 in active_dispersion
+    assert 7 in active_dispersion_arctan and 8 in active_dispersion_arctan
+    assert not set(range(9, 13)).intersection(active_dispersion_arctan)

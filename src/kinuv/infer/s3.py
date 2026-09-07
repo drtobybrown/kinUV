@@ -176,7 +176,14 @@ def initial_chart(s2_parameters, knot_radii_arcsec, natural_weights, *, vsys_see
     )
 
 
-def chart_bounds(pa_seed_deg, dv_kms, bmaj_arcsec, candidate):
+def chart_bounds(
+    pa_seed_deg,
+    dv_kms,
+    bmaj_arcsec,
+    candidate,
+    *,
+    two_zone_uses_rings=True,
+):
     if candidate not in CANDIDATES:
         raise ValueError(f"unknown S3 candidate {candidate!r}")
     pa = math.radians(float(pa_seed_deg))
@@ -199,7 +206,10 @@ def chart_bounds(pa_seed_deg, dv_kms, bmaj_arcsec, candidate):
     active = set(range(9))
     if candidate in {"joint_emissivity", "supported_rings", "two_zone_dispersion"}:
         active.update((13, 14))
-    if candidate in {"supported_rings", "two_zone_dispersion"}:
+    use_rings = candidate == "supported_rings" or (
+        candidate == "two_zone_dispersion" and two_zone_uses_rings
+    )
+    if use_rings:
         active.difference_update((7, 8))
         active.update((9, 10, 11, 12))
     if candidate == "two_zone_dispersion":
@@ -278,6 +288,7 @@ def build_s3_objective(
     vsys_seed_kms,
     bmaj_arcsec,
     initial_emissivity_logits,
+    two_zone_uses_rings=True,
 ):
     import jax
     import jax.numpy as jnp
@@ -291,7 +302,9 @@ def build_s3_objective(
     knots = jnp.asarray(knot_radii_arcsec)
     initial_logits = jnp.asarray(initial_emissivity_logits)
     use_emissivity = candidate != "baseline_arctan"
-    use_rings = candidate in {"supported_rings", "two_zone_dispersion"}
+    use_rings = candidate == "supported_rings" or (
+        candidate == "two_zone_dispersion" and two_zone_uses_rings
+    )
     use_two_zone = candidate == "two_zone_dispersion"
 
     def objective(z):
@@ -374,10 +387,17 @@ def fit_s3_candidate(
     vsys_seed_kms,
     bmaj_arcsec,
     maxiter=120,
+    two_zone_uses_rings=True,
 ):
     import jax.numpy as jnp
 
-    bounds, active = chart_bounds(pa_seed_deg, data.dv_kms, bmaj_arcsec, candidate)
+    bounds, active = chart_bounds(
+        pa_seed_deg,
+        data.dv_kms,
+        bmaj_arcsec,
+        candidate,
+        two_zone_uses_rings=two_zone_uses_rings,
+    )
     z_start = np.asarray(z0, dtype=np.float64).copy()
     active_set = set(active)
     for index, (lo, hi) in enumerate(bounds):
@@ -396,6 +416,7 @@ def fit_s3_candidate(
         vsys_seed_kms=vsys_seed_kms,
         bmaj_arcsec=bmaj_arcsec,
         initial_emissivity_logits=initial_logits,
+        two_zone_uses_rings=two_zone_uses_rings,
     )
     _ = value_gradient(jnp.asarray(z_start))
     normalization = 1.0 / max(1, int(data.vis.size))
@@ -439,7 +460,10 @@ def fit_s3_candidate(
         logits = np.asarray(optimum[13:15])
         prior += 0.5 * float(np.sum((logits - initial_logits) ** 2))
     regularization = 0.0
-    if candidate in {"supported_rings", "two_zone_dispersion"}:
+    uses_rings = candidate == "supported_rings" or (
+        candidate == "two_zone_dispersion" and two_zone_uses_rings
+    )
+    if uses_rings:
         regularization = float(
             _spacing_curvature(np.asarray(optimum[9:13]) * 100.0, knot_radii_arcsec, np)
         )
@@ -489,7 +513,7 @@ def fit_s3_candidate(
         ),
         "singular_values_per_complex": singular.tolist(),
     }
-    if candidate in {"supported_rings", "two_zone_dispersion"}:
+    if uses_rings:
         knot_hessian = 0.5 * (
             hessian_full[9:13, 9:13] + hessian_full[9:13, 9:13].T
         ) / max(1, int(data.vis.size))
