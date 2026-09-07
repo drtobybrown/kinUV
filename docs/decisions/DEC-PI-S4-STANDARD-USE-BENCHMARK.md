@@ -1,3 +1,11 @@
+---
+id: DEC-PI-S4-STANDARD-USE-BENCHMARK
+status: accepted
+date: 2026-09-07
+authority: Project-PI
+scope: S4-standard-use-comparison-and-synthetic-truth
+supersedes: S4-training-fold-CASA-reimaging-requirement
+---
 # DEC-PI-S4-STANDARD-USE-BENCHMARK: Standard-use S4 evaluation
 
 **Status:** Accepted by direct Project PI authority, 2026-09-07  
