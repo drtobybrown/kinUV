@@ -132,16 +132,15 @@ def supported_knot_radii(template, grid, pa_rad, i_rad, bmaj_arcsec):
 
     image = np.maximum(np.asarray(template, dtype=np.float64), 0.0)
     radius, _ = galaxy_r_phi(grid, float(pa_rad), float(i_rad))
-    raw = _weighted_radius_quantiles(radius, image, (0.20, 0.50, 0.80, 0.95))
+    outer = _weighted_radius_quantiles(radius, image, (0.40, 0.70, 0.95))
     floor = 0.5 * float(bmaj_arcsec)
     separation = 0.20 * float(bmaj_arcsec)
-    knots = np.asarray(raw, dtype=np.float64)
-    knots[0] = max(knots[0], floor)
+    knots = np.concatenate(([floor], np.asarray(outer, dtype=np.float64)))
     for index in range(1, knots.size):
         knots[index] = max(knots[index], knots[index - 1] + separation)
-    if knots[-1] > raw[-1] + 0.5 * float(bmaj_arcsec):
+    if knots[-1] > outer[-1] + 0.5 * float(bmaj_arcsec):
         raise ValueError("emission support cannot identify four beam-aware knots")
-    return knots, float(raw[-1])
+    return knots, float(outer[-1])
 
 
 def _softmax_weights(logit_1, logit_2, xp):
@@ -405,8 +404,13 @@ def fit_s3_candidate(
         value, gradient = value_gradient(jnp.asarray(z))
         return float(value), np.asarray(gradient, dtype=np.float64)
 
+    best_seen = {"value": float("inf"), "z": z_start.copy()}
+
     def scaled(z):
         value, gradient = raw(z)
+        if value < best_seen["value"]:
+            best_seen["value"] = value
+            best_seen["z"] = np.asarray(z, dtype=np.float64).copy()
         return normalization * value, normalization * gradient
 
     opt = minimize(
@@ -417,9 +421,14 @@ def fit_s3_candidate(
         bounds=bounds,
         options={"maxiter": int(maxiter), "ftol": 1.0e-15, "gtol": 1.0e-8, "maxls": 40},
     )
-    value, gradient = raw(opt.x)
+    optimum = (
+        best_seen["z"]
+        if best_seen["value"] < float(opt.fun) / normalization
+        else np.asarray(opt.x, dtype=np.float64)
+    )
+    value, gradient = raw(optimum)
     params = unpack_chart(
-        opt.x,
+        optimum,
         vsys_seed_kms=vsys_seed_kms,
         dv_kms=data.dv_kms,
         bmaj_arcsec=bmaj_arcsec,
@@ -427,15 +436,15 @@ def fit_s3_candidate(
     )
     prior = (params["dx_arcsec"] / 0.5) ** 2 + (params["dy_arcsec"] / 0.5) ** 2
     if candidate != "baseline_arctan":
-        logits = np.asarray(opt.x[13:15])
+        logits = np.asarray(optimum[13:15])
         prior += 0.5 * float(np.sum((logits - initial_logits) ** 2))
     regularization = 0.0
     if candidate in {"supported_rings", "two_zone_dispersion"}:
         regularization = float(
-            _spacing_curvature(np.asarray(opt.x[9:13]) * 100.0, knot_radii_arcsec, np)
+            _spacing_curvature(np.asarray(optimum[9:13]) * 100.0, knot_radii_arcsec, np)
         )
     chi2 = 2.0 * float(value) - float(prior) - 2.0 * regularization
-    pg = projected_gradient(opt.x, gradient, bounds)
+    pg = projected_gradient(optimum, gradient, bounds)
     pg_raw = float(np.max(np.abs(pg[list(active)])))
     pg_per_complex = pg_raw / max(1, int(data.vis.size))
     boundary = []
@@ -443,8 +452,8 @@ def fit_s3_candidate(
         lo, hi = bounds[index]
         span = hi - lo
         if span > 0.0 and (
-            opt.x[index] - lo <= 1.0e-4 * span
-            or hi - opt.x[index] <= 1.0e-4 * span
+            optimum[index] - lo <= 1.0e-4 * span
+            or hi - optimum[index] <= 1.0e-4 * span
         ):
             boundary.append(S3_PARAMETER_NAMES[index])
 
@@ -452,10 +461,10 @@ def fit_s3_candidate(
     # is reported, not used to claim calibrated posterior uncertainty.
     hessian_full = np.zeros((len(S3_PARAMETER_NAMES), len(S3_PARAMETER_NAMES)))
     for index in active:
-        step = 1.0e-4 * max(1.0, abs(float(opt.x[index])))
+        step = 1.0e-4 * max(1.0, abs(float(optimum[index])))
         lo, hi = bounds[index]
-        plus = opt.x.copy()
-        minus = opt.x.copy()
+        plus = optimum.copy()
+        minus = optimum.copy()
         plus[index] = min(hi, plus[index] + step)
         minus[index] = max(lo, minus[index] - step)
         denominator = plus[index] - minus[index]
@@ -515,7 +524,7 @@ def fit_s3_candidate(
         message=str(opt.message),
         boundary_parameters=tuple(boundary),
         hessian=hessian,
-    ), np.asarray(opt.x, dtype=np.float64)
+    ), np.asarray(optimum, dtype=np.float64)
 
 
 __all__ = [

@@ -157,9 +157,11 @@ def intrinsic_sky_cube(
         x = xp.asarray(x)
         y = xp.asarray(y)
     xe, yn = xp.meshgrid(x, y, indexing="xy")
+    x_centered = xe - xp.asarray(dx_arcsec)
+    y_centered = yn - xp.asarray(dy_arcsec)
     v_los = los_velocity(
-        xe - xp.asarray(dx_arcsec),
-        yn - xp.asarray(dy_arcsec),
+        x_centered,
+        y_centered,
         pa_rad,
         i_use,
         vsys_kms,
@@ -169,11 +171,14 @@ def intrinsic_sky_cube(
         v_knots_kms=v_knots_kms,
         velocity_profile=velocity_profile,
     )
-    sigma = (
-        xp.asarray(gas_sigma_kms)
-        if dispersion_profile is None
-        else xp.asarray(dispersion_profile(radius))
-    )
+    if dispersion_profile is None:
+        sigma = xp.asarray(gas_sigma_kms)
+    else:
+        x_galaxy, y_galaxy = sky_to_galaxy(
+            x_centered, y_centered, pa_rad, i_use
+        )
+        radius = xp.hypot(x_galaxy, y_galaxy)
+        sigma = xp.asarray(dispersion_profile(radius))
     if sigma.ndim == 2:
         sigma = sigma[:, :, None]
     phi = _gaussian_channel_average(
