@@ -139,7 +139,7 @@ def test_continuum_worker_skips_fully_cropped_deposition_chunks():
     assert "there is no sparse deposition contribution" in source
 
 
-def test_synthetic_s4_profile_metric_and_casa_boundary():
+def test_synthetic_s4_profile_metric_and_casa_boundary(tmp_path):
     import importlib.util
     from pathlib import Path
 
@@ -158,5 +158,26 @@ def test_synthetic_s4_profile_metric_and_casa_boundary():
     source = path.read_text(encoding="utf-8")
     assert "casatasks" not in source
     assert '"casa_used": False' in source
-    assert '"cube_sha256": _sha256(cube)' in source
-    assert "retained_config == worker_config" in source
+    assert '"fit_window_cube"' in source
+
+    work = tmp_path / "kinms"
+    work.mkdir()
+    contract = {
+        "provenance": {
+            "runner_commit": "abc123",
+            "realization_seed": 7001,
+            "cube_sha256": "cube-a",
+        }
+    }
+    (work / "fit_config.json").write_text(__import__("json").dumps(contract))
+    (work / "kinms_fit_result.json").write_text('{"success": true, "value": 4}')
+    assert module.retained_kinms_result(work, contract)["value"] == 4
+
+    for key, value in (
+        ("runner_commit", "def456"),
+        ("realization_seed", 7002),
+        ("cube_sha256", "cube-b"),
+    ):
+        stale = __import__("copy").deepcopy(contract)
+        stale["provenance"][key] = value
+        assert module.retained_kinms_result(work, stale) is None

@@ -141,6 +141,20 @@ def profile_rmse(truth: dict, fitted: dict, radius: np.ndarray, weight: np.ndarr
     return float(np.sqrt(np.sum(weight * residual**2) / np.sum(weight)))
 
 
+def retained_kinms_result(work: Path, worker_config: dict) -> dict | None:
+    """Reuse a successful external fit only when its full contract is identical."""
+
+    retained = work / "kinms_fit_result.json"
+    config_path = work / "fit_config.json"
+    if not retained.is_file() or not config_path.is_file():
+        return None
+    retained_config = json.loads(config_path.read_text(encoding="utf-8"))
+    result = json.loads(retained.read_text(encoding="utf-8"))
+    if retained_config == worker_config and result.get("success"):
+        return result
+    return None
+
+
 def _kinms_fit(
     config: dict,
     cube: Path,
@@ -196,13 +210,10 @@ def _kinms_fit(
             "worker_sha256": _sha256(KINMS_WORKER),
         },
     }
-    retained = work / "kinms_fit_result.json"
     config_path = work / "fit_config.json"
-    if retained.is_file() and config_path.is_file():
-        retained_config = json.loads(config_path.read_text(encoding="utf-8"))
-        result = json.loads(retained.read_text(encoding="utf-8"))
-        if retained_config == worker_config and result.get("success"):
-            return result
+    retained = retained_kinms_result(work, worker_config)
+    if retained is not None:
+        return retained
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True, exist_ok=True)
@@ -400,6 +411,7 @@ def run_target(
             "target_config": {"path": str(config_path.resolve()), "sha256": _sha256(config_path)},
             "covariance_metrics": {"path": str(covariance_path.resolve()), "sha256": _sha256(covariance_path)},
             "visibility_npz": {"path": str(Path(config["visibility_npz"]).resolve()), "sha256": _sha256(Path(config["visibility_npz"]))},
+            "fit_window_cube": {"path": str(Path(config["fit_window_cube"]).resolve()), "sha256": _sha256(Path(config["fit_window_cube"]))},
             "diagnostic_cube": {"path": str(Path(config["diagnostic_cube"]).resolve()), "sha256": _sha256(Path(config["diagnostic_cube"]))},
             "diagnostic_mask": {"path": str(Path(config["diagnostic_mask"]).resolve()), "sha256": _sha256(Path(config["diagnostic_mask"]))},
             "diagnostic_ico_error": {"path": str(Path(config["diagnostic_ico_error"]).resolve()), "sha256": _sha256(Path(config["diagnostic_ico_error"]))},
