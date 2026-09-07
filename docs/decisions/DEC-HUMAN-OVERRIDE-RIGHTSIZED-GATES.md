@@ -22,6 +22,12 @@ discrete PA symmetry, projected-speed/inclination covariance, local minima,
 optimizer failures, and boundary pressure. A favorable start may not be hidden
 or selected after changing the data.
 
+Optimizer evidence records both the raw projected-gradient infinity norm and
+that norm per retained complex visibility. The S2 empirical convergence gate
+is `g_P_inf / N_complex <= 1e-3`; the raw quantity remains available for
+diagnosis. This normalization makes the gate comparable across targets, folds,
+and visibility selections without changing the likelihood or fitted optimum.
+
 Native observed frequencies remain the likelihood coordinates. A registered
 TOPO-to-LSRK reporting conversion passes when its unmodeled time variation is
 less than 1.0 km/s. Visibility resampling is neither required nor preferred at

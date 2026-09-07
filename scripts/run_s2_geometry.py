@@ -171,6 +171,7 @@ def run_target(config_path: Path, covariance_metrics: dict, output: Path, maxite
                     "start_id": result.start_id,
                     "chi2": result.chi2,
                     "projected_gradient_inf": result.projected_gradient_inf,
+                    "projected_gradient_inf_raw": result.projected_gradient_inf_raw,
                     "success": result.success,
                 }
             )
@@ -216,6 +217,7 @@ def run_target(config_path: Path, covariance_metrics: dict, output: Path, maxite
                 "start_id": result.start_id,
                 "chi2": result.chi2,
                 "projected_gradient_inf": result.projected_gradient_inf,
+                "projected_gradient_inf_raw": result.projected_gradient_inf_raw,
                 "success": result.success,
             }
         )

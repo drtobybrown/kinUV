@@ -53,6 +53,8 @@ class S2FitResult:
     prior: float
     regularization: float
     projected_gradient_inf: float
+    projected_gradient_inf_raw: float
+    projected_gradient_normalization: str
     nfev: int
     njev: int
     nit: int
@@ -342,6 +344,8 @@ def fit_s2_start(
     )
     prior = (params["dx_arcsec"] / 0.5) ** 2 + (params["dy_arcsec"] / 0.5) ** 2
     pg = projected_gradient(opt.x, gradient, bounds)
+    pg_raw = float(np.max(np.abs(pg)))
+    pg_per_complex = pg_raw / max(1, int(data.vis.size))
     boundary = []
     for index, name in enumerate(S2_PARAMETER_NAMES):
         lo, hi = bounds[index]
@@ -360,7 +364,9 @@ def fit_s2_start(
         chi2=float(2.0 * value - prior),
         prior=float(prior),
         regularization=0.0,
-        projected_gradient_inf=float(np.max(np.abs(pg))),
+        projected_gradient_inf=pg_per_complex,
+        projected_gradient_inf_raw=pg_raw,
+        projected_gradient_normalization="raw_projected_gradient_divided_by_n_complex",
         nfev=int(opt.nfev),
         njev=int(opt.njev),
         nit=int(opt.nit),
