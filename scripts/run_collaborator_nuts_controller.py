@@ -23,16 +23,46 @@ def write_json(path: Path, value):
     os.replace(temporary, path)
 
 
+def process_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except (OSError, ValueError):
+        return False
+    return True
+
+
+def cpu_set_for(pid: int) -> str:
+    """Return a taskset-compatible description of an adopted worker affinity."""
+    cpus = sorted(os.sched_getaffinity(pid))
+    ranges = []
+    start = previous = cpus[0]
+    for cpu in cpus[1:]:
+        if cpu == previous + 1:
+            previous = cpu
+            continue
+        ranges.append(str(start) if start == previous else f"{start}-{previous}")
+        start = previous = cpu
+    ranges.append(str(start) if start == previous else f"{start}-{previous}")
+    return ",".join(ranges)
+
+
+def terminal_record(job: dict, exit_code: int):
+    return {
+        name: job[name]
+        for name in ("target", "chain", "seed", "pid", "started_utc", "cpu_set")
+    } | {"exit_code": exit_code, "completed_utc": utc_now()}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--map-root", type=Path, required=True)
     parser.add_argument("--scratch-root", type=Path, required=True)
     parser.add_argument("--durable-root", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
-    parser.add_argument("--max-workers", type=int, default=4)
+    parser.add_argument("--max-workers", type=int, default=8)
     parser.add_argument(
         "--cpu-sets",
-        default="0-3,4-7,8-11,12-15",
+        default="0-3,4-7,8-11,12-15,16-19,20-23,24-27,28-31",
         help="comma-separated taskset CPU ranges, one per concurrent worker",
     )
     args = parser.parse_args()
@@ -51,8 +81,35 @@ def main() -> int:
     active = {}
     completed = []
     status_path = args.durable_root / "controller_status.json"
+    queued = []
+    for job in jobs:
+        worker_status = args.durable_root / job["target"] / f"chain-{job['chain']}" / "status.json"
+        state = json.loads(worker_status.read_text(encoding="utf-8")) if worker_status.is_file() else None
+        if state and state.get("state") in {"SUCCEEDED", "FAILED"}:
+            job.update({
+                "pid": int(state.get("pid", -1)),
+                "started_utc": state.get("started_utc", "unknown"),
+                "cpu_set": state.get("cpu_set", "completed"),
+            })
+            completed.append(terminal_record(job, int(state.get("exit_code", state["state"] != "SUCCEEDED"))))
+        elif state and process_alive(int(state.get("pid", -1))):
+            pid = int(state["pid"])
+            job.update({
+                "pid": pid,
+                "process": None,
+                "log_handle": None,
+                "started_utc": state.get("started_utc", "unknown"),
+                "cpu_set": cpu_set_for(pid),
+            })
+            active[(job["target"], job["chain"])] = job
+        else:
+            queued.append(job)
+    jobs = queued
     with controller_log.open("a", encoding="ascii") as log:
-        log.write(f"{utc_now()} controller start pid={os.getpid()} jobs={len(jobs)}\n")
+        log.write(
+            f"{utc_now()} controller start pid={os.getpid()} queued={len(jobs)} "
+            f"adopted={len(active)} completed={len(completed)}\n"
+        )
         log.flush()
         while jobs or active:
             while jobs and len(active) < args.max_workers:
@@ -81,11 +138,20 @@ def main() -> int:
                 log.flush()
             time.sleep(10.0)
             for key, job in list(active.items()):
-                code = job["process"].poll()
+                worker_status = args.durable_root / job["target"] / f"chain-{job['chain']}" / "status.json"
+                state = json.loads(worker_status.read_text(encoding="utf-8")) if worker_status.is_file() else {}
+                code = None
+                if state.get("state") in {"SUCCEEDED", "FAILED"}:
+                    code = int(state.get("exit_code", state["state"] != "SUCCEEDED"))
+                elif job["process"] is not None:
+                    code = job["process"].poll()
+                elif not process_alive(job["pid"]):
+                    code = 1
                 if code is None:
                     continue
-                job["log_handle"].close()
-                completed.append({name: job[name] for name in ("target", "chain", "seed", "pid", "started_utc", "cpu_set")} | {"exit_code": code, "completed_utc": utc_now()})
+                if job["log_handle"] is not None:
+                    job["log_handle"].close()
+                completed.append(terminal_record(job, code))
                 del active[key]
                 log.write(f"{utc_now()} exit target={key[0]} chain={key[1]} pid={job['pid']} code={code}\n")
                 log.flush()
