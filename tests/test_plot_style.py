@@ -7,11 +7,29 @@ import matplotlib
 matplotlib.use("Agg")
 
 from kinuv.diagnostics.figures import plot_chi2_slices, plot_leftover_chi2
-from kinuv.diagnostics.style import apply_style, format_sky_ax, save_fig
+from kinuv.diagnostics.style import (
+    apj_dimensions,
+    apply_style,
+    format_sky_ax,
+    save_fig,
+    save_publication,
+)
 
 
 def test_apply_style_callable():
+    import matplotlib as mpl
+
     apply_style()
+    assert float(mpl.rcParams["axes.labelsize"]) >= 12.0
+    assert float(mpl.rcParams["xtick.labelsize"]) >= 10.0
+    assert float(mpl.rcParams["ytick.labelsize"]) >= 10.0
+    assert mpl.rcParams["mathtext.fontset"] == "stix"
+    assert mpl.rcParams["pdf.fonttype"] == 42
+
+
+def test_apj_dimensions_match_journal_columns():
+    assert apj_dimensions(1) == (3.5, 2.1)
+    assert apj_dimensions(2) == (7.1, 4.26)
 
 
 def test_save_fig_writes(tmp_path):
@@ -24,6 +42,17 @@ def test_save_fig_writes(tmp_path):
     save_fig(fig, out)
     assert out.is_file()
     assert out.stat().st_size > 0
+
+
+def test_save_publication_writes_vector_and_raster(tmp_path):
+    import matplotlib.pyplot as plt
+
+    apply_style()
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 1.0], [0.0, 1.0])
+    outputs = save_publication(fig, tmp_path / "publication")
+    assert outputs["pdf"].is_file() and outputs["pdf"].stat().st_size > 0
+    assert outputs["png"].is_file() and outputs["png"].stat().st_size > 0
 
 
 def test_format_sky_ax_east_left():

@@ -7,6 +7,7 @@ matching physics stays in ``kinuv.diagnostics.imaging``.
 from __future__ import annotations
 
 from pathlib import Path
+import warnings
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -28,8 +29,9 @@ COLOUR = {
     "muted": "#555555",
 }
 
-# Sequential intensity (M0, M2, PV). Dark-low so white mask stays distinct.
-# matplotlib has no mako; this is a colourblind-safe teal–sand ramp.
+# Fallback sequential intensity palette. Production plots use matplotlib's
+# perceptually uniform ``magma`` map; the fallback remains registered for old
+# artifacts that explicitly request ``kinuv_intensity``.
 INTENSITY_HEX = (
     "#08111A",
     "#0E2A3A",
@@ -46,19 +48,33 @@ INTENSITY_HEX = (
 CMAP_VELOCITY = "coolwarm"  # M1; light mid-tone, centred on 0 after v−vsys
 CMAP_RESIDUAL = "RdBu_r"  # data−model; not the velocity map
 
-DPI = 200
+# Geometry and base rcParams follow drtobybrown/apj-formatter (MIT), vendored
+# here to keep kinUV standalone. Production typography uses a larger 12-point
+# base so labels and 10-point ticks remain legible in dense science panels.
+SINGLE_COLUMN_WIDTH = 3.5
+DOUBLE_COLUMN_WIDTH = 7.1
+MAX_PAGE_HEIGHT = 9.0
+DEFAULT_ASPECT = 0.60
+DPI = 300
 CROP_ARCSEC = 12.0
-TITLE_SIZE = 11
-TICK_SIZE = 8
-LABEL_SIZE = 9
+TITLE_SIZE = 12
+TICK_SIZE = 10
+LABEL_SIZE = 12
+LEGEND_SIZE = 11
 
 __all__ = [
     "CMAP_RESIDUAL",
     "CMAP_VELOCITY",
     "COLOUR",
     "CROP_ARCSEC",
+    "DEFAULT_ASPECT",
     "DPI",
+    "DOUBLE_COLUMN_WIDTH",
     "INTENSITY_HEX",
+    "MAX_PAGE_HEIGHT",
+    "SINGLE_COLUMN_WIDTH",
+    "apj_dimensions",
+    "apj_rcparams",
     "apply_style",
     "beam_ellipse",
     "cbar",
@@ -67,8 +83,11 @@ __all__ = [
     "imshow_masked",
     "intensity_cmap",
     "panel_letter",
+    "publication_figure",
+    "publication_subplots",
     "residual_cmap",
     "save_fig",
+    "save_publication",
     "sequential_clim",
     "sky_extent_arcsec",
     "symmetric_clim",
@@ -86,49 +105,150 @@ def _register_cmaps() -> None:
     mpl.colormaps.register(cmap.with_extremes(bad=COLOUR["mask"]))
 
 
-def apply_style() -> None:
-    """Set rcParams. Call once per plotting process before creating figures."""
-    _register_cmaps()
-    mpl.rcParams.update(
-        {
-            "figure.facecolor": "white",
-            "axes.facecolor": "white",
-            "savefig.facecolor": "white",
-            "savefig.edgecolor": "none",
-            "font.family": "DejaVu Sans",
-            "font.size": LABEL_SIZE,
-            "axes.titlesize": TITLE_SIZE,
-            "axes.labelsize": LABEL_SIZE,
-            "axes.titlepad": 4.0,
-            "axes.linewidth": 0.7,
-            "axes.grid": False,
-            "axes.unicode_minus": True,
-            "xtick.labelsize": TICK_SIZE,
-            "ytick.labelsize": TICK_SIZE,
-            "xtick.direction": "in",
-            "ytick.direction": "in",
-            "xtick.top": True,
-            "ytick.right": True,
-            "xtick.major.width": 0.6,
-            "ytick.major.width": 0.6,
-            "xtick.minor.width": 0.4,
-            "ytick.minor.width": 0.4,
-            "xtick.major.size": 3.5,
-            "ytick.major.size": 3.5,
-            "xtick.minor.size": 2.0,
-            "ytick.minor.size": 2.0,
-            "legend.frameon": False,
-            "legend.fontsize": 8,
-            "image.interpolation": "nearest",
-            "image.origin": "lower",
-            "image.cmap": "kinuv_intensity",
-            "axes.prop_cycle": mpl.cycler(color=[COLOUR["model"], COLOUR["data"]]),
-            "pdf.fonttype": 42,
-            "ps.fonttype": 42,
-            "savefig.dpi": DPI,
-            "figure.dpi": 100,
-        }
+def apj_dimensions(
+    columns: int = 1,
+    *,
+    aspect_ratio: float = DEFAULT_ASPECT,
+    width_ratio: float = 1.0,
+) -> tuple[float, float]:
+    """Return the ApJ single- or double-column figure dimensions in inches."""
+
+    if columns == 1:
+        width = SINGLE_COLUMN_WIDTH * float(width_ratio)
+    elif columns == 2:
+        width = DOUBLE_COLUMN_WIDTH * float(width_ratio)
+    else:
+        raise ValueError("columns must be 1 or 2")
+    if aspect_ratio <= 0.0 or width_ratio <= 0.0:
+        raise ValueError("aspect_ratio and width_ratio must be positive")
+    height = width * float(aspect_ratio)
+    if height > MAX_PAGE_HEIGHT:
+        warnings.warn(
+            f"figure height {height:.2f} inches exceeds the ApJ page limit "
+            f"of {MAX_PAGE_HEIGHT:.1f} inches",
+            UserWarning,
+            stacklevel=2,
+        )
+    return width, height
+
+
+def apj_rcparams(
+    columns: int = 2,
+    *,
+    aspect_ratio: float = DEFAULT_ASPECT,
+    width_ratio: float = 1.0,
+    fontsize_pt: float = LABEL_SIZE,
+) -> dict:
+    """Return the standalone ApJ rcParams contract used by kinUV."""
+
+    width, height = apj_dimensions(
+        columns, aspect_ratio=aspect_ratio, width_ratio=width_ratio
     )
+    base = float(fontsize_pt)
+    if base <= 0.0:
+        raise ValueError("fontsize_pt must be positive")
+    return {
+        "figure.figsize": (width, height),
+        "figure.dpi": DPI,
+        "savefig.dpi": DPI,
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "savefig.facecolor": "white",
+        "savefig.edgecolor": "none",
+        "font.family": "serif",
+        "font.serif": [
+            "Times New Roman",
+            "Times",
+            "TeX Gyre Termes",
+            "DejaVu Serif",
+            "STIXGeneral",
+            "serif",
+        ],
+        "font.size": base,
+        "mathtext.fontset": "stix",
+        "mathtext.rm": "Times New Roman",
+        "mathtext.it": "Times New Roman:italic",
+        "mathtext.bf": "Times New Roman:bold",
+        "text.usetex": False,
+        "axes.labelsize": base,
+        "axes.titlesize": base,
+        "axes.titlepad": 4.0,
+        "axes.linewidth": 0.8,
+        "axes.grid": False,
+        "axes.unicode_minus": True,
+        "lines.linewidth": 1.0,
+        "lines.markersize": 4.0,
+        "lines.markeredgewidth": 0.5,
+        "xtick.labelsize": max(base - 2.0, 6.0),
+        "ytick.labelsize": max(base - 2.0, 6.0),
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.top": True,
+        "ytick.right": True,
+        "xtick.minor.visible": True,
+        "ytick.minor.visible": True,
+        "xtick.major.size": 4.0,
+        "ytick.major.size": 4.0,
+        "xtick.minor.size": 2.0,
+        "ytick.minor.size": 2.0,
+        "xtick.major.width": 0.8,
+        "ytick.major.width": 0.8,
+        "xtick.minor.width": 0.6,
+        "ytick.minor.width": 0.6,
+        "legend.frameon": True,
+        "legend.framealpha": 0.85,
+        "legend.fancybox": False,
+        "legend.edgecolor": "0.8",
+        "legend.borderpad": 0.4,
+        "legend.fontsize": max(base - 1.0, 6.0),
+        "image.interpolation": "nearest",
+        "image.origin": "lower",
+        "image.cmap": "magma",
+        "axes.prop_cycle": mpl.cycler(color=[COLOUR["model"], COLOUR["data"]]),
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+    }
+
+
+def apply_style(
+    *,
+    columns: int = 2,
+    aspect_ratio: float = DEFAULT_ASPECT,
+    width_ratio: float = 1.0,
+    fontsize_pt: float = LABEL_SIZE,
+) -> tuple[float, float]:
+    """Apply the vendored ApJ style and return its figure dimensions."""
+
+    _register_cmaps()
+    rc = apj_rcparams(
+        columns,
+        aspect_ratio=aspect_ratio,
+        width_ratio=width_ratio,
+        fontsize_pt=fontsize_pt,
+    )
+    mpl.rcParams.update(rc)
+    return tuple(rc["figure.figsize"])
+
+
+def publication_figure(*, columns: int = 1, aspect_ratio: float = DEFAULT_ASPECT, **kwargs):
+    """Create an ApJ-sized figure using only the in-repo style contract."""
+
+    size = apply_style(columns=columns, aspect_ratio=aspect_ratio)
+    return plt.figure(figsize=size, **kwargs)
+
+
+def publication_subplots(
+    nrows: int = 1,
+    ncols: int = 1,
+    *,
+    columns: int = 1,
+    aspect_ratio: float = DEFAULT_ASPECT,
+    **kwargs,
+):
+    """Create ApJ-sized subplots using only the in-repo style contract."""
+
+    size = apply_style(columns=columns, aspect_ratio=aspect_ratio)
+    return plt.subplots(nrows, ncols, figsize=size, **kwargs)
 
 
 def _cmap_copy(name: str):
@@ -137,10 +257,9 @@ def _cmap_copy(name: str):
 
 
 def intensity_cmap():
-    """Sequential map for M0 / M2 / PV brightness. Prefers mako if registered."""
+    """Perceptually uniform high-dynamic-range map for M0, M2, and PV."""
     _register_cmaps()
-    name = "mako" if "mako" in mpl.colormaps else "kinuv_intensity"
-    return _cmap_copy(name)
+    return _cmap_copy("magma")
 
 
 def velocity_cmap():
@@ -326,7 +445,7 @@ def panel_letter(ax, letter, *, x=0.06, y=0.94):
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=10,
+        fontsize=TITLE_SIZE,
         fontweight="bold",
         color=COLOUR["text"],
         zorder=10,
@@ -362,3 +481,24 @@ def save_fig(fig, path, *, dpi: int | None = None) -> Path:
     )
     plt.close(fig)
     return path
+
+
+def save_publication(fig, stem, *, dpi: int = DPI) -> dict[str, Path]:
+    """Write one figure as vector PDF and high-resolution PNG, then close it."""
+
+    stem = Path(stem)
+    if stem.suffix:
+        raise ValueError("publication figure stem must not include a suffix")
+    stem.parent.mkdir(parents=True, exist_ok=True)
+    outputs = {"pdf": stem.with_suffix(".pdf"), "png": stem.with_suffix(".png")}
+    for path in outputs.values():
+        fig.savefig(
+            path,
+            dpi=int(dpi),
+            facecolor="white",
+            edgecolor="none",
+            bbox_inches="tight",
+            pad_inches=0.04,
+        )
+    plt.close(fig)
+    return outputs

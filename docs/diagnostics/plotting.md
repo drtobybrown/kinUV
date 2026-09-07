@@ -48,6 +48,17 @@ apply_style()  # once per process, before any Figure
 
 Run with `MPLBACKEND=Agg` on CANFAR. matplotlib only; do not add cmcrameri/cmasher/seaborn.
 
+## ApJ geometry contract
+
+`kinuv.diagnostics.style` carries the required formatting internally; do not
+add `apj-formatter` as a package dependency. Its vendored geometry follows the
+ApJ presets of 3.5 inches for one column and 7.1 inches for two columns, with a
+9-inch maximum page height. Use `apj_dimensions`, `publication_figure`, or
+`publication_subplots` when creating new panels, and `save_publication` to
+write paired vector PDF and 300-dpi PNG products. The rcParams are adapted from
+[`drtobybrown/apj-formatter`](https://github.com/drtobybrown/apj-formatter)
+under its MIT license.
+
 ## Colour roles
 
 Use the named tokens. Never `C0` / `C1` / `tab10` for science lines.
@@ -59,11 +70,14 @@ Use the named tokens. Never `C0` / `C1` / `tab10` for science lines.
 | `COLOUR["vsys"]` | `#737373` | Systemic-velocity dashed line |
 | `COLOUR["zero"]` | `#C8C8C8` | Zero-flux or zero-offset line |
 | `COLOUR["mask"]` | `#FFFFFF` | Blanked pixels (not a mapped 0) |
-| `intensity_cmap()` | in-repo teal–sand (`kinuv_intensity`; `mako` if present) | M0, M2, PV brightness |
+| `intensity_cmap()` | matplotlib `magma` | M0, M2, PV brightness |
 | `velocity_cmap()` | matplotlib `coolwarm` | Moment 1, **after** subtracting vsys |
 | `residual_cmap()` | matplotlib `RdBu_r` | data − model. Not the M1 cmap. |
 
-Do not use `inferno`, `viridis`, `magma`, or `seismic`. Sequential maps must be dark at low intensity so a white mask is visible. `apply_style()` sets inward ticks, white frames, and DejaVu Sans (the in-repo publication face).
+Do not use rainbow or `seismic` maps. Sequential maps must be dark at low
+intensity so a white mask is visible. `apply_style()` sets inward ticks, white
+frames, a Times/STIX-compatible serif stack, 12-point axis labels, 10-point
+tick labels, and Type 42 font embedding for ApJ/AAS-compatible output.
 
 ## Sky recipe (moments / channel maps)
 
