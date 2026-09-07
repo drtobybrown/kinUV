@@ -141,6 +141,10 @@ def profile_rmse(truth: dict, fitted: dict, radius: np.ndarray, weight: np.ndarr
 
 
 def _kinms_fit(config: dict, cube: Path, mask: Path, truth_cube: Path, work: Path) -> dict:
+    cube = cube.resolve()
+    mask = mask.resolve()
+    truth_cube = truth_cube.resolve()
+    work = work.resolve()
     correction = float(config["spectral_frame"]["frequency_correction_equivalent_kms"])
     truth = config["_truth"]
     vsys_lsrk = float(topo_radio_to_lsrk_radio(truth["vsys_kms"], correction))
@@ -382,6 +386,7 @@ def main() -> int:
     parser.add_argument("--covariance-metrics", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    args.output = args.output.resolve()
     state = _git_state()
     if state["branch"] != "dev" or state["dirty"]:
         raise RuntimeError("S4 synthetic recovery requires a clean exact commit on dev")
