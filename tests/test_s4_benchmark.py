@@ -122,6 +122,11 @@ def test_grouped_prediction_bootstrap_and_frame_round_trip():
 
     assert recovered == pytest.approx(float(optical_to_radio_kms(vopt_lsrk)))
 
+    source = path.read_text(encoding="utf-8")
+    assert '"casa_reimaging_required": False' in source
+    assert '"promotion_eligible": audit_pass' in source
+    assert "training-only stock-KinMS confirmation" not in source
+
 
 def test_continuum_worker_skips_fully_cropped_deposition_chunks():
     from pathlib import Path

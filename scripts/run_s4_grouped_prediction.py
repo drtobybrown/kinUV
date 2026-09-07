@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Conservative grouped visibility prediction audit for S4 recovery.
+"""PI-authorized standard-use grouped visibility audit for S4 recovery.
 
 kinUV is refit on each training fold.  The frozen full-data stock KinMS fit is
 then rendered by the validated continuum adapter and scored on exactly the
 same held-out rows and C1 covariance.  Because KinMS has seen the held-out
 image cube, this comparison gives the external baseline an information
 advantage; a positive kinUV delta is therefore conservative.  It does not
-replace the later strictly training-only stock-KinMS confirmation.
+require CASA reimaging: stock KinMS is evaluated as astronomers receive and
+use it, from the canonical pipeline cube, while kinUV is refit on visibility
+training folds and evaluated on untouched visibility groups.
 """
 
 from __future__ import annotations
@@ -402,7 +404,7 @@ def run_target(config_path, s3_root, old_s3_root, covariance_metrics, output, ma
             "stock_fit_sha256": _sha256(Path(config["kinms"]["result"])),
             "continuum_artifact": str(artifact),
             "full_data_fit_information_advantage": True,
-            "interpretation": "conservative audit; strict training-only KinMS confirmation remains required for final promotion",
+            "interpretation": "PI-authorized conservative standard-use audit; frozen full-data KinMS receives an information advantage",
             "fitted": kinms_result["fitted"],
         },
         "folds": fold_rows,
@@ -440,17 +442,19 @@ def main():
         )
         for path in args.target_config
     ]
-    strict_confirmation_required = True
+    audit_pass = all(
+        row["gate"]["kinuv_beats_information_advantaged_kinms"] for row in targets
+    )
     summary = {
-        "schema_version": "kinuv-s4-grouped-prediction-v1",
+        "schema_version": "kinuv-s4-grouped-prediction-v2",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "git": state,
         "targets": targets,
-        "conservative_audit_pass": all(
-            row["gate"]["kinuv_beats_information_advantaged_kinms"] for row in targets
-        ),
-        "promotion_eligible": not strict_confirmation_required,
-        "remaining_confirmation": "refit frozen stock KinMS on images made from each training fold only",
+        "comparison_contract": "PI-authorized standard use: canonical full-data KinMS cube versus grouped kinUV visibility prediction",
+        "casa_reimaging_required": False,
+        "conservative_audit_pass": audit_pass,
+        "promotion_eligible": audit_pass,
+        "remaining_confirmation": None,
     }
     _write_json(args.output / "summary.json", summary)
     manifest = {"schema_version": "kinuv-s4-grouped-manifest-v1", "code_commit": state["commit"], "files": {}}
@@ -461,7 +465,7 @@ def main():
                 "sha256": _sha256(path),
             }
     _write_json(args.output / "MANIFEST.json", manifest)
-    print(json.dumps({"stage": "S4-grouped", "audit_pass": summary["conservative_audit_pass"], "promotion_eligible": False}, sort_keys=True), flush=True)
+    print(json.dumps({"stage": "S4-grouped", "audit_pass": audit_pass, "promotion_eligible": audit_pass}, sort_keys=True), flush=True)
 
 
 if __name__ == "__main__":
