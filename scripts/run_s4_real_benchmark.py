@@ -106,6 +106,10 @@ def _model_header(grid, velocity_lsrk_radio, data_header):
     wcs.wcs.cunit = ["deg", "deg", "km/s"]
     wcs.wcs.specsys = "LSRK"
     header = wcs.to_header()
+    header["NAXIS"] = 3
+    header["NAXIS1"] = int(grid.nx)
+    header["NAXIS2"] = int(grid.ny)
+    header["NAXIS3"] = int(velocity.size)
     header["RESTFRQ"] = float(F_REST_CO21_HZ)
     header["BUNIT"] = "Jy/pixel"
     header["ORIGIN"] = "kinUV S4 visibility-fit diagnostic"
