@@ -71,4 +71,6 @@ def test_time_embargo_removes_neighboring_scan_blocks():
 def test_too_few_scan_groups_fails_closed():
     table = _table(n_scan=4)
     with np.testing.assert_raises_regex(ValueError, "at least 5"):
-        build_grouped_visibility_folds(table, n_folds=5)
+        build_grouped_visibility_folds(
+            table, n_folds=5, integrations_per_group=100
+        )

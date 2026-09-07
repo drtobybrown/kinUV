@@ -91,7 +91,12 @@ def _json_parameters(parameters):
     }
 
 
-def _run_target(config_path: Path, n_folds: int, margin_native: int):
+def _run_target(
+    config_path: Path,
+    n_folds: int,
+    margin_native: int,
+    integrations_per_group: int,
+):
     config = json.loads(config_path.read_text(encoding="utf-8"))
     visibility_path = Path(config["visibility_npz"])
     cube_path = Path(config["fit_window_cube"])
@@ -102,7 +107,11 @@ def _run_target(config_path: Path, n_folds: int, margin_native: int):
     line_free, window = _line_free_mask(table, cube_path, margin_native)
     if int(np.sum(line_free)) < 2:
         raise ValueError("fewer than two line-free native channels remain")
-    folds = build_grouped_visibility_folds(table, n_folds=n_folds)
+    folds = build_grouped_visibility_folds(
+        table,
+        n_folds=n_folds,
+        integrations_per_group=integrations_per_group,
+    )
     embargo_s = float(2.0 * np.max(table.interval))
     selection = select_grouped_covariance(
         table, folds, line_free, embargo_s=embargo_s
@@ -155,6 +164,7 @@ def _run_target(config_path: Path, n_folds: int, margin_native: int):
             "n_channels": int(table.vis.shape[1]),
             "n_line_free_channels": int(np.sum(line_free)),
             "n_scan_groups": len(folds.groups),
+            "integrations_per_group": int(integrations_per_group),
             "frequency_frame": table.frequency_frame,
             "visibility_unit": table.visibility_unit,
             "weight_convention": table.weight_convention,
@@ -190,6 +200,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--n-folds", type=int, default=5)
     parser.add_argument("--line-margin-native", type=int, default=3)
+    parser.add_argument("--integrations-per-group", type=int, default=5)
     args = parser.parse_args()
     git = _git_state()
     if git["branch"] != "dev" or git["dirty"]:
@@ -198,7 +209,12 @@ def main() -> None:
         raise FileExistsError(f"refusing to overwrite nonempty {args.output}")
     args.output.mkdir(parents=True, exist_ok=True)
     results = [
-        _run_target(config, args.n_folds, args.line_margin_native)
+        _run_target(
+            config,
+            args.n_folds,
+            args.line_margin_native,
+            args.integrations_per_group,
+        )
         for config in args.target_configs
     ]
     payload = {

@@ -11,13 +11,14 @@ from kinuv.io.vis import NativeVisTable, require_s2_provenance
 
 @dataclass(frozen=True)
 class VisibilityGroup:
-    """One indivisible observation/scan block spanning all baselines."""
+    """One contiguous within-scan time block spanning all baselines."""
 
     group_id: int
     fold_id: int
     observation_id: int
     array_id: int
     scan_number: int
+    time_block_index: int
     state_id: int
     field_id: int
     data_desc_id: int
@@ -75,18 +76,43 @@ class GroupedVisibilityFolds:
 
 
 def build_grouped_visibility_folds(
-    table: NativeVisTable, *, n_folds: int = 5
+    table: NativeVisTable,
+    *,
+    n_folds: int = 5,
+    integrations_per_group: int = 5,
 ) -> GroupedVisibilityFolds:
-    """Assign complete scan blocks to contiguous, approximately balanced folds.
+    """Assign within-scan time blocks to contiguous, balanced folds.
 
-    The indivisible key uses only standard Measurement Set identities. Antenna
-    pair is deliberately excluded so every baseline observed within a scan
-    stays in the same fold. Assignment happens on native rows before any time,
-    uv, or channel aggregation.
+    The indivisible key uses standard Measurement Set identities plus a rank
+    over native integration timestamps. Antenna pair is deliberately excluded
+    so every baseline observed within a time block stays in the same fold.
+    Assignment happens before any time, uv, or channel aggregation.
     """
     require_s2_provenance(table)
     if n_folds < 2:
         raise ValueError("n_folds must be at least two")
+    if integrations_per_group < 1:
+        raise ValueError("integrations_per_group must be positive")
+    scan_keys = np.column_stack(
+        [
+            table.observation_id,
+            table.array_id,
+            table.scan_number,
+            table.state_id,
+            table.field_id,
+            table.data_desc_id,
+        ]
+    ).astype(np.int64, copy=False)
+    _, scan_inverse = np.unique(scan_keys, axis=0, return_inverse=True)
+    time_block = np.empty(table.time_centroid.size, dtype=np.int64)
+    for scan_id in np.unique(scan_inverse):
+        rows = scan_inverse == scan_id
+        integrations, integration_index = np.unique(
+            table.time_centroid[rows], return_inverse=True
+        )
+        if integrations.size == 0:
+            raise ValueError("scan group contains no integrations")
+        time_block[rows] = integration_index // int(integrations_per_group)
     keys = np.column_stack(
         [
             table.observation_id,
@@ -95,6 +121,7 @@ def build_grouped_visibility_folds(
             table.state_id,
             table.field_id,
             table.data_desc_id,
+            time_block,
         ]
     ).astype(np.int64, copy=False)
     unique_keys, inverse = np.unique(keys, axis=0, return_inverse=True)
@@ -144,6 +171,7 @@ def build_grouped_visibility_folds(
             observation_id=int(unique_keys[group_id, 0]),
             array_id=int(unique_keys[group_id, 1]),
             scan_number=int(unique_keys[group_id, 2]),
+            time_block_index=int(unique_keys[group_id, 6]),
             state_id=int(unique_keys[group_id, 3]),
             field_id=int(unique_keys[group_id, 4]),
             data_desc_id=int(unique_keys[group_id, 5]),
