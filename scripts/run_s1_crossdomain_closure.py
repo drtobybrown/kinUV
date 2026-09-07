@@ -521,7 +521,7 @@ def target_closure(
     common_phases = [0.0]
     independent_phases = [float(np.sqrt(2.0) / 7.0)]
     reference = {
-        "radial_samples": 128,
+        "radial_samples": 256,
         "azimuth_samples": 512,
         "spectral_oversample": 2,
         "spatial_oversample": 2,
@@ -536,7 +536,7 @@ def target_closure(
             "seed": INDEPENDENT_SEED,
         },
         "spatial_double": {**reference, "spatial_oversample": 4},
-        "radial_double": {**reference, "radial_samples": 256},
+        "radial_double": {**reference, "radial_samples": 512},
         "azimuth_double": {**reference, "azimuth_samples": 1024},
         "spectral_double": {**reference, "spectral_oversample": 4},
     }

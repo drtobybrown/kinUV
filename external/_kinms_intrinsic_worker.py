@@ -85,11 +85,27 @@ def _channel_probabilities(mu, sigma, velocity, dv, subdivisions):
     return probability
 
 
-def _quadrature_plane(sb_rad, sb_profile, radial_samples, azimuth_samples, phase):
+def _radial_quadrature(sb_rad, radial_samples):
+    """Composite Gauss-Legendre nodes aligned to brightness-profile knots."""
     r_max = float(sb_rad[-1])
-    legendre_node, legendre_weight = np.polynomial.legendre.leggauss(radial_samples)
-    radius = 0.5 * r_max * (legendre_node + 1.0)
-    radius_weight = 0.5 * r_max * legendre_weight
+    uniform_edges = np.linspace(0.0, r_max, radial_samples + 1)
+    profile_edges = np.asarray(sb_rad, dtype=np.float64)
+    profile_edges = profile_edges[(profile_edges > 0.0) & (profile_edges < r_max)]
+    edges = np.unique(np.concatenate(([0.0, r_max], uniform_edges, profile_edges)))
+    midpoint = 0.5 * (edges[:-1] + edges[1:])
+    half_width = 0.5 * (edges[1:] - edges[:-1])
+    legendre_node, legendre_weight = np.polynomial.legendre.leggauss(3)
+    radius = (
+        midpoint[:, None] + half_width[:, None] * legendre_node[None, :]
+    ).ravel()
+    radius_weight = (half_width[:, None] * legendre_weight[None, :]).ravel()
+    return radius, radius_weight, edges.size - 1
+
+
+def _quadrature_plane(sb_rad, sb_profile, radial_samples, azimuth_samples, phase):
+    radius, radius_weight, radial_intervals = _radial_quadrature(
+        sb_rad, radial_samples
+    )
     phi = (np.arange(azimuth_samples, dtype=np.float64) + phase) * (
         2.0 * np.pi / azimuth_samples
     )
@@ -97,7 +113,7 @@ def _quadrature_plane(sb_rad, sb_profile, radial_samples, azimuth_samples, phase
     brightness = np.interp(rr, sb_rad, sb_profile, left=sb_profile[0], right=0.0)
     radial_weight = np.broadcast_to(radius_weight[:, None], rr.shape)
     raw_weight = brightness * rr * radial_weight * (2.0 * np.pi / azimuth_samples)
-    return rr.ravel(), pp.ravel(), raw_weight.ravel()
+    return rr.ravel(), pp.ravel(), raw_weight.ravel(), radial_intervals, radius.size
 
 
 def _project_clouds(radius, phi, params, velocity_radius, velocity_profile):
@@ -240,8 +256,9 @@ def main() -> int:
     cube = np.zeros((ny, nx, velocity.size), dtype=np.float64)
     spatial_retained = spectral_retained = joint_retained = quadrature_input = 0.0
     kinms_pa_deg = None
+    radial_intervals = radial_nodes = None
     for phase in phases:
-        radius, phi, raw_weight = _quadrature_plane(
+        radius, phi, raw_weight, radial_intervals, radial_nodes = _quadrature_plane(
             sb_rad, sb_profile, radial_samples, azimuth_samples, phase
         )
         raw_sum = float(np.sum(raw_weight))
@@ -299,11 +316,14 @@ def main() -> int:
         "render_mode": "deterministic_continuum_quadrature",
         "quadrature": {
             "radial_samples": radial_samples,
+            "radial_rule": "composite 3-point Gauss-Legendre split at profile knots and uniform edges",
+            "radial_intervals": radial_intervals,
+            "radial_nodes": radial_nodes,
             "azimuth_samples": azimuth_samples,
             "phase_ensemble_size": len(phases),
             "azimuth_phase_fractions": phases,
         },
-        "n_clouds": radial_samples * azimuth_samples * len(phases),
+        "n_clouds": radial_nodes * azimuth_samples * len(phases),
         "seed": int(config["seed"]),
         "coordinate_conversion": {
             "kinuv_pa_deg_east_of_north_receding": float(params["pa_deg"]),
