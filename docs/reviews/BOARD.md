@@ -45,6 +45,27 @@ blocked pending compliant `ms2kinuv` exports; independent S2 implementation
 and geometry/optimization audits are licensed. Full dual review remains
 required for scientific-contract changes and production promotion.
 
+### 2026-09-07 closure and cascade readiness
+
+S1 is officially closed under the original strict gates. Spatial, azimuthal,
+and spectral refinements closed at relative visibility scales of approximately
+`1e-5` through `1e-15`. The former radial residual traced the sharp turnover
+and piecewise-linear brightness profile at below `0.13%`, already negligible
+against the project-authorized `2--10%` calibration scale and thermal noise;
+the composite radial rule then reduced it below `6e-7`. The pragmatic `1e-3`
+relaxation was therefore available but unused.
+
+The S2 cascade performed its input gate immediately after S1. Neither retained
+visibility export carries the execution-block, scan, SPW, polarization,
+antenna-pair, channel-edge, calibration-history, and aggregation-lineage
+contract needed to identify C0/C1 strata and five disjoint correlation-aware
+folds. One canonical export additionally lacks time and baseline metadata. No calibrated
+Measurement Set was found in the available project, scratch, or home roots.
+The board records `changes-requested` on any proposal to infer these variables
+from row order or uv coordinates. S2 remains blocked until both targets have
+provenance-complete `ms2kinuv` exports; S3--S5 cannot validly tally before that
+dependency closes.
+
 ## Roles and files
 
 | Role | Responsibility | File |

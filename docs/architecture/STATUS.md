@@ -1,10 +1,10 @@
 ---
-generation: 19
-phase: s2-geometry-covariance-in-progress
-code_freeze: false
-next_role: implementer-sol
-board: crossdomain-recovery-s2
-build_licensed: true
+generation: 20
+phase: s2-covariance-identifiability-blocked
+code_freeze: true
+next_role: consultant-astra
+board: crossdomain-recovery-s2-input-blocked
+build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
@@ -17,17 +17,18 @@ last_review_b: docs/reviews/2026-09-06-review-b-s1-continuum-contract.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - s2-compliant-visibility-export
-deadlocks: []
-canon_generation: 19
+deadlocks:
+  - s2-covariance-identifiability-missing-ms-provenance
+canon_generation: 20
 ---
 
 ## Agent Run Status
 
-* **Phase:** S1 is closed; S2 geometry and covariance implementation is active
-* **Last Action:** Sealed the passing r5 two-target matrix from exact implementation commit `3a734693bdd023d01490f77c8181c5d1551072bb`
+* **Phase:** S1 is closed; S2 halted at the covariance-identifiability input gate
+* **Last Action:** Audited both retained visibility exports and searched the available project, scratch, and home trees for calibrated Measurement Sets
 * **Decisions Made:** `chi2_blank` detects emission; rotation requires `chi2_nonrot` with matched brightness/nuisance fitting. `Omega=|Delta2 V|/|Delta v_chan|` is dimensionless. The historical `Omega<0.3` applies only to the 20-mock KGAS066 exact-family residual-omega calibration and is not a universal production threshold. Governance now codifies proportional verification, direct repair authority, and the empirical `<=0.1` refinement priority for the S1-to-S2 workflow.
-* **Blockers / Gates:** S1 has no open gate. Both retained target exports lack the grouping provenance required for real S2 covariance selection and held-out scoring; S2 geometry, turnover, basin, and covariance infrastructure work may proceed.
-* **Next Step:** Implement the accepted S2 geometry/covariance contracts and audit work that does not require grouping metadata while both targets are re-exported through `ms2kinuv`.
+* **Blockers / Gates:** S1 has no open gate. S2 cannot identify covariance strata or construct five disjoint correlation-aware folds: KGAS007 has no row-group metadata, KGAS066 has only time and encoded baseline, and no source Measurement Set is available in the audited filesystem roots.
+* **Next Step:** Astra supplies calibrated source Measurement Sets or provenance-complete `ms2kinuv` exports for both targets; Sol then resumes S2 without changing the frozen covariance or fold gates.
 
 The Field Guide and Review Board charter govern the active S2 implementation.
 The S1 closure did not alter the physical brightness profile, velocity
@@ -90,6 +91,27 @@ dossier is
 
 All flux, independent-phase, signed-coordinate, and spectral-centroid gates
 also pass. S1 is **CLOSED** and S2 began on 2026-09-07.
+
+### Briefing note for Astra
+
+The earlier spatial, azimuthal, and spectral refinements closed at relative
+visibility scales from approximately `1e-5` to `1e-15`. The r4 radial residual
+was caused by the steep turnover and piecewise-linear brightness knots and was
+already below `0.13%`, negligible against the project-authorized `2--10%`
+telescope calibration scale and the measured thermal noise. The lightweight
+composite rule reduced the radial residual to `5.55e-7` for KGAS066 and
+`1.01e-7` for KGAS007, so S1 closed under its original stricter thresholds;
+the authorized pragmatic relaxation was not needed. This closure protects
+engineering velocity without weakening physical fidelity. The additive
+rationale record is
+`results/validation/crossdomain-recovery-s1-closure-20260907/metrics.json`.
+
+S2 readiness evidence is
+`results/validation/crossdomain-recovery-s2-readiness-20260907/metrics.json`.
+The missing grouping variables make the required C0/C1 covariance comparison
+and held-out scores non-identifiable. Inferring them from row order or uv
+coordinates would fabricate independence, so the autonomous cascade stops at
+an authorized S2 identifiability boundary.
 
 ## Corrected prospective rotation accounting
 

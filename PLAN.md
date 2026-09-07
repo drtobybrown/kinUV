@@ -10,10 +10,10 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-1. **Execute S2 geometry and optimization audits.** S1 closed on the passing r5 two-target matrix. Implement the accepted inclination, beam-reference, LOS-support, parameter-chart, turnover-grid, multi-start, and projected-gradient contracts.
-2. **Implement S2 covariance infrastructure.** Add the registered C0/C1 covariance candidates, grouped predictive scoring, and fail-closed provenance validation.
-3. **Re-export both targets through `ms2kinuv`.** Neither retained file meets the real-S2 grouping and provenance contract; covariance selection and held-out scoring remain blocked until compliant exports exist.
-4. **Complete S2 covariance validation.** Run grouped covariance selection and held-out scoring when compliant exports exist.
+1. **Restore identifiable S2 inputs.** Supply calibrated Measurement Sets or provenance-complete `ms2kinuv` exports for both targets. The current files cannot identify covariance strata or five correlation-aware folds.
+2. **Execute S2 geometry and optimization audits.** Once the input gate closes, implement the accepted inclination, beam-reference, LOS-support, parameter-chart, turnover-grid, multi-start, and projected-gradient contracts.
+3. **Implement S2 covariance infrastructure.** Add the registered C0/C1 covariance candidates, grouped predictive scoring, and fail-closed provenance validation.
+4. **Complete S2 covariance validation.** Run grouped covariance selection and held-out scoring on the compliant exports.
 5. **Test one-factor candidates.** Execute S3--S4 joint brightness/ring/dispersion ablations, paired mocks, and valid held-out folds.
 6. **Calibrate intervals separately.** No NUTS is licensed here; exact-workflow SBC remains required before calibrated interval claims.
 
