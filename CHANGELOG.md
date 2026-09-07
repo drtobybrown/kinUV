@@ -2,9 +2,27 @@
 
 Durable results, rejected alternatives, benchmark values, and retained artifact paths are recorded in [`docs/PRODUCTION_RECORD.md`](docs/PRODUCTION_RECORD.md). Git history and the compressed legacy-doc bundle preserve the original review exchanges.
 
+## 2026-09-07 - cross-domain recovery S0-S5 closure
+
+- Closed S4 after kinUV beat the information-advantaged canonical KinMS
+  comparator on every held-out visibility fold for KGAS066 and KGAS007.
+- Added a CASA-free paired truth suite using Python-native analytic cubes and
+  visibilities; kinUV/KinMS projected-velocity RMSE ratios are 0.01180 and
+  0.04569 against the 0.90 gate.
+- Repaired signed-coordinate, primary-beam-frequency, and spectral accounting;
+  retained cube, moment, spectrum, channel-map, PVD, and flux products as
+  supporting diagnostics.
+- Added smooth positive emissivity, fold-safe visibility loading, authenticated
+  external-fit checkpoints, complete source hashes, and behavioral stale-state
+  rejection tests.
+- Removed the abandoned CASA reimaging environments and logs. S4 validation no
+  longer requires training-fold `tclean` products.
+- Received independent Reviewer A and Reviewer B acceptance, verified the
+  50-file S4 manifest, and sealed S5 without launching a posterior campaign.
+
 ## 2026-09-06 — production closeout and documentation cleanup
 
-- Replaced KinMS nearest-cell/Gauss-Hermite rendering with analytic Gaussian channel integration, cubic B-spline deposition, explicit Jy/Jy km/s accounting, and proportional validation. The second refinement iteration removed the catastrophic dispersion instability and closed every axis except radial quadrature; S1 remains open and S2 did not begin.
+- Replaced KinMS nearest-cell/Gauss-Hermite rendering with analytic Gaussian channel integration, cubic B-spline deposition, explicit Jy/Jy km/s accounting, and proportional validation. Composite radial quadrature subsequently closed the remaining refinement axis, and S1 advanced to the now-complete S2--S5 cascade.
 - Streamlined the Field Guide so localized mathematical corrections use focused tests and empirical target closure without mandatory ADR, dossier, or proposal-review ceremony; full review remains for scientific-contract changes and production promotion.
 - Registered Astra's continuum-adapter/S2 architecture at `e7a1e71`; independent Reviewer A/B verdicts both require executable metric, refinement, unit, campaign-configuration, covariance, and optimizer details before implementation is licensed.
 - Closed S0 scientific accounting at `fb4a145`, distinguishing blank from fitted non-rotating emission and blocking universal use of the historical dimensionless omega threshold.

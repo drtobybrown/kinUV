@@ -1,5 +1,43 @@
 # kinUV production record
 
+## 2026-09-07 S4 scientific recovery and S5 closure
+
+The PI terminated the proposed CASA training-fold reimaging track and fixed the
+scientifically standard comparison: KinMS is evaluated from the canonical
+pipeline cube, while kinUV is fitted and scored in visibility space. The
+binding record is
+[`DEC-PI-S4-STANDARD-USE-BENCHMARK`](decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).
+No CASA task produced a promoted artifact, all temporary CASA environments and
+logs were removed, and kinUV retains no CASA runtime dependency.
+
+The accepted S4 dossier is
+`results/validation/crossdomain-recovery-s4-final-20260907/`, generated from a
+clean `dev` checkout at `354bbad8fb721871f82bb374ac9cfa62606067f4`.
+Every one of five held-out visibility folds favors kinUV on both targets. The
+aggregate gain `chi2_KinMS - chi2_kinUV` per real component is 0.04265074 for
+KGAS066 and 0.00456083 for KGAS007; lower 95 percent bounds are +0.03178592 and
++0.00290304. The frozen KinMS comparator saw the complete canonical cube, so
+this is a conservative standard-use prediction test.
+
+The paired Python-native truth suite uses three fixed noise seeds per target,
+the actual uv/channel/beam sampling, and a common thin axisymmetric exponential
+emissivity plus arctan rotation law. Aggregate projected-velocity RMSE is
+0.08836 versus 7.48616 km/s for KGAS066 and 0.39607 versus 8.66773 km/s for
+KGAS007, giving kinUV/KinMS ratios of 0.01180 and 0.04569 against the required
+0.90 maximum. This establishes superiority for the tested exact family and
+standard-use data boundary; it does not establish performance for arbitrary
+warps, noncircular flows, thickness, or calibrated posterior coverage.
+
+Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B
+accepted software, provenance, and isolation at `0442542`. Their records retain
+the earlier `changes-requested` rounds that caught unauthenticated checkpoints,
+a missing fit-window content hash, and insufficient checkpoint tests. The
+final runner authenticates commit, seed, runner, worker, cube, truth, mask, all
+source inputs, and bootstrap seed 4404. The S5 seal at
+`results/validation/crossdomain-recovery-s5-20260907/` verifies the 50-file S4
+manifest, dual verdicts, CASA-free boundary, and deterministic suite result of
+263 passed and 5 skipped. S0 through S5 are closed.
+
 ## 2026-09-06 S0 scientific-accounting closure
 
 MILESTONE-001 numerical artifacts remain sealed. Per
@@ -35,10 +73,11 @@ The production target set is KGAS066 plus KGAS007. G4 and population inference h
 
 The independent KGAS007 fit assessment is recorded in
 [`diagnostics/kgas007-fit-assessment.md`](diagnostics/kgas007-fit-assessment.md).
-It finds a strong visibility-domain rotation candidate and constrained PA, but no current
-evidence that kinUV outperforms KinMS for this target. The dominant mismatch is
-the fixed-geometry, frozen-brightness model at 1--3 arcsec and in asymmetric
-spectral channels; an equal visibility-likelihood comparison has not yet been run.
+It finds a strong visibility-domain rotation candidate and constrained PA. The
+later S4 recovery now establishes a conservative held-out standard-use
+advantage and matched-family truth-recovery advantage for KGAS007. The earlier
+image-cube mismatch remains useful evidence that restored-cube residuals and
+sparse moment profiles do not measure visibility recovery directly.
 
 ## Production method and invariants
 
@@ -60,7 +99,7 @@ The JAX likelihood reproduced the official KGAS066 MAP chi2 and ran at 3.01 eval
 
 The retained S3 comparison uses KinMS only as an image-plane comparator. Its corrected wrapper passes face-on disk coordinates to KinMS, lets KinMS project inclination and PA, writes cubes with transpose `(2, 1, 0)`, and applies systemic velocity through `vOffset`. The best real-data KinMS comparator found PA 198.70 deg, V0 266.92 km/s, rt 0.465 arcsec, inclination 48.41 deg, and gas dispersion 12.83 km/s. These cube-fit parameters do not replace the visibility likelihood or official kinUV parameters. On the controlled mock, KinMS returned `rt=0.395 arcsec` for truth 0.25 arcsec, while kinUV returned 0.253 arcsec.
 
-The 2026-09-06 canonical downstream runner extended the same comparison contract to KGAS007 and regenerated a homogeneous diagnostic suite for both targets. The independent KGAS007 KinMS cube fit completed after 475 evaluations with PA 152.72 deg, V0 285.25 km/s, rt 1.095 arcsec, inclination 25.26 deg, systemic optical velocity 14203.71 km/s, and gas dispersion 15.56 km/s. MILESTONE-001 embeds the comparator in each accepted bundle. KinMS has lower residual RMS on the masked CLEAN cube for both targets, as expected for a model optimized in that image domain. That metric is not a visibility likelihood comparison. The retained controlled KGAS066 mock remains the evidence that kinUV recovers injected sub-beam kinematics more accurately than the restored-cube fit.
+The 2026-09-06 canonical downstream runner extended the same comparison contract to KGAS007 and regenerated a homogeneous diagnostic suite for both targets. The independent KGAS007 KinMS cube fit completed after 475 evaluations with PA 152.72 deg, V0 285.25 km/s, rt 1.095 arcsec, inclination 25.26 deg, systemic optical velocity 14203.71 km/s, and gas dispersion 15.56 km/s. MILESTONE-001 embeds the comparator in each accepted bundle. KinMS has lower residual RMS on the masked CLEAN cube for both targets, as expected for a model optimized in that image domain. That metric is not a visibility likelihood comparison. The 2026-09-07 S4 record supersedes the former one-target mock with authenticated paired recovery for both canonical samplings and a grouped real-visibility prediction audit.
 
 MILESTONE-001 fixed an inclination propagation defect in Stage B and model-cube serialization. The previous KGAS007 Stage A likelihood used 28.9 degrees correctly, but its exported cube inherited the KGAS066 default inclination. The milestone reran the fit and now propagates the configured target inclination through likelihood evaluation, Stage B, native cube creation, matched imaging products, and the KinMS comparison. Both products were generated from clean commits, reproduce their selected chi2 exactly, and contain complete SHA-256 manifests.
 
@@ -96,8 +135,8 @@ The compressed source bundle for pruned history is [`archives/kinuv_docs_legacy_
 
 ## Remaining work
 
-1. Execute S1 with an intrinsic pre-restoration KinMS adapter and the shared visibility/channel operator, then satisfy the frozen closure gates.
+1. Complete the fitted non-rotating emitting-disk bootstrap before publishing rotation-detection probabilities.
 2. Calibrate the exact NUTS workflow with simulation-based calibration before publishing credible intervals.
-3. Re-export the historical KGAS007 wavelength-coordinate NPZ with `ms2kinuv` when its source Measurement Set becomes available.
+3. Extend paired recovery to warped, lopsided, thick, noncircular, and radially varying dispersion truths.
 4. Investigate the KGAS066 velocity-structured residual and define an outer-ring support criterion before another Stage B campaign.
 5. Define a target-selection contract before adding a multi-galaxy runner or hierarchical model.

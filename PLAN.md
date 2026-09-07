@@ -10,19 +10,19 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-The implementation and empirical S4 gates are complete under
+The cross-domain recovery program is complete through S5 under
 [`DEC-PI-S4-STANDARD-USE-BENCHMARK`](docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).
-The historical failure remains preserved. The final S4 dossier is frozen for
-dual independent review; S5 has not started.
+The historical S4 failure remains preserved. Reviewer A and Reviewer B accept
+the corrected S4 evidence, and the S5 verification seal is immutable.
 
-1. **Complete dual S4 review.** Reviewer A assesses the physical comparison, matched-family truth recovery, and interpretation. Reviewer B verifies exact commits, manifests, runner behavior, and the CASA-free boundary.
-2. **Close S4 only on dual acceptance.** Record both verdicts without rewriting the historical r3 failure. Any requested correction returns to a new immutable evidence directory.
-3. **Seal S5 after S4 closure.** Verify final artifact integrity and production references, then update the production record and milestone registry. No new scientific fit or posterior campaign is part of S5 sealing.
-4. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes coverage before calibrated interval claims.
+1. **Calibrate rotation significance.** Complete the fitted non-rotating emitting-disk bootstrap before promoting a formal rotation-detection probability.
+2. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes exact-workflow coverage before calibrated interval claims.
+3. **Broaden the recovery frontier.** Test warped, lopsided, thick, noncircular, and radially varying dispersion truths under fixed evaluation samples. Preserve the accepted thin axisymmetric arctan result as the baseline.
+4. **Prepare survey expansion.** Define a target-selection and resource contract before adding more galaxies or a population runner.
 
 ## Exit criteria for the next production increment
 
-- S0--S3 retain historical closure; S4 empirical gates pass and await dual review; S5 has not started.
+- S0--S5 are closed with dual review, manifest verification, and the PI-authorized standard-use comparison.
 - Exact-workflow SBC meets a separately declared coverage criterion only for a calibrated-interval claim.
 - MILESTONE-001 remains reproducible from the frozen target configurations and run manifests.
 - A clean checkout reproduces MAP identity chi2 and validates retained NUTS summaries from manifests.

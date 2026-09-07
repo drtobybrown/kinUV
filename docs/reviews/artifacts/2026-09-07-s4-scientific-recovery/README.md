@@ -1,6 +1,6 @@
 # S4 scientific recovery review packet
 
-**Candidate implementation:** `f2f6a22b6749f46da70e55f57e599f919190c9f8`<br>
+**Evidence commit:** `354bbad8fb721871f82bb374ac9cfa62606067f4`<br>
 **Binding comparison:** `DEC-PI-S4-STANDARD-USE-BENCHMARK`<br>
 **Dossier:** `results/validation/crossdomain-recovery-s4-final-20260907/`
 
@@ -32,15 +32,16 @@ are below the required 0.90.
   `results/validation/crossdomain-recovery-s4-remediation-20260907-r1/`.
 * The grouped visibility audit is
   `results/validation/crossdomain-recovery-s4-remediation-20260907-r2/grouped/`.
-* The final dossier contains 50 checksum-bound files totaling 69,156,464
+* The final dossier contains 50 checksum-bound files totaling 69,157,562
   bytes. All referenced source manifests were revalidated while sealing it.
 * Reviewer B rejected the first submission at `72a7d35` because resume could
   mix an older KinMS checkpoint into a newer stamped dossier. The revised
   runner authenticates commit, realization seed, runner, worker, cube, truth,
   and mask before reuse. Target config, covariance, visibility, diagnostic
-  inputs, and bootstrap seed 4404 are serialized. The entire dossier was then
-  deleted and all six fits rerun from scratch at the candidate commit; every
-  scientific metric reproduced exactly.
+  inputs, and bootstrap seed 4404 are serialized. A second review added the
+  missing fit-window hashes and behavioral stale-checkpoint tests. The entire
+  dossier was then deleted and all six fits rerun from scratch at the stable
+  evidence commit; every scientific metric reproduced exactly.
 * The deterministic and architecture suite passes: 263 passed, 5 skipped.
   The known unstable NUTS smoke module is outside this authorized MAP/recovery
   run and was not executed.
@@ -53,10 +54,8 @@ four scratch environments were removed, and three untracked CASA logs were
 deleted. S4 no longer requires training-fold `tclean` imaging. kinUV remains a
 visibility engine; Measurement Set extraction remains isolated in ms2kinuv.
 
-## Review questions
+## Review outcome
 
-Reviewer A should decide whether the standard-use and matched-family evidence
-supports the physical superiority claim without over-interpreting restored
-cube diagnostics. Reviewer B should verify the code boundary, clean exact
-commit, manifest chain, deterministic tests, and resumable external-fit
-execution. Dual `accept` closes S4 and permits S5 sealing.
+Reviewer A accepted the stable science evidence at `98f7730`; Reviewer B
+accepted software and reproducibility at `0442542`. S4 is closed. The S5 seal
+is `results/validation/crossdomain-recovery-s5-20260907/`.
