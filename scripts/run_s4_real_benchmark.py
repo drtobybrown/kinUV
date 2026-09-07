@@ -303,9 +303,9 @@ def run_target(config_path, s3_root, covariance_metrics, output):
     structured = _structured_diagnostics(config, covariance_metrics)
     gates = {
         "projected_velocity_rmse_at_least_10_percent_better_than_kinms": recovery[
-            "ratio_kinuv_over_kinms"
+            "gate_eligible"
         ]
-        <= 0.90,
+        and recovery["ratio_kinuv_over_kinms"] <= 0.90,
         "overall_reduced_chi2_better_than_kinms": kinuv_chi2["reduced_chi2"]
         < kinms_chi2["reduced_chi2"],
     }

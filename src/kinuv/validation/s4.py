@@ -51,8 +51,8 @@ def projected_velocity_rmse(profiles, inclination_deg):
 
     radius_data = np.asarray(profiles["rotation_radius_data"], dtype=np.float64)
     speed_data = np.asarray(profiles["rotation_speed_data"], dtype=np.float64)
-    if radius_data.size < 3:
-        raise ValueError("at least three common data-profile points are required")
+    if radius_data.size < 2:
+        raise ValueError("at least two common data-profile points are required")
     factor = float(np.sin(np.radians(float(inclination_deg))))
     output = {}
     for name in ("kinuv", "kinms"):
@@ -61,8 +61,8 @@ def projected_velocity_rmse(profiles, inclination_deg):
         lo = max(float(radius_data.min()), float(radius.min()))
         hi = min(float(radius_data.max()), float(radius.max()))
         use = (radius_data >= lo) & (radius_data <= hi) & np.isfinite(speed_data)
-        if np.sum(use) < 3:
-            raise ValueError(f"{name} has fewer than three overlapping profile points")
+        if np.sum(use) < 2:
+            raise ValueError(f"{name} has fewer than two overlapping profile points")
         estimate = np.interp(radius_data[use], radius, speed)
         residual = factor * (estimate - speed_data[use])
         output[name] = {
@@ -74,6 +74,10 @@ def projected_velocity_rmse(profiles, inclination_deg):
     output["ratio_kinuv_over_kinms"] = (
         output["kinuv"]["rmse_kms"] / output["kinms"]["rmse_kms"]
     )
+    output["gate_eligible"] = min(
+        output["kinuv"]["n_radius"], output["kinms"]["n_radius"]
+    ) >= 3
+    output["eligibility_rule"] = "at least three common moment-1 radial bins"
     return output
 
 

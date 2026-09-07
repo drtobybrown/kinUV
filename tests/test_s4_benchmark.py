@@ -48,3 +48,18 @@ def test_common_reduced_chi2_and_projected_rmse():
     assert recovery["kinuv"]["rmse_kms"] == pytest.approx(0.5)
     assert recovery["kinms"]["rmse_kms"] == pytest.approx(1.0)
     assert recovery["ratio_kinuv_over_kinms"] == pytest.approx(0.5)
+    assert recovery["gate_eligible"] is True
+
+
+def test_two_point_velocity_profile_is_diagnostic_but_not_gate_eligible():
+    profiles = {
+        "rotation_radius_data": np.array([1.0, 2.0]),
+        "rotation_speed_data": np.array([10.0, 20.0]),
+        "rotation_radius_kinuv": np.array([1.0, 2.0]),
+        "rotation_speed_kinuv": np.array([11.0, 21.0]),
+        "rotation_radius_kinms": np.array([1.0, 2.0]),
+        "rotation_speed_kinms": np.array([12.0, 22.0]),
+    }
+    recovery = projected_velocity_rmse(profiles, 30.0)
+    assert recovery["gate_eligible"] is False
+    assert np.isfinite(recovery["ratio_kinuv_over_kinms"])
