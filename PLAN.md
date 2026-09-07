@@ -10,6 +10,16 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
+The active, PI-authorized pre-meeting campaign is defined by
+[`COLLABORATOR_DELIVERY_PLAN_20260908`](docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).
+Both four-start joint visibility MAP sweeps are complete. Their immutable
+MAP-only meeting packet is at
+`results/production/meeting_packets/kinuv-collaborator-20260908-map/` and is in
+independent dual review. Four KGAS066 NUTS chains are running under the durable,
+CPU-pinned controller; KGAS007 follows through the same four-worker pool. The
+first oversubscribed launch failed explicitly and remains preserved. The early
+packet remains available and unchanged while posterior sampling proceeds.
+
 The cross-domain recovery program is complete through S5 under
 [`DEC-PI-S4-STANDARD-USE-BENCHMARK`](docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).
 The historical S4 failure remains preserved. Reviewer A and Reviewer B accept

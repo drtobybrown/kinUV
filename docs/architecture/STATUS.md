@@ -1,16 +1,17 @@
 ---
-generation: 34
-phase: crossdomain-recovery-s5-closed
-code_freeze: true
-next_role: consultant-astra
-board: diagnostic-coordinate-and-checkpoint-repair
-build_licensed: false
+generation: 35
+phase: collaborator-delivery-running
+code_freeze: false
+next_role: senior-implementer-sol
+board: collaborator-map-packet-dual-review
+build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - exact-workflow-posterior-calibration
-last_propose: human-directive-diagnostic-coordinate-repair-20260907
-last_review: docs/reviews/2026-09-07-recovery-diagnostic-qa.md
+  - collaborator-nuts-completion
+last_propose: docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md
+last_review: pending-collaborator-map-packet-dual-review
 last_review_a: docs/reviews/2026-09-07-astra-production-figure-completeness.md
 last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4-recovery.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
@@ -22,12 +23,44 @@ canon_generation: 34
 
 ## Agent Run Status
 
-* **Phase:** S0--S5 are closed under the PI-authorized cross-domain recovery contract. The accepted S4 evidence commit is `354bbad`; S5 sealed it at `98f7730`.
-* **Last Action:** Diagnostic-only coordinate/provenance repair at `fdcbf165cdd8b1f9b6d89d71cfd5353ce4ac9e7c`. Both active targets now display exact S4-bound smooth-S3 checkpoints and matched cubes. No fit, new score, or gate change.
+* **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
+* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. The selected MAP-only packet was checksum-sealed under `results/production/meeting_packets/kinuv-collaborator-20260908-map/`; four CPU-pinned KGAS066 NUTS chains are in warm-up and KGAS007 is queued.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
-* **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
-* **Verification:** 36 focused physical imaging/style/S4 tests passed. Both active manifests verify 30 files; 44 original files per target were checksum-verified in archives before replacement. Exact hashes and Astra science check are recorded below.
-* **Next Step:** Astra may define the next scientific expansion. Posterior calibration, the non-rotation bootstrap, and broader synthetic families remain separate future campaigns.
+* **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
+* **Verification:** Six focused transform/S3 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. The first NUTS launch failed explicitly with `libgomp` thread oversubscription and is retained; attempt 2 pins four workers to disjoint four-core CPU sets and checkpoints adaptation every 100 warm-up steps.
+* **Next Step:** Close the independent MAP-only packet review while NUTS runs. After all eight chains finish, generate chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate; do not mutate the sealed early packet.
+
+## 2026-09-08 collaborator delivery campaign
+
+The executable contract is
+[`COLLABORATOR_DELIVERY_PLAN_20260908`](../operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).
+MAP implementation commits are `9376187` and `41020af`; the selected KGAS066
+record is bound to `41020af` and KGAS007 to `3570824`. Four starts per target
+completed successfully with no qualifying boundary hits.
+
+| Target | Parent chi-square | Selected chi-square | Improvement | Start | Model | Inclination |
+|---|---:|---:|---:|---:|---|---:|
+| KGAS066 | 166319.252931 | 166317.442848 | 1.810083 | 4 | two-zone dispersion on arctan projected speed | 55.3343 deg |
+| KGAS007 | 105423.874661 | 105421.994976 | 1.879685 | 3 | supported projected-speed knots | 33.8940 deg |
+
+The exact MAP-only packet index SHA-256 is
+`653aeef5e51d2725ce3aa8fbef8b132f751a548a575bcf59b239e1e60e18bbff`.
+Its packet-manifest SHA-256 is
+`3ef9f5ff6b4ec2069ca5974248eab5433fe5e6cfc475989861d6b2dab336e553`.
+The installed target packet manifests are `910e093c28dcb83ff077ba7524f8a4e06d019143f40902db0f5a7c7d8642f200`
+for KGAS066 and `22d072ef1ef86f6419a942dcaab82ce719f79112f62e727698edddc30ed86926`
+for KGAS007. The packet is labeled `MAP_ONLY_CANDIDATE`; it contains no
+posterior intervals and cannot inherit any historical corner plot.
+
+The first detached NUTS attempt used unrestricted JAX CPU affinity. Each worker
+created approximately 1183 threads and all workers exited nonzero with
+`libgomp: Thread creation failed`. Its controller records and logs are retained
+under `results/incoming/collaborator-delivery-20260908/nuts-attempt1-thread-oversubscription/`.
+Commit `af79bb3` replaced monolithic warm-up with explicit state checkpoints and
+pins four workers to CPU sets `0-3`, `4-7`, `8-11`, and `12-15`. Attempt 2 uses
+controller PID 1700497, four independent seeds per target, 1000 warm-up and
+1000 retained draws, target acceptance 0.90, and maximum tree depth 10. Its
+live evidence is under `results/incoming/collaborator-delivery-20260908/nuts/`.
 
 ## 2026-09-07 diagnostic coordinate and checkpoint repair
 
