@@ -3,7 +3,7 @@ generation: 35
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
-board: collaborator-map-packet-dual-review
+board: collaborator-map-packet-dual-accept
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
@@ -11,9 +11,9 @@ pending:
   - exact-workflow-posterior-calibration
   - collaborator-nuts-completion
 last_propose: docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md
-last_review: pending-collaborator-map-packet-dual-review
-last_review_a: docs/reviews/2026-09-07-astra-production-figure-completeness.md
-last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4-recovery.md
+last_review: docs/reviews/2026-09-08-collaborator-map-review-b.md
+last_review_a: docs/reviews/2026-09-08-collaborator-map-review-a.md
+last_review_b: docs/reviews/2026-09-08-collaborator-map-review-b.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - How broadly does the demonstrated advantage extend beyond the tested thin axisymmetric arctan family?
@@ -24,11 +24,11 @@ canon_generation: 34
 ## Agent Run Status
 
 * **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
-* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. The selected MAP-only packet was checksum-sealed under `results/production/meeting_packets/kinuv-collaborator-20260908-map/`; four CPU-pinned KGAS066 NUTS chains are in warm-up and KGAS007 is queued.
+* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. Reviewer A and Reviewer B accept corrected packet v2 under `results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`; four CPU-pinned KGAS066 NUTS chains are in warm-up and KGAS007 is queued.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
 * **Verification:** Six focused transform/S3 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. The first NUTS launch failed explicitly with `libgomp` thread oversubscription and is retained; attempt 2 pins four workers to disjoint four-core CPU sets and checkpoints adaptation every 100 warm-up steps.
-* **Next Step:** Close the independent MAP-only packet review while NUTS runs. After all eight chains finish, generate chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate; do not mutate the sealed early packet.
+* **Next Step:** Continue NUTS without changing the dual-accepted MAP-only packet. After all eight chains finish, generate chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate.
 
 ## 2026-09-08 collaborator delivery campaign
 
@@ -43,13 +43,21 @@ completed successfully with no qualifying boundary hits.
 | KGAS066 | 166319.252931 | 166317.442848 | 1.810083 | 4 | two-zone dispersion on arctan projected speed | 55.3343 deg |
 | KGAS007 | 105423.874661 | 105421.994976 | 1.879685 | 3 | supported projected-speed knots | 33.8940 deg |
 
-The exact MAP-only packet index SHA-256 is
-`653aeef5e51d2725ce3aa8fbef8b132f751a548a575bcf59b239e1e60e18bbff`.
+The first sealed packet was rejected by both reviewers for incorrect MAP
+provenance wording, incomplete failed-process dispositions, and a KGAS007
+moment-layout collision. These findings were repaired in new immutable packet
+v2 without changing either selected MAP or synthetic score. Reviewer A and
+Reviewer B independently accept v2 in the records named above.
+
+The accepted MAP-only packet v2 index SHA-256 is
+`64976fb021903f9576f921ab99712c8862b444891ef52456bef330a7bbad79ae`.
 Its packet-manifest SHA-256 is
-`3ef9f5ff6b4ec2069ca5974248eab5433fe5e6cfc475989861d6b2dab336e553`.
-The installed target packet manifests are `910e093c28dcb83ff077ba7524f8a4e06d019143f40902db0f5a7c7d8642f200`
-for KGAS066 and `22d072ef1ef86f6419a942dcaab82ce719f79112f62e727698edddc30ed86926`
-for KGAS007. The packet is labeled `MAP_ONLY_CANDIDATE`; it contains no
+`bd030b2346d696b8db58dec51c223e2b9e199add9617dce7a2eff541dc8d2a09`.
+The installed target packet manifests are `f815f87dbc4cc869b875547c5a839e7611e0ca22bc58d84fca578ddd83f9b3fb`
+for KGAS066 and `89b84da9c816551d5761316c71149fba684baf5ebb5040c4b0290079fbefa71a`
+for KGAS007. The attempt-ledger SHA-256 is
+`5fafd4615d05e188bac7f9bea8b396efd2cac6307c9e726be549411b4cda64bf`.
+The packet is labeled `MAP_ONLY_CANDIDATE`; it contains no
 posterior intervals and cannot inherit any historical corner plot.
 
 The first detached NUTS attempt used unrestricted JAX CPU affinity. Each worker
