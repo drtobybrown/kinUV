@@ -275,12 +275,12 @@ def moment_figure(
                 axis.set_title(("Data", "kinUV model", "Data - kinUV")[column])
             panel_letter(axis, next(letters))
         axes[0].text(
-            0.04,
-            0.05,
+            0.96,
+            0.94,
             row_label,
             transform=axes[0].transAxes,
-            va="bottom",
-            ha="left",
+            va="top",
+            ha="right",
             fontsize=11,
             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.80},
         )
@@ -301,6 +301,10 @@ def moment_figure(
         if row < 2:
             pair_bar.ax.xaxis.set_label_position("top")
             residual_bar.ax.xaxis.set_label_position("top")
+        pair_bar.locator = MaxNLocator(nbins=5)
+        residual_bar.locator = MaxNLocator(nbins=3, symmetric=True)
+        pair_bar.update_ticks()
+        residual_bar.update_ticks()
         if row == 0:
             beam_ellipse(
                 axes[0],
@@ -880,27 +884,33 @@ def benchmark_moment_figure(
                 axis.set_title(titles[column], fontsize=11)
             panel_letter(axis, next(letters), fontsize=10)
         row_axes[0].text(
-            0.04,
-            0.05,
+            0.96,
+            0.94,
             row_name,
             transform=row_axes[0].transAxes,
+            va="top",
+            ha="right",
             fontsize=10,
             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8},
         )
-        cbar(
+        common_bar = cbar(
             figure,
             common_artist,
             unit,
             cax=figure.add_subplot(grid[2 * row + 1, :3]),
             orientation="horizontal",
         )
-        cbar(
+        residual_bar = cbar(
             figure,
             residual_artist,
             unit,
             cax=figure.add_subplot(grid[2 * row + 1, 3:]),
             orientation="horizontal",
         )
+        common_bar.locator = MaxNLocator(nbins=5)
+        residual_bar.locator = MaxNLocator(nbins=3, symmetric=True)
+        common_bar.update_ticks()
+        residual_bar.update_ticks()
         if row == 0:
             beam_ellipse(
                 row_axes[0],
@@ -1589,13 +1599,30 @@ def recovery_target_products(config_path, source_root, output_root, synthetic_ro
     save_pair(fig, plots, "rotation_curve")
     for suffix in ("pdf", "png"):
         shutil.copy2(plots / f"rotation_curve.{suffix}", benchmarks / f"rotation_curve_kinuv_vs_kinms.{suffix}")
-    summary = {"target_id": target, "status": "accepted_checkpoint_diagnostic", "selected_model": fit["candidate"], "source_fit": fit, "no_fit_performed": True, "posterior_available_for_selected_checkpoint": False, "accounting": replay["accounting_repairs"], "geometry": geometry}
+    summary = {"target_id": target, "status": "collaborator_map_candidate", "selected_model": fit["candidate"], "source_fit": fit, "map_fit_performed": True, "fit_performed_during_rendering": False, "synthetic_refit_or_rescore_performed": False, "posterior_available_for_selected_checkpoint": False, "accounting": replay["accounting_repairs"], "geometry": geometry}
     write_json(best / "summary.json", summary)
-    note = f"""# {target}: accepted recovery checkpoint diagnostics
+    synthetic_ratios = {
+        "KGAS066": (0.02493, 0.01438),
+        "KGAS007": (0.27665, 0.13749),
+    }
+    turnover_ratio, inner_ratio = synthetic_ratios[target]
+    residual_note = (
+        "KGAS066 retains coherent real-cube residual structure in the integrated spectral wings, major-axis envelope, minor-axis PVD, and moment-1 field. Its supporting restored-cube reduced chi-square is 7.43049 versus 6.50510 for KinMS, and its moment-1 profile RMSE is 7.75576 versus 3.14489 km/s. The bounded joint MAP improved native visibility chi-square only modestly and did not eliminate those image-plane discrepancies."
+        if target == "KGAS066"
+        else
+        "KGAS007 retains structured real-cube residuals in its clumpy moment-0 field and in both PVD axes. The bounded joint MAP improved native visibility chi-square only modestly; the supported-knot model does not define a scalar real-galaxy turnover radius."
+    )
+    note = f"""# {target}: collaborator joint-MAP candidate diagnostics
 
-The selected `{fit['candidate']}` checkpoint and its exact cube come from the S4-sealed smooth-emissivity replay. No fit, parameter tuning, or new benchmark scoring was performed. All direct and comparator plots use these same frozen parameters and matched cubes. Celestial east increases RA; slit PA is east of north. All three cubes share each selected-fit diagnostic slit and aperture.
+The selected `{fit['candidate']}` checkpoint is a new four-start bounded joint visibility MAP fit initialized from the S4-sealed smooth-emissivity model. The accepted emissivity weights were held fixed while the active projected kinematics, geometry, centering, flux, and supported dispersion coordinates were optimized. Rendering performed no additional fit, parameter tuning, synthetic refit, or synthetic rescore. All direct and comparator plots use the selected MAP parameters and its matched cube. Celestial east increases RA; slit PA is east of north. All three cubes share each selected-fit diagnostic slit and aperture.
 
 Visibility likelihood is primary. Restored science cubes are supporting diagnostics, not ground truth; cleaner image residuals do not establish more accurate intrinsic kinematics. The measured synthetic turnover-error ratio 0.02493 and inner-velocity RMSE ratio 0.01438 for KGAS066 apply to the registered axisymmetric arctan test family, not arbitrary real galaxies.
+
+For this target the registered synthetic turnover-error ratio is {turnover_ratio:.5f} and the inner-beam projected-velocity RMSE ratio is {inner_ratio:.5f}. These are retained mock results, not measurements of the real target.
+
+{residual_note}
+
+The imported mechanical `replay.json` preserves its historical `promotion_eligible: false` field and obsolete blockers as an audit record. Those flags describe the earlier S4 replay contract; they do not govern this explicitly labeled MAP-only collaborator packet or constitute posterior acceptance.
 
 No matching posterior exists for this selected checkpoint. Its historical, fixed-inclination arctan corner plot is preserved only in the superseded archive. MAP profiles have no calibrated credible intervals. No real inner slope or sub-beam turnover precision claim is promoted; the supported-ring model has no scalar turnover parameter.
 
@@ -1606,7 +1633,7 @@ The preserved replay explicitly records the same observed PB frequency in forwar
     (target_root / "README.md").write_text(note, encoding="ascii")
     file_record = lambda path: {"bytes": path.stat().st_size, "sha256": sha256(path)}
     write_json(best / "MANIFEST.json", {"schema_version": "kinuv-recovery-checkpoint-v1", "git": state, "selected_model": fit["candidate"], "files": {p.relative_to(best).as_posix(): file_record(p) for p in sorted(best.rglob("*")) if p.is_file()}})
-    manifest = {"schema_version": "kinuv-production-layout-v3", "target_id": target, "git": state, "fit_performed": False, "scoring_performed": False, "selected_model": fit["candidate"], "fit_config_commit": config_revision, "fit_config_sha256": hashlib.sha256(frozen_config).hexdigest(), "geometry": geometry, "accounting": replay["accounting_repairs"], "sources": {k: {"path": str(v.resolve()), **file_record(v)} for k,v in source_files.items()}, "files": {p.relative_to(target_root).as_posix(): file_record(p) for p in sorted(target_root.rglob("*")) if p.is_file()}, "rendering": {"source_adaptive_crop_arcsec": crop, "east_increases_ra": True, "pa_east_of_north": True, "legacy_figures_present": False}, "posterior_available_for_selected_checkpoint": False}
+    manifest = {"schema_version": "kinuv-production-layout-v3", "target_id": target, "git": state, "map_fit_performed": True, "fit_performed_during_rendering": False, "synthetic_refit_or_rescore_performed": False, "selected_model": fit["candidate"], "fit_config_commit": config_revision, "fit_config_sha256": hashlib.sha256(frozen_config).hexdigest(), "geometry": geometry, "accounting": replay["accounting_repairs"], "sources": {k: {"path": str(v.resolve()), **file_record(v)} for k,v in source_files.items()}, "files": {p.relative_to(target_root).as_posix(): file_record(p) for p in sorted(target_root.rglob("*")) if p.is_file()}, "rendering": {"source_adaptive_crop_arcsec": crop, "east_increases_ra": True, "pa_east_of_north": True, "legacy_figures_present": False}, "posterior_available_for_selected_checkpoint": False}
     write_json(target_root / "MANIFEST.json", manifest)
     print(f"{target}: generated checkpoint-consistent diagnostics ({fit['candidate']})")
     return manifest

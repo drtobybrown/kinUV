@@ -84,6 +84,7 @@ def main() -> int:
     parser.add_argument("--production-root", type=Path, required=True)
     parser.add_argument("--synthetic-root", type=Path, required=True)
     parser.add_argument("--subbeam-root", type=Path, required=True)
+    parser.add_argument("--attempt-ledger", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
@@ -95,6 +96,12 @@ def main() -> int:
     subbeam_count = verify_manifest(args.subbeam_root, args.subbeam_root / "MANIFEST.json")
     controller_path = args.nuts_root / "controller_status.json"
     controller = load_json(controller_path)
+    ledger_manifest_path = args.attempt_ledger.with_name("ATTEMPT_LEDGER_MANIFEST.json")
+    ledger_manifest = load_json(ledger_manifest_path)
+    for relative, expected in ledger_manifest["files"].items():
+        path = args.attempt_ledger.parent / relative
+        if file_record(path) != expected:
+            raise ValueError(f"attempt-ledger verification failed: {path}")
     target_records = []
     installed_roots = []
     for target in TARGETS:
@@ -142,6 +149,8 @@ def main() -> int:
         raise FileExistsError(packet_root)
     packet_root.mkdir(parents=True)
     shutil.copy2(controller_path, packet_root / "nuts_controller_status_at_seal.json")
+    shutil.copy2(args.attempt_ledger, packet_root / "ATTEMPT_LEDGER.json")
+    shutil.copy2(ledger_manifest_path, packet_root / "ATTEMPT_LEDGER_MANIFEST.json")
     index = {
         "schema_version": "kinuv-collaborator-meeting-packet-v1",
         "created_utc": datetime.now(timezone.utc).isoformat(),
@@ -169,6 +178,8 @@ def main() -> int:
             "controller_pid": controller["controller_pid"],
             "state_at_seal": controller["state"],
             "status_snapshot": file_record(packet_root / "nuts_controller_status_at_seal.json"),
+            "attempt_ledger": file_record(packet_root / "ATTEMPT_LEDGER.json"),
+            "all_concluded_processes_have_disposition": load_json(args.attempt_ledger)["all_concluded_processes_have_disposition"],
         },
         "claims": {
             "real_data": "visibility MAP; restored cubes are supporting diagnostics",
