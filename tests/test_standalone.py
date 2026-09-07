@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from kinuv.constants import C_LIGHT_M_S
-from kinuv.io.vis import load_visibility_table
+from kinuv.io.vis import load_visibility_table, require_s2_provenance
 from kinuv.targets import get_target
 
 
@@ -58,6 +58,80 @@ def test_loads_existing_historical_wavelength_contract(tmp_path):
     assert table.uv_ref_hz == ref_hz
     np.testing.assert_allclose(table.u_m, u_m)
     assert table.time is None
+
+
+def _v2_payload():
+    freqs, vis, weights = _arrays()
+    n_row, n_chan = vis.shape
+    antenna1 = np.array([0, 0, 1], dtype=np.int64)
+    antenna2 = np.array([1, 2, 2], dtype=np.int64)
+    row_id = np.arange(n_row, dtype=np.int64)
+    channel_width = np.full(n_chan, 1.0e8)
+    return {
+        "schema_version": np.array("ms2kinuv-npz-v2"),
+        "u_m": np.array([1.0, 2.0, 3.0]),
+        "v_m": np.array([-1.0, -2.0, -3.0]),
+        "uvw_m": np.array([[1.0, -1.0, 0.0], [2.0, -2.0, 0.0], [3.0, -3.0, 0.0]]),
+        "vis": vis,
+        "weights": weights,
+        "freqs": freqs,
+        "time": np.array([0.0, 10.0, 20.0]),
+        "baseline": (antenna1 << np.int64(32)) | antenna2,
+        "phase_dir_rad": np.array([2.0, 0.1]),
+        "row_id": row_id,
+        "source_row_id": row_id.copy(),
+        "aggregation_coefficients": np.ones(n_row),
+        "antenna1": antenna1,
+        "antenna2": antenna2,
+        "scan_number": np.array([1, 1, 2]),
+        "observation_id": np.zeros(n_row, dtype=np.int64),
+        "array_id": np.zeros(n_row, dtype=np.int64),
+        "state_id": np.zeros(n_row, dtype=np.int64),
+        "field_id": np.zeros(n_row, dtype=np.int64),
+        "data_desc_id": np.zeros(n_row, dtype=np.int64),
+        "time_centroid": np.array([0.5, 10.5, 20.5]),
+        "interval": np.ones(n_row),
+        "flags": np.zeros((n_row, n_chan), dtype=bool),
+        "channel_width_hz": channel_width,
+        "channel_edges_hz": np.column_stack(
+            [freqs - channel_width / 2.0, freqs + channel_width / 2.0]
+        ),
+        "spectral_window_id": np.array(0),
+        "polarization_id": np.array(0),
+        "polarization_index": np.array(0),
+        "correlation_type": np.array(9),
+        "frequency_reference_code": np.array(1),
+        "frequency_frame": np.array("LSRK"),
+        "visibility_unit": np.array("Jy"),
+        "weight_convention": np.array("2_times_ms_weight_equals_2_over_sigma_squared"),
+        "history_json": np.array('{"available": true}'),
+        "smoothing_history_json": np.array("{}"),
+        "extraction_json": np.array(
+            '{"source_row_identity_preserved": true, '
+            '"row_averaging": "none", "channel_averaging": "none"}'
+        ),
+    }
+
+
+def test_loads_fold_safe_ms2kinuv_v2_contract(tmp_path):
+    path = tmp_path / "provenance.npz"
+    np.savez(path, **_v2_payload())
+    table = load_visibility_table(path)
+    require_s2_provenance(table)
+    assert table.fold_safe
+    np.testing.assert_array_equal(table.scan_number, [1, 1, 2])
+    np.testing.assert_array_equal(table.antenna1, [0, 0, 1])
+    assert table.frequency_frame == "LSRK"
+    assert table.extraction["row_averaging"] == "none"
+
+
+def test_v2_missing_group_metadata_fails_closed(tmp_path):
+    path = tmp_path / "incomplete.npz"
+    payload = _v2_payload()
+    payload.pop("scan_number")
+    np.savez(path, **payload)
+    with np.testing.assert_raises_regex(KeyError, "scan_number"):
+        load_visibility_table(path)
 
 
 def test_rejects_unknown_ms2kinuv_schema(tmp_path):

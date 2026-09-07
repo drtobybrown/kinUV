@@ -8,6 +8,11 @@ from .rotation import (
     RotationTestMetrics,
     rotation_test_metrics,
 )
+from .groups import (
+    GroupedVisibilityFolds,
+    VisibilityGroup,
+    build_grouped_visibility_folds,
+)
 
 __all__ = [
     "MIN_NONROT_BOOTSTRAP_TRIALS",
@@ -16,4 +21,7 @@ __all__ = [
     "ROTATION_GATE_ID",
     "RotationTestMetrics",
     "rotation_test_metrics",
+    "GroupedVisibilityFolds",
+    "VisibilityGroup",
+    "build_grouped_visibility_folds",
 ]

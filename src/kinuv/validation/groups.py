@@ -1,0 +1,165 @@
+"""Correlation-aware native-row groups for held-out visibility validation."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import numpy as np
+
+from kinuv.io.vis import NativeVisTable, require_s2_provenance
+
+
+@dataclass(frozen=True)
+class VisibilityGroup:
+    """One indivisible observation/scan block spanning all baselines."""
+
+    group_id: int
+    fold_id: int
+    observation_id: int
+    array_id: int
+    scan_number: int
+    state_id: int
+    field_id: int
+    data_desc_id: int
+    start_time_s: float
+    end_time_s: float
+    n_rows: int
+    n_baselines: int
+
+
+@dataclass(frozen=True)
+class GroupedVisibilityFolds:
+    """Native-row fold assignment with optional time-boundary embargo."""
+
+    row_group_id: np.ndarray
+    row_fold_id: np.ndarray
+    groups: tuple[VisibilityGroup, ...]
+    n_folds: int
+
+    def validation_mask(self, fold_id: int) -> np.ndarray:
+        self._check_fold(fold_id)
+        return self.row_fold_id == int(fold_id)
+
+    def training_mask(self, fold_id: int, *, embargo_s: float = 0.0) -> np.ndarray:
+        """Exclude the validation fold and rows within its time embargo."""
+        self._check_fold(fold_id)
+        if embargo_s < 0.0:
+            raise ValueError("embargo_s must be nonnegative")
+        validation = [group for group in self.groups if group.fold_id == fold_id]
+        keep_group = np.ones(len(self.groups), dtype=bool)
+        for candidate in self.groups:
+            if candidate.fold_id == fold_id:
+                keep_group[candidate.group_id] = False
+                continue
+            for held_out in validation:
+                same_stratum = (
+                    candidate.observation_id == held_out.observation_id
+                    and candidate.array_id == held_out.array_id
+                    and candidate.field_id == held_out.field_id
+                    and candidate.data_desc_id == held_out.data_desc_id
+                )
+                if not same_stratum:
+                    continue
+                separated = (
+                    candidate.end_time_s < held_out.start_time_s - embargo_s
+                    or candidate.start_time_s > held_out.end_time_s + embargo_s
+                )
+                if not separated:
+                    keep_group[candidate.group_id] = False
+                    break
+        return keep_group[self.row_group_id]
+
+    def _check_fold(self, fold_id: int) -> None:
+        if not 0 <= int(fold_id) < self.n_folds:
+            raise ValueError(f"fold_id must be in 0..{self.n_folds - 1}")
+
+
+def build_grouped_visibility_folds(
+    table: NativeVisTable, *, n_folds: int = 5
+) -> GroupedVisibilityFolds:
+    """Assign complete scan blocks to contiguous, approximately balanced folds.
+
+    The indivisible key uses only standard Measurement Set identities. Antenna
+    pair is deliberately excluded so every baseline observed within a scan
+    stays in the same fold. Assignment happens on native rows before any time,
+    uv, or channel aggregation.
+    """
+    require_s2_provenance(table)
+    if n_folds < 2:
+        raise ValueError("n_folds must be at least two")
+    keys = np.column_stack(
+        [
+            table.observation_id,
+            table.array_id,
+            table.scan_number,
+            table.state_id,
+            table.field_id,
+            table.data_desc_id,
+        ]
+    ).astype(np.int64, copy=False)
+    unique_keys, inverse = np.unique(keys, axis=0, return_inverse=True)
+    n_group = unique_keys.shape[0]
+    if n_group < n_folds:
+        raise ValueError(
+            f"need at least {n_folds} independent scan groups; found {n_group}"
+        )
+
+    starts = np.empty(n_group, dtype=np.float64)
+    ends = np.empty(n_group, dtype=np.float64)
+    counts = np.bincount(inverse, minlength=n_group).astype(np.int64)
+    n_baselines = np.empty(n_group, dtype=np.int64)
+    for group_id in range(n_group):
+        rows = inverse == group_id
+        starts[group_id] = float(np.min(table.time_centroid[rows] - table.interval[rows] / 2.0))
+        ends[group_id] = float(np.max(table.time_centroid[rows] + table.interval[rows] / 2.0))
+        pairs = np.column_stack([table.antenna1[rows], table.antenna2[rows]])
+        n_baselines[group_id] = np.unique(pairs, axis=0).shape[0]
+
+    order = np.lexsort(
+        (
+            unique_keys[:, 2],
+            starts,
+            unique_keys[:, 1],
+            unique_keys[:, 0],
+        )
+    )
+    cumulative = np.cumsum(counts[order], dtype=np.int64)
+    boundaries = np.linspace(0, int(cumulative[-1]), n_folds + 1)[1:-1]
+    fold_ordered = np.searchsorted(boundaries, cumulative, side="left")
+    # A large scan can cross more than one ideal boundary. Preserve the scan
+    # and guarantee that every fold receives at least one complete group.
+    fold_ordered = np.maximum.accumulate(fold_ordered)
+    for fold_id in range(n_folds):
+        if not np.any(fold_ordered == fold_id):
+            split = np.array_split(np.arange(n_group), n_folds)
+            fold_ordered = np.empty(n_group, dtype=np.int64)
+            for assigned_fold, positions in enumerate(split):
+                fold_ordered[positions] = assigned_fold
+            break
+    group_fold = np.empty(n_group, dtype=np.int64)
+    group_fold[order] = fold_ordered
+    row_fold = group_fold[inverse]
+
+    groups = tuple(
+        VisibilityGroup(
+            group_id=group_id,
+            fold_id=int(group_fold[group_id]),
+            observation_id=int(unique_keys[group_id, 0]),
+            array_id=int(unique_keys[group_id, 1]),
+            scan_number=int(unique_keys[group_id, 2]),
+            state_id=int(unique_keys[group_id, 3]),
+            field_id=int(unique_keys[group_id, 4]),
+            data_desc_id=int(unique_keys[group_id, 5]),
+            start_time_s=float(starts[group_id]),
+            end_time_s=float(ends[group_id]),
+            n_rows=int(counts[group_id]),
+            n_baselines=int(n_baselines[group_id]),
+        )
+        for group_id in range(n_group)
+    )
+    return GroupedVisibilityFolds(
+        row_group_id=inverse.astype(np.int64, copy=False),
+        row_fold_id=row_fold,
+        groups=groups,
+        n_folds=int(n_folds),
+    )

@@ -12,6 +12,7 @@ window to radio so the same sky frequencies are selected.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,38 @@ N_GUARD = 1
 NATIVE_N_ROW = 43240
 NATIVE_N_CHAN = 1920
 MS2KINUV_SCHEMA_VERSION = "ms2kinuv-npz-v1"
+MS2KINUV_PROVENANCE_SCHEMA_VERSION = "ms2kinuv-npz-v2"
+
+MS2KINUV_V2_KEYS = (
+    "uvw_m",
+    "row_id",
+    "antenna1",
+    "antenna2",
+    "scan_number",
+    "observation_id",
+    "array_id",
+    "state_id",
+    "field_id",
+    "data_desc_id",
+    "time_centroid",
+    "interval",
+    "flags",
+    "channel_width_hz",
+    "channel_edges_hz",
+    "spectral_window_id",
+    "polarization_id",
+    "polarization_index",
+    "correlation_type",
+    "frequency_reference_code",
+    "frequency_frame",
+    "visibility_unit",
+    "weight_convention",
+    "history_json",
+    "smoothing_history_json",
+    "extraction_json",
+    "source_row_id",
+    "aggregation_coefficients",
+)
 
 
 @dataclass
@@ -77,6 +110,57 @@ class NativeVisTable:
     phase_dir_rad: np.ndarray | None
     schema: str
     uv_ref_hz: float | None
+    uvw_m: np.ndarray | None = None
+    row_id: np.ndarray | None = None
+    antenna1: np.ndarray | None = None
+    antenna2: np.ndarray | None = None
+    scan_number: np.ndarray | None = None
+    observation_id: np.ndarray | None = None
+    array_id: np.ndarray | None = None
+    state_id: np.ndarray | None = None
+    field_id: np.ndarray | None = None
+    data_desc_id: np.ndarray | None = None
+    time_centroid: np.ndarray | None = None
+    interval: np.ndarray | None = None
+    flags: np.ndarray | None = None
+    channel_width_hz: np.ndarray | None = None
+    channel_edges_hz: np.ndarray | None = None
+    spectral_window_id: int | None = None
+    polarization_id: int | None = None
+    polarization_index: int | None = None
+    correlation_type: int | None = None
+    frequency_reference_code: int | None = None
+    frequency_frame: str | None = None
+    visibility_unit: str | None = None
+    weight_convention: str | None = None
+    history: dict | None = None
+    smoothing_history: dict | None = None
+    extraction: dict | None = None
+    source_row_id: np.ndarray | None = None
+    aggregation_coefficients: np.ndarray | None = None
+
+    @property
+    def fold_safe(self) -> bool:
+        """Whether the table carries the complete native S2 grouping contract."""
+        return self.schema == MS2KINUV_PROVENANCE_SCHEMA_VERSION
+
+
+def require_s2_provenance(table: NativeVisTable) -> None:
+    """Fail closed unless an unaveraged, grouping-complete v2 export is loaded."""
+    if not table.fold_safe:
+        raise ValueError(
+            "S2 requires an ms2kinuv-npz-v2 export with native row provenance"
+        )
+    if table.extraction.get("source_row_identity_preserved") is not True:
+        raise ValueError("S2 requires preserved Measurement Set row identity")
+    if table.extraction.get("row_averaging") != "none":
+        raise ValueError("S2 folds must be assigned before row averaging")
+    if table.extraction.get("channel_averaging") != "none":
+        raise ValueError("S2 folds must be assigned before channel averaging")
+    if not str(table.visibility_unit).lower().startswith("jy"):
+        raise ValueError("S2 requires calibrated visibility flux density in Jy")
+    if not str(table.weight_convention).startswith("2_"):
+        raise ValueError("S2 requires the declared w=2/sigma^2 convention")
 
 
 def load_visibility_table(path) -> NativeVisTable:
@@ -93,18 +177,17 @@ def load_visibility_table(path) -> NativeVisTable:
         if "u_m" in z.files and "v_m" in z.files:
             if "schema_version" in z.files:
                 version = str(np.asarray(z["schema_version"]).item())
-                if version != MS2KINUV_SCHEMA_VERSION:
+                if version not in (
+                    MS2KINUV_SCHEMA_VERSION,
+                    MS2KINUV_PROVENANCE_SCHEMA_VERSION,
+                ):
                     raise ValueError(
                         f"{npz_path}: unsupported schema_version {version!r}; "
-                        f"expected {MS2KINUV_SCHEMA_VERSION!r}"
+                        "expected an ms2kinuv v1 or v2 schema"
                     )
             u_m = np.asarray(z["u_m"], dtype=np.float64)
             v_m = np.asarray(z["v_m"], dtype=np.float64)
-            schema = (
-                MS2KINUV_SCHEMA_VERSION
-                if "schema_version" in z.files
-                else "unversioned-metres"
-            )
+            schema = version if "schema_version" in z.files else "unversioned-metres"
             uv_ref_hz = None
         elif "u" in z.files and "v" in z.files:
             uv_ref_hz = float(np.mean(freqs))
@@ -131,6 +214,49 @@ def load_visibility_table(path) -> NativeVisTable:
             if "phase_dir_rad" in z.files
             else None
         )
+        provenance = {}
+        if schema == MS2KINUV_PROVENANCE_SCHEMA_VERSION:
+            missing_v2 = [key for key in MS2KINUV_V2_KEYS if key not in z.files]
+            if missing_v2:
+                raise KeyError(f"{npz_path} missing v2 provenance keys {missing_v2}")
+            row_int = (
+                "row_id",
+                "antenna1",
+                "antenna2",
+                "scan_number",
+                "observation_id",
+                "array_id",
+                "state_id",
+                "field_id",
+                "data_desc_id",
+                "source_row_id",
+            )
+            for key in row_int:
+                provenance[key] = np.asarray(z[key], dtype=np.int64).ravel()
+            for key in ("time_centroid", "interval", "aggregation_coefficients"):
+                provenance[key] = np.asarray(z[key], dtype=np.float64).ravel()
+            provenance.update(
+                uvw_m=np.asarray(z["uvw_m"], dtype=np.float64),
+                flags=np.asarray(z["flags"], dtype=bool),
+                channel_width_hz=np.asarray(z["channel_width_hz"], dtype=np.float64),
+                channel_edges_hz=np.asarray(z["channel_edges_hz"], dtype=np.float64),
+            )
+            for key in (
+                "spectral_window_id",
+                "polarization_id",
+                "polarization_index",
+                "correlation_type",
+                "frequency_reference_code",
+            ):
+                provenance[key] = int(np.asarray(z[key]).item())
+            for key in ("frequency_frame", "visibility_unit", "weight_convention"):
+                provenance[key] = str(np.asarray(z[key]).item())
+            for key, output_key in (
+                ("history_json", "history"),
+                ("smoothing_history_json", "smoothing_history"),
+                ("extraction_json", "extraction"),
+            ):
+                provenance[output_key] = json.loads(str(np.asarray(z[key]).item()))
     n_row, n_chan = vis.shape
     if weights.shape != vis.shape:
         raise ValueError(f"weights shape {weights.shape} != vis shape {vis.shape}")
@@ -140,6 +266,56 @@ def load_visibility_table(path) -> NativeVisTable:
         raise ValueError("freqs must have one value per visibility channel")
     if (time is None) != (baseline is None):
         raise ValueError("time and baseline metadata must be present together")
+    if schema == MS2KINUV_PROVENANCE_SCHEMA_VERSION:
+        for key in (
+            "row_id",
+            "antenna1",
+            "antenna2",
+            "scan_number",
+            "observation_id",
+            "array_id",
+            "state_id",
+            "field_id",
+            "data_desc_id",
+            "time_centroid",
+            "interval",
+            "source_row_id",
+            "aggregation_coefficients",
+        ):
+            if provenance[key].shape != (n_row,):
+                raise ValueError(f"{key} must have one value per visibility row")
+        if provenance["uvw_m"].shape != (n_row, 3):
+            raise ValueError("uvw_m must have shape (n_row, 3)")
+        if provenance["flags"].shape != vis.shape:
+            raise ValueError("flags must match the visibility array")
+        if provenance["channel_width_hz"].shape != (n_chan,):
+            raise ValueError("channel_width_hz must match freqs")
+        if provenance["channel_edges_hz"].shape != (n_chan, 2):
+            raise ValueError("channel_edges_hz must have shape (n_chan, 2)")
+        if np.any(weights[provenance["flags"]] != 0.0):
+            raise ValueError("flagged cells must have zero weight")
+        if not np.all(np.isfinite(weights)) or np.any(weights < 0.0):
+            raise ValueError("weights must be finite and nonnegative")
+        if not np.array_equal(
+            provenance["uvw_m"][:, 0].astype(np.float32), u_m.astype(np.float32)
+        ) or not np.array_equal(
+            provenance["uvw_m"][:, 1].astype(np.float32), v_m.astype(np.float32)
+        ):
+            raise ValueError("u_m/v_m disagree with uvw_m")
+        expected_baseline = (
+            provenance["antenna1"] << np.int64(32)
+        ) | provenance["antenna2"]
+        if not np.array_equal(baseline, expected_baseline):
+            raise ValueError("baseline encoding disagrees with antenna pair")
+        if np.any(provenance["channel_width_hz"] <= 0.0):
+            raise ValueError("channel widths must be positive")
+        edges = provenance["channel_edges_hz"]
+        if np.any(edges[:, 0] >= freqs) or np.any(edges[:, 1] <= freqs):
+            raise ValueError("each channel centre must lie within ordered edges")
+        if not np.array_equal(provenance["row_id"], provenance["source_row_id"]):
+            raise ValueError("unaveraged v2 export must preserve source row identity")
+        if not np.all(provenance["aggregation_coefficients"] == 1.0):
+            raise ValueError("unaveraged v2 export must have unit coefficients")
     return NativeVisTable(
         u_m=u_m,
         v_m=v_m,
@@ -151,6 +327,7 @@ def load_visibility_table(path) -> NativeVisTable:
         phase_dir_rad=phase_dir,
         schema=schema,
         uv_ref_hz=uv_ref_hz,
+        **provenance,
     )
 
 
