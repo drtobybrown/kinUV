@@ -188,8 +188,17 @@ def _write_rotation_curve(destination: Path, stage_a: dict, stage_b: dict, selec
     return {"selected": selected, "radius_max_arcsec": rmax}
 
 
-def _historical_posterior_reference(source: Path, destination: Path) -> dict:
+def _historical_posterior_reference(source: Path | None, destination: Path) -> dict:
     """Record old draws without presenting them as samples of this likelihood."""
+    if source is None:
+        result = {
+            "status": "no_current_posterior", "source": None,
+            "current_posterior_available": False,
+            "current_rhat": None, "current_ess": None,
+            "note": "Historical posterior archives are documented in PRODUCTION_RECORD.md.",
+        }
+        destination.write_text(json.dumps(result, indent=2) + "\n")
+        return result
     required = ("posterior_samples.json", "summary.json", "METRICS.md", "config.yaml")
     for name in required:
         src = source / name
@@ -405,7 +414,8 @@ def main(argv=None) -> int:
     )
     shutil.copy2(config["kinms"]["result"], benchmark_dir / "kinms_fit_result.json")
     posterior = _historical_posterior_reference(
-        Path(config["retained_posterior"]), output / "historical_posterior_reference.json"
+        Path(config["retained_posterior"]) if config.get("retained_posterior") else None,
+        output / "historical_posterior_reference.json"
     )
 
     gates = {
