@@ -1022,13 +1022,17 @@ def benchmark_pv_figure(
         cax=figure.add_subplot(grid[2, :3]),
         orientation="horizontal",
     )
-    cbar(
+    residual_bar = cbar(
         figure,
         residual_artist,
         r"$\Delta T_{\rm B}\ (\mathrm{K})$",
         cax=figure.add_subplot(grid[2, 3:]),
         orientation="horizontal",
     )
+    # The residual colourbar spans only two of five columns.  Keep its tick
+    # labels legible at ApJ two-column width, including low-amplitude targets.
+    residual_bar.locator = MaxNLocator(nbins=3, symmetric=True)
+    residual_bar.update_ticks()
     figure.suptitle(f"{target_id}: matched PVD comparison", y=0.975)
     figure.supxlabel(r"Offset (arcsec; receding $+$)", y=0.018)
     return save_pair(figure, output_dir, "pvd_kinuv_vs_kinms")
