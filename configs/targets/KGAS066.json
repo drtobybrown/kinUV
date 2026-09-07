@@ -36,7 +36,7 @@
     "emissivity_basis_rank": 3,
     "projected_velocity_knot_count": 4,
     "projected_velocity_gain_min_chi2": 10.0,
-    "maxiter": 120
+    "maxiter": 200
   },
   "stage_a": {
     "maxiter": 80,

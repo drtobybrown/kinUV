@@ -176,6 +176,7 @@ def run_target(config_path, s2_summary_path, covariance_metrics, output, maxiter
         "n_row": int(data.vis.shape[0]),
         "n_channel": int(data.vis.shape[1]),
         "n_complex": int(data.vis.size),
+        "maxiter": int(maxiter),
         "bmaj_arcsec": bmaj,
         "emissivity_basis": {
             "rank": 3,
@@ -306,7 +307,7 @@ def main():
     parser.add_argument("--s2-summary", action="append", type=Path, required=True)
     parser.add_argument("--covariance-metrics", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--maxiter", type=int, default=120)
+    parser.add_argument("--maxiter", type=int, default=200)
     args = parser.parse_args()
     if len(args.target_config) != len(args.s2_summary):
         raise ValueError("one S2 summary is required for each target config")
