@@ -9,6 +9,8 @@ campaign_id: crossdomain-recovery-s4-scientific-recovery
 proposal: docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md
 reviewed_commit: f0d3067562e3b65b07a6a748ad869ea6656f9c0e
 reviewed_range: 3462efd05481aa8ae4c51d8e21c5cc5badf505c2..17dc9d7b576b2fede281a935d3b69a23e6d25fa8
+rereviewed_commit: f2f6a22b6749f46da70e55f57e599f919190c9f8
+status_packet_commit: 879a04b896df6a22b72437e98bb937385b0a9e68
 verdict: accept
 ---
 # Independent code review A: cross-domain S4 scientific recovery
@@ -123,3 +125,38 @@ non-regression guard. The evidence is checksum-bound and the physical claim
 is appropriately restricted. S4 may close after the independent software and
 reproducibility seat also accepts; S5 may seal this evidence without expanding
 the scientific claim or launching an unlicensed sampler campaign.
+
+## Authentication revision re-review
+
+I re-reviewed the corrected scientific implementation and regenerated evidence
+at exact clean commit
+`f2f6a22b6749f46da70e55f57e599f919190c9f8`, together with the status and
+review packet at `879a04b896df6a22b72437e98bb937385b0a9e68`.
+
+The correction closes the checkpoint-provenance defect without changing the
+science. A retained KinMS fit is now reusable only when its saved configuration
+exactly matches the current configuration, including runner commit,
+realization seed, mock-cube hash, mask hash, truth-cube hash, and worker hash.
+Because the previous configurations lacked these fields, the corrected runner
+necessarily removed and regenerated all six fit directories. Both target
+summaries now also bind the covariance metrics, visibility table, diagnostic
+cube, mask, error map, target configuration, runner, and worker by path and
+SHA-256. I independently matched every recorded source digest to the current
+file and verified all six per-realization provenance records. The grouped
+bootstrap seed is explicitly recorded as `4404`.
+
+The final dossier manifest identifies `f2f6a22`, contains 50 entries, and
+passes complete byte-count and SHA-256 verification. Its nested synthetic
+manifest identifies the same commit and all 49 entries verify. The regenerated
+science values are exactly equal to those reviewed above: projected-speed RMSE
+ratios remain `0.01180266879454277` for KGAS066 and
+`0.04569431293329279` for KGAS007; real held-out gains remain
+`0.04265073718804183` and `0.00456082894209484` chi-square per real
+component, with lower bounds `0.03178592352114772` and
+`0.0029030375555849555`. Every individual recovery ratio and optimizer status
+also remains unchanged. The `f2f6a22..879a04b` diff contains only status and
+review-packet documentation, so it does not alter those metrics.
+
+**Final re-review verdict: Accept.** The authenticated rerun preserves the
+previous scientific conclusion and removes the stale-checkpoint ambiguity.
+The claim limits in this review remain binding.
