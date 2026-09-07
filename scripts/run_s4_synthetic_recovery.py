@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
@@ -140,16 +141,19 @@ def profile_rmse(truth: dict, fitted: dict, radius: np.ndarray, weight: np.ndarr
     return float(np.sqrt(np.sum(weight * residual**2) / np.sum(weight)))
 
 
-def _kinms_fit(config: dict, cube: Path, mask: Path, truth_cube: Path, work: Path) -> dict:
+def _kinms_fit(
+    config: dict,
+    cube: Path,
+    mask: Path,
+    truth_cube: Path,
+    work: Path,
+    *,
+    realization_seed: int,
+) -> dict:
     cube = cube.resolve()
     mask = mask.resolve()
     truth_cube = truth_cube.resolve()
     work = work.resolve()
-    retained = work / "kinms_fit_result.json"
-    if retained.is_file():
-        result = json.loads(retained.read_text(encoding="utf-8"))
-        if result.get("success"):
-            return result
     correction = float(config["spectral_frame"]["frequency_correction_equivalent_kms"])
     truth = config["_truth"]
     vsys_lsrk = float(topo_radio_to_lsrk_radio(truth["vsys_kms"], correction))
@@ -183,9 +187,25 @@ def _kinms_fit(config: dict, cube: Path, mask: Path, truth_cube: Path, work: Pat
         "phase_center": [0.0, 0.0],
         "sb_pa_deg": truth["pa_deg"],
         "sb_inc_deg": truth["inclination_deg"],
+        "provenance": {
+            "runner_commit": _git_state()["commit"],
+            "realization_seed": int(realization_seed),
+            "cube_sha256": _sha256(cube),
+            "mask_sha256": _sha256(mask),
+            "truth_cube_sha256": _sha256(truth_cube),
+            "worker_sha256": _sha256(KINMS_WORKER),
+        },
     }
-    work.mkdir(parents=True, exist_ok=True)
+    retained = work / "kinms_fit_result.json"
     config_path = work / "fit_config.json"
+    if retained.is_file() and config_path.is_file():
+        retained_config = json.loads(config_path.read_text(encoding="utf-8"))
+        result = json.loads(retained.read_text(encoding="utf-8"))
+        if retained_config == worker_config and result.get("success"):
+            return result
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True, exist_ok=True)
     _write_json(config_path, worker_config)
     process = subprocess.run(
         [str(KINMS_PYTHON), str(KINMS_WORKER), str(config_path)],
@@ -206,7 +226,12 @@ def _kinms_fit(config: dict, cube: Path, mask: Path, truth_cube: Path, work: Pat
     return result
 
 
-def run_target(config_path: Path, covariance_metrics: dict, output: Path) -> dict:
+def run_target(
+    config_path: Path,
+    covariance_metrics: dict,
+    covariance_path: Path,
+    output: Path,
+) -> dict:
     config = json.loads(config_path.read_text(encoding="utf-8"))
     target_id = config["target_id"]
     target_dir = output / target_id
@@ -329,6 +354,7 @@ def run_target(config_path: Path, covariance_metrics: dict, output: Path) -> dic
             mask_path,
             truth_path,
             realization_dir / "kinms",
+            realization_seed=seed,
         )
         kinuv_parameters = dict(kinuv_fit["parameters"])
         kinuv_rmse = profile_rmse(truth, kinuv_parameters, radius, radial_weight)
@@ -370,6 +396,16 @@ def run_target(config_path: Path, covariance_metrics: dict, output: Path) -> dic
             "profile_radius_arcsec": radius.tolist(),
         },
         "load": load,
+        "inputs": {
+            "target_config": {"path": str(config_path.resolve()), "sha256": _sha256(config_path)},
+            "covariance_metrics": {"path": str(covariance_path.resolve()), "sha256": _sha256(covariance_path)},
+            "visibility_npz": {"path": str(Path(config["visibility_npz"]).resolve()), "sha256": _sha256(Path(config["visibility_npz"]))},
+            "diagnostic_cube": {"path": str(Path(config["diagnostic_cube"]).resolve()), "sha256": _sha256(Path(config["diagnostic_cube"]))},
+            "diagnostic_mask": {"path": str(Path(config["diagnostic_mask"]).resolve()), "sha256": _sha256(Path(config["diagnostic_mask"]))},
+            "diagnostic_ico_error": {"path": str(Path(config["diagnostic_ico_error"]).resolve()), "sha256": _sha256(Path(config["diagnostic_ico_error"]))},
+            "runner": {"path": str(Path(__file__).resolve()), "sha256": _sha256(Path(__file__))},
+            "kinms_worker": {"path": str(KINMS_WORKER.resolve()), "sha256": _sha256(KINMS_WORKER)},
+        },
         "realizations": realizations,
         "aggregate": {
             "kinuv_rms_rmse_kms": float(np.sqrt(np.mean(kinuv_all**2))),
@@ -402,7 +438,10 @@ def main() -> int:
         raise FileExistsError(args.output)
     args.output.mkdir(parents=True, exist_ok=args.resume)
     covariance = json.loads(args.covariance_metrics.read_text(encoding="utf-8"))
-    targets = [run_target(path, covariance, args.output) for path in args.target_config]
+    targets = [
+        run_target(path, covariance, args.covariance_metrics, args.output)
+        for path in args.target_config
+    ]
     accepted = all(row["gate"]["passed"] for row in targets)
     summary = {
         "schema_version": "kinuv-s4-python-truth-summary-v1",

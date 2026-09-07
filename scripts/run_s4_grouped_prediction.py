@@ -311,6 +311,7 @@ def _bootstrap_delta(fold_rows, seed=4404, draws=20000):
         "lower_95_percent": float(np.quantile(samples, 0.025)),
         "upper_95_percent": float(np.quantile(samples, 0.975)),
         "bootstrap_draws": draws,
+        "bootstrap_seed": int(seed),
         "resampling_unit": "native-row time-block fold",
     }
 

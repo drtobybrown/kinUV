@@ -113,6 +113,7 @@ def test_grouped_prediction_bootstrap_and_frame_round_trip():
     result = module._bootstrap_delta(rows, seed=2, draws=2000)
     assert result["delta_chi2_per_real_component"] == pytest.approx(0.5)
     assert result["lower_95_percent"] > 0.0
+    assert result["bootstrap_seed"] == 2
 
     correction = 10.9850680313608
     vopt_lsrk = 8300.0
@@ -157,3 +158,5 @@ def test_synthetic_s4_profile_metric_and_casa_boundary():
     source = path.read_text(encoding="utf-8")
     assert "casatasks" not in source
     assert '"casa_used": False' in source
+    assert '"cube_sha256": _sha256(cube)' in source
+    assert "retained_config == worker_config" in source
