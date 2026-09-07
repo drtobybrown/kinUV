@@ -1616,7 +1616,7 @@ def recovery_target_products(config_path, source_root, output_root, synthetic_ro
 
 The selected `{fit['candidate']}` checkpoint is a new four-start bounded joint visibility MAP fit initialized from the S4-sealed smooth-emissivity model. The accepted emissivity weights were held fixed while the active projected kinematics, geometry, centering, flux, and supported dispersion coordinates were optimized. Rendering performed no additional fit, parameter tuning, synthetic refit, or synthetic rescore. All direct and comparator plots use the selected MAP parameters and its matched cube. Celestial east increases RA; slit PA is east of north. All three cubes share each selected-fit diagnostic slit and aperture.
 
-Visibility likelihood is primary. Restored science cubes are supporting diagnostics, not ground truth; cleaner image residuals do not establish more accurate intrinsic kinematics. The measured synthetic turnover-error ratio 0.02493 and inner-velocity RMSE ratio 0.01438 for KGAS066 apply to the registered axisymmetric arctan test family, not arbitrary real galaxies.
+Visibility likelihood is primary. Restored science cubes are supporting diagnostics, not ground truth; cleaner image residuals do not establish more accurate intrinsic kinematics. The target-specific synthetic ratios below apply to the registered axisymmetric arctan test family, not arbitrary real galaxies.
 
 For this target the registered synthetic turnover-error ratio is {turnover_ratio:.5f} and the inner-beam projected-velocity RMSE ratio is {inner_ratio:.5f}. These are retained mock results, not measurements of the real target.
 
