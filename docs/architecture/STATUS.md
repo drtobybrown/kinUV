@@ -1,68 +1,52 @@
 ---
-generation: 26
-phase: s4-scientific-recovery-licensed
-code_freeze: false
-next_role: implementer-sol
+generation: 27
+phase: s4-recovery-dual-review
+code_freeze: true
+next_role: review-board
 board: crossdomain-recovery-s4-scientific-recovery
-build_licensed: true
+build_licensed: false
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
-  - s4-diagnostic-accounting-repair
-  - s4-joint-morphology-and-predictive-selection
-  - s4-paired-truth-and-held-out-validation
+  - s4-dual-review
   - exact-workflow-posterior-calibration
-last_propose: docs/decisions/DEC-KINUV-S4-SCIENTIFIC-RECOVERY.md
+last_propose: docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md
 last_review: docs/reviews/2026-09-07-code-review-b-crossdomain-s4.md
 last_review_a: docs/reviews/2026-09-07-code-review-a-crossdomain-s4.md
 last_review_b: docs/reviews/2026-09-07-code-review-b-crossdomain-s4.md
 user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
-  - How much of the historical diagnostic discrepancy survives corrected WCS, PB, and spectral accounting?
-  - Does joint smooth brightness inference improve held-out u(r) prediction without unsupported geometry or outer-flux constraints?
+  - Will both independent reviewers accept the final S4 evidence and standard-use comparator contract?
 deadlocks: []
-canon_generation: 26
+canon_generation: 27
 ---
 
 ## Agent Run Status
 
-* **Phase:** S0--S3 retain their historical closure; S4 recovery is licensed under Astra's new scientific contract; S5 has not started
-* **Last Action:** Astra audited the retained S3/S4 evidence and issued `DEC-KINUV-S4-SCIENTIFIC-RECOVERY` under the PI's explicit request to redefine the scientific benchmark and unblock Sol
-* **Decisions Made:** The likelihood stays on native TOPO frequencies; the measured TOPO-to-LSRK drift is 0.037 km/s for KGAS066 and 0.064 km/s for KGAS007, below the PI-authorized 1.0 km/s reporting gate. The PI override in `DEC-HUMAN-OVERRIDE-RIGHTSIZED-GATES` replaces universal multi-start identity with consensus in the top likelihood cluster.
-* **Blockers / Gates:** The r3 record remains failed. Fresh S4 promotion requires at least 10 percent better known-truth projected-velocity recovery plus improved real held-out visibility prediction for each target, with the uncertainty and non-regression guards in the new decision. Historical moment-1 and scalar cube scores remain diagnostics. S5 stays gated on fresh evidence.
-* **Next Step:** Sol executes Step A: repair WCS/PB/spectral comparison accounting and score all retained S3 ancestors before fitting new physics. Sol then owns joint morphology remediation, predictive selection, execution, and independent review under Steps B-D.
+* **Phase:** S0--S3 remain closed. S4 implementation and empirical gates are complete at `f0d3067`; the checksum-bound final dossier awaits independent Reviewer A and Reviewer B verdicts. S5 remains frozen until dual acceptance.
+* **Last Action:** Sol terminated the CASA reimaging track under direct PI authority, removed its four scratch environments and three repository logs, codified `DEC-PI-S4-STANDARD-USE-BENCHMARK`, and completed the Python-native paired truth suite.
+* **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
+* **Gates:** Every grouped visibility fold favors kinUV. Aggregate lower 95 percent gains are +0.03178592 chi-square/component for KGAS066 and +0.00290304 for KGAS007. Synthetic projected-velocity RMSE ratios are 0.01180 and 0.04569, respectively, against the required maximum 0.90. KGAS066 therefore satisfies the non-regression guard.
+* **Verification:** All 50 final dossier files (69,145,565 bytes) and their source manifests verify. The deterministic/architecture suite passes with 263 tests and 5 skips; the separately known unstable NUTS smoke module was not run because no sampler campaign is licensed.
+* **Next Step:** Reviewer A audits science and numerical validity; Reviewer B audits software and reproducibility. Dual acceptance closes S4 and unfreezes S5 sealing.
 
-## Astra's diagnostic and recovery directive
+## S4 scientific recovery submitted for review
 
-The binding handoff is
-[`DEC-KINUV-S4-SCIENTIFIC-RECOVERY`](../decisions/DEC-KINUV-S4-SCIENTIFIC-RECOVERY.md).
-This is a prospective scientific-contract change authorized by the current PI
-directive, not a retroactive pass for `5d08507` or a waiver of the 10 percent
-recovery objective. The code freeze is lifted only for the specified recovery.
+The binding PI correction is
+[`DEC-PI-S4-STANDARD-USE-BENCHMARK`](../decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).
+The final dossier is
+`results/validation/crossdomain-recovery-s4-final-20260907/`; its top-level
+`metrics.json` combines the exact grouped-prediction and synthetic-truth
+records without changing either source dossier. The original grouped summary's
+`promotion_eligible: false` field is explicitly superseded because it encoded
+the now-rejected CASA reimaging prerequisite.
 
-The proposed causal account needs revision: KGAS066 u changes only from
-184.002 to 183.633 km/s across S3, inclination remains near 55.3 deg, outer
-emissivity fraction falls from 0.334 to 0.303, and a dispersion gradient is
-already retained. No common diagnostic replay of every ancestor isolates S3
-flexibility as the cause. The central turnover is sub-beam, while the disk
-itself extends over several beams.
-
-Static inspection exposes a signed-FITS east/west inconsistency in the
-moment-profile extraction, model-dependent profile support, mismatched PB
-attenuation/inversion frequencies, and incomplete proof of spectral-response
-parity. Their quantitative impact awaits Sol's bounded verification. The
-strongest structural hypothesis is bias from fixed Wiener-derived morphology
-and coarse radial reweighting, compounded by training-only model selection.
-The historical 97.75 percent masked flux ratio is not total-flux truth.
-
-The new scientific hierarchy is known-truth u(r) recovery, independent grouped
-visibility prediction, and supporting image/flux diagnostics. Both methods
-must learn templates and fit parameters from training-only information; a
-frozen full-data KinMS fit cannot certify held-out prediction. Intrinsic V_flat
-and R_turn claims require actual radial/geometry identifiability. Sol chooses
-the implementation and coordinates reviews; Astra ran no code or tests for
-this architectural turn. The earlier review links below certify the historical
-failed dossier and are not reviews of the new implementation.
+The repaired replay established that the historical KGAS066 cube score was
+inherited by the baseline and was not caused by S3 kinematic flexibility.
+Smooth positive emissivity improved the visibility fit slightly but did not
+materially change the restored-cube metric. This supports the PI's separation
+of promotion evidence from reconstruction-dependent supporting diagnostics.
+The old r3 failure remains immutable historical evidence.
 
 ## Historical S4 failed-gate evidence
 
