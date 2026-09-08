@@ -246,6 +246,16 @@ Before a production inference campaign, the Registrar records its accepted speci
 
 Long jobs run asynchronously under the configured batch platform. Interactive agents monitor bounded status records and do not block on the sampling loop. A retry receives a new attempt identifier and links to its predecessor.
 
+On CANFAR, production computation runs in headless sessions visible to
+`canfar ps`; a process detached inside an interactive session is not a batch
+job. Prefer flexible sessions without explicit CPU or memory allocation when
+each session fits within 16 CPU and 32 GB RAM. Request fixed resources only for
+a measured requirement above either flexible ceiling. Submit independent
+targets or chains as separate work when this materially reduces wall time, and
+allow the CANFAR queue to schedule up to the site-authorized session limit.
+Keep orchestration and synthesis in headless sessions as well, so closing an
+interactive terminal or session cannot terminate the campaign.
+
 ## 7. Storage tiering
 
 Paths are resolved from deployment configuration. Source code must not embed a user's home directory, target directory, or site-specific project root.
@@ -259,6 +269,12 @@ Paths are resolved from deployment configuration. Source code must not embed a u
 | Archive | Closed legacy or superseded evidence | Verified compressed bundles with checksums and manifests | Durable, read-only |
 
 Write large intermediate arrays to scratch first. Promote a checkpoint by closing it, validating it, copying to a temporary durable path, fsyncing file and directory, verifying size/checksum, and atomically renaming it. Never stream high-volume progress output, JIT caches, or repeatedly rewritten arrays directly to `/arc`.
+
+Each headless session performs compilation, sampling, optimization, rendering,
+and high-frequency logging in its own node-local `/scratch` directory. It copies
+bounded logs and atomic, resume-compatible checkpoints to `/arc` periodically
+and on exit. A status request reads the durable heartbeat and checkpoint record;
+it must not require attaching to the compute process.
 
 On success or failure, preserve the bounded log, status, last valid checkpoint, environment record, and failure reason. Delete scratch only after durable verification. Never copy raw inputs into every run directory.
 

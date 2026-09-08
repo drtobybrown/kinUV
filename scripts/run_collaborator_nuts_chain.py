@@ -128,6 +128,7 @@ def main() -> int:
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--scratch", type=Path, required=True)
     parser.add_argument("--durable", type=Path, required=True)
+    parser.add_argument("--log-dir", type=Path, default=None)
     parser.add_argument("--warmup", type=int, default=1000)
     parser.add_argument("--samples", type=int, default=1000)
     parser.add_argument("--chunk", type=int, default=100)
@@ -139,14 +140,37 @@ def main() -> int:
     durable = args.durable / chain
     scratch.mkdir(parents=True, exist_ok=True)
     durable.mkdir(parents=True, exist_ok=True)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", handlers=[logging.FileHandler(durable / "worker.log"), logging.StreamHandler()])
+    log_dir = args.log_dir or durable
+    log_dir.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", handlers=[logging.FileHandler(log_dir / "worker.log"), logging.StreamHandler()])
     log = logging.getLogger(chain)
     selected, transform, fixed_full, potential = setup_problem(args.selected_map)
     target = selected["target_id"]
     y0 = transform.active_initial_unconstrained(fixed_full)
     rng = np.random.default_rng(args.seed)
     y0 = y0 + 0.01 * rng.standard_normal(y0.shape)
-    state_doc = {"state": "RUNNING", "target": target, "chain_id": args.chain_id, "seed": args.seed, "pid": os.getpid(), "started_utc": utc_now(), "warmup": args.warmup, "samples": args.samples, "completed_warmup": 0, "completed_draws": 0}
+    prior_status_path = durable / "status.json"
+    prior = json.loads(prior_status_path.read_text(encoding="utf-8")) if prior_status_path.is_file() else None
+    compatible_resume = bool(
+        prior
+        and prior.get("target") == target
+        and prior.get("chain_id") == args.chain_id
+        and prior.get("seed") == args.seed
+        and prior.get("warmup") == args.warmup
+        and prior.get("samples") == args.samples
+        and (durable / "sampler_state.pkl").is_file()
+    )
+    if prior and prior.get("state") not in {"SUCCEEDED", "FAILED"} and not compatible_resume:
+        raise RuntimeError("incomplete chain state is not checkpoint-compatible")
+    state_doc = {
+        "state": "RUNNING", "target": target, "chain_id": args.chain_id,
+        "seed": args.seed, "pid": os.getpid(),
+        "started_utc": prior.get("started_utc", utc_now()) if compatible_resume else utc_now(),
+        "warmup": args.warmup, "samples": args.samples,
+        "completed_warmup": int(prior.get("completed_warmup", 0)) if compatible_resume else 0,
+        "completed_draws": int(prior.get("completed_draws", 0)) if compatible_resume else 0,
+        "resumed": compatible_resume,
+    }
     atomic_json(durable / "status.json", state_doc)
     stop = threading.Event()
 
@@ -170,15 +194,23 @@ def main() -> int:
         key = jax.random.PRNGKey(args.seed)
         state_doc["state"] = "WARMUP"
         atomic_json(durable / "status.json", state_doc)
-        sampler_state = kernel.init(
-            key,
-            args.warmup,
-            init_params=jnp.asarray(y0),
-            model_args=(),
-            model_kwargs={},
-        )
+        if compatible_resume:
+            with (durable / "sampler_state.pkl").open("rb") as stream:
+                sampler_state = pickle.load(stream)
+            log.info(
+                "resume target=%s chain=%d warmup=%d draws=%d",
+                target, args.chain_id, state_doc["completed_warmup"], state_doc["completed_draws"],
+            )
+        else:
+            sampler_state = kernel.init(
+                key,
+                args.warmup,
+                init_params=jnp.asarray(y0),
+                model_args=(),
+                model_kwargs={},
+            )
         sample_once = jax.jit(lambda current: kernel.sample(current, (), {}))
-        for warmup_index in range(args.warmup):
+        for warmup_index in range(state_doc["completed_warmup"], args.warmup):
             sampler_state = sample_once(sampler_state)
             completed = warmup_index + 1
             if completed % args.chunk == 0 or completed == args.warmup:
@@ -190,9 +222,14 @@ def main() -> int:
         state_doc["state"] = "SAMPLING"
         draws = []
         extras = {name: [] for name in ("diverging", "num_steps", "accept_prob", "energy")}
+        if compatible_resume and state_doc["completed_draws"]:
+            with np.load(durable / "draws.npz", allow_pickle=False) as archive:
+                draws.append(np.asarray(archive["unconstrained"]))
+                for name in extras:
+                    extras[name].append(np.asarray(archive[name]))
         chunk_draws = []
         chunk_extras = {name: [] for name in extras}
-        for draw_index in range(args.samples):
+        for draw_index in range(state_doc["completed_draws"], args.samples):
             sampler_state = sample_once(sampler_state)
             chunk_draws.append(np.asarray(sampler_state.z, dtype=np.float64))
             chunk_extras["diverging"].append(np.asarray(sampler_state.diverging))

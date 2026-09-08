@@ -30,15 +30,33 @@ def main() -> int:
     parser.add_argument("--posterior-root", type=Path, required=True)
     parser.add_argument("--candidate-root", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
+    parser.add_argument("--controller-status", type=Path, action="append", default=[])
+    parser.add_argument("--status-file", type=Path, default=None)
+    parser.add_argument("--log-file", type=Path, default=None)
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[1]
-    status_path = args.nuts_root.parent / "postprocess_status.json"
-    log_path = args.nuts_root.parent / "postprocess.log"
+    status_path = args.status_file or args.nuts_root.parent / "postprocess_status.json"
+    log_path = args.log_file or args.nuts_root.parent / "postprocess.log"
+    status_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
     state = {"state": "WAITING_FOR_NUTS", "pid": os.getpid(), "started_utc": now()}
     write_status(status_path, state)
     with log_path.open("a", encoding="ascii") as log:
         while True:
-            controller = json.loads((args.nuts_root / "controller_status.json").read_text(encoding="utf-8"))
+            status_paths = args.controller_status or [args.nuts_root / "controller_status.json"]
+            controllers = [json.loads(path.read_text(encoding="utf-8")) for path in status_paths if path.is_file()]
+            if len(controllers) != len(status_paths):
+                controller = {"state": "RUNNING", "completed": [], "active": [], "queued": []}
+            else:
+                states = {item["state"] for item in controllers}
+                controller = {
+                    "state": "FAILED" if "FAILED" in states else "SUCCEEDED" if states == {"SUCCEEDED"} else "RUNNING",
+                    "completed": [row for item in controllers for row in item["completed"]],
+                    "active": [row for item in controllers for row in item["active"]],
+                    "queued": [row for item in controllers for row in item["queued"]],
+                    "target_controller_statuses": [str(path) for path in status_paths],
+                }
+                write_status(args.nuts_root / "controller_status.json", controller)
             log.write(f"{now()} heartbeat state={controller['state']} completed={len(controller['completed'])} active={len(controller['active'])} queued={len(controller['queued'])}\n")
             log.flush()
             if controller["state"] != "RUNNING":

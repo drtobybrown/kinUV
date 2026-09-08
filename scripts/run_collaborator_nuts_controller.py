@@ -59,6 +59,15 @@ def main() -> int:
     parser.add_argument("--scratch-root", type=Path, required=True)
     parser.add_argument("--durable-root", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
+    parser.add_argument(
+        "--targets",
+        nargs="+",
+        choices=("KGAS066", "KGAS007"),
+        default=("KGAS066", "KGAS007"),
+    )
+    parser.add_argument("--status-file", type=Path, default=None)
+    parser.add_argument("--controller-log", type=Path, default=None)
+    parser.add_argument("--worker-log-root", type=Path, default=None)
     parser.add_argument("--max-workers", type=int, default=8)
     parser.add_argument(
         "--cpu-sets",
@@ -70,17 +79,19 @@ def main() -> int:
     if len(cpu_sets) < args.max_workers:
         raise ValueError("cpu-sets must provide one affinity set per worker")
     args.durable_root.mkdir(parents=True, exist_ok=True)
-    controller_log = args.durable_root / "controller.log"
+    controller_log = args.controller_log or args.durable_root / "controller.log"
+    controller_log.parent.mkdir(parents=True, exist_ok=True)
     jobs = []
-    for target_index, target in enumerate(("KGAS066", "KGAS007")):
+    seed_bases = {"KGAS066": 9100, "KGAS007": 9200}
+    for target in args.targets:
         selected = args.map_root / target / "selected_map.json"
         if not selected.is_file():
             raise FileNotFoundError(selected)
         for chain in range(1, 5):
-            jobs.append({"target": target, "chain": chain, "seed": 9100 + 100 * target_index + chain, "selected": selected})
+            jobs.append({"target": target, "chain": chain, "seed": seed_bases[target] + chain, "selected": selected})
     active = {}
     completed = []
-    status_path = args.durable_root / "controller_status.json"
+    status_path = args.status_file or args.durable_root / "controller_status.json"
     queued = []
     for job in jobs:
         worker_status = args.durable_root / job["target"] / f"chain-{job['chain']}" / "status.json"
@@ -118,7 +129,10 @@ def main() -> int:
                 chain = job["chain"]
                 worker_root = args.durable_root / target
                 worker_root.mkdir(parents=True, exist_ok=True)
-                worker_log = (worker_root / f"chain-{chain}.stdout.log").open("ab")
+                stdout_root = args.worker_log_root or worker_root
+                worker_stdout = stdout_root / target / f"chain-{chain}.stdout.log" if args.worker_log_root else stdout_root / f"chain-{chain}.stdout.log"
+                worker_stdout.parent.mkdir(parents=True, exist_ok=True)
+                worker_log = worker_stdout.open("ab")
                 worker_command = [
                     str(args.python), "scripts/run_collaborator_nuts_chain.py",
                     "--selected-map", str(job["selected"]), "--chain-id", str(chain),
@@ -126,6 +140,8 @@ def main() -> int:
                     "--durable", str(worker_root), "--warmup", "1000", "--samples", "1000",
                     "--chunk", "100", "--target-accept", "0.90", "--max-tree-depth", "10",
                 ]
+                if args.worker_log_root:
+                    worker_command.extend(["--log-dir", str(args.worker_log_root / target / f"chain-{chain}")])
                 occupied = {row["cpu_set"] for row in active.values()}
                 cpu_set = next(item for item in cpu_sets if item not in occupied)
                 command = ["taskset", "-c", cpu_set, *worker_command]

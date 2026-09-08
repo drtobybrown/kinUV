@@ -21,4 +21,12 @@ durable evidence path, and the next responsible role before handoff.
 
 kinUV must remain importable without legacy packages or CASA tooling. Measurement Set extraction belongs exclusively to the separate `ms2kinuv` repository. Use node-local `/scratch` for high-frequency temporary I/O and the configured `/arc` run root for durable, bounded artifacts.
 
+Run production compute in CANFAR headless sessions visible to `canfar ps`, not
+as detached children of an interactive session. Prefer flexible sessions with
+no CPU or RAM flags when a session fits within 16 CPU and 32 GB; use fixed
+resources only above those limits. Let the CANFAR queue schedule independent
+targets or chains. Compute and high-frequency writes stay on `/scratch`; copy
+atomic resume checkpoints, bounded logs, exit codes, and final products to
+`/arc`.
+
 If `code_freeze: true`, do not change production code unless Astra explicitly overrides the freeze. Never commit secrets or overwrite a promoted product.

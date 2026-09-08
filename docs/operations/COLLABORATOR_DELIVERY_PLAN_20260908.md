@@ -42,12 +42,15 @@ remaining residuals honestly; their disappearance is not guaranteed by this plan
   `visibilities/KILOGAS007.v2.npz`, with the accepted selection, C1 covariance,
   visibility weights, phase center, channel edges, frame conversion, PB model,
   and spectral response. Resolve exact inputs from checkpoint provenance.
-- Use up to **16 CPU cores and 32 GB RAM in aggregate**, not per target.
-  Start with at most four workers, each with at most four computational threads.
-  Schedule all eight MAP tasks through this shared pool. Cap nested BLAS/XLA
-  threads and leave memory headroom for the controller and operating system;
-  reduce concurrency before approaching the RAM limit. Reuse compiled operators
-  where practical. Rendering and sampling share the same resource budget.
+- Run long computation as CANFAR headless sessions rather than child processes
+  of an interactive session. Prefer flexible sessions with no explicit CPU or
+  memory request whenever each session fits within 16 CPU and 32 GB RAM. Use a
+  fixed allocation only when a measured workload exceeds either flexible limit.
+  Submit independent work to CANFAR and let its queue manage scheduling; the
+  site permits approximately 400 queued/running sessions. For this campaign,
+  use one flexible session per target and parallelize its four chains within
+  that session. Cap nested BLAS/XLA threads and leave memory headroom for the
+  controller. Reuse compiled operators where practical.
 - Use node-local `/scratch` for compilation caches and frequent checkpoints.
   Incrementally flush chain draws, adaptation state, RNG state and draw position
   to `/scratch` throughout warm-up and sampling, not only at chain completion.
@@ -55,9 +58,10 @@ remaining residuals honestly; their disappearance is not guaranteed by this plan
   campaign directory under `results/incoming/`; retain the last valid durable
   checkpoint until its replacement is complete. Checkpoint cadence must bound
   lost work without writing every likelihood evaluation to `/arc`.
-  Launch detached headless workers managed by a controller that also survives
-  terminal disconnect. Persist controller and worker PIDs, chain/seed identities,
-  process start times and every exit code, including failed or retried attempts.
+  Launch CANFAR headless workers managed by a headless controller that survives
+  terminal and interactive-session termination. Persist CANFAR session IDs,
+  controller and worker PIDs, chain/seed identities, process start times and
+  every exit code, including failed or retried attempts.
   After controller recovery, reconcile existing workers before launching more;
   do not duplicate a chain. A background PID is not task completion.
 - Use ASCII-only terminal output, file logs, disabled animated progress bars,
