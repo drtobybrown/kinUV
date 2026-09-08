@@ -1,5 +1,5 @@
 ---
-generation: 36
+generation: 37
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -24,11 +24,11 @@ canon_generation: 34
 ## Agent Run Status
 
 * **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
-* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. Reviewer A and Reviewer B accept corrected packet v2 under `results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`. All eight production NUTS chains now run concurrently: KGAS066 occupies CPU sets 0--15 and KGAS007 occupies CPU sets 16--31, with no queued chains.
+* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. Reviewer A and Reviewer B accept corrected packet v2 under `results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`. The posterior campaign now runs as proper flexible CANFAR headless sessions: KGAS066 session `lhcamyhk`, KGAS007 session `bkrzseva`, and postprocessing session `kd0xtaty`. Each target session has four active chains in warm-up with no queued chain.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** Forty focused transform, S3, imaging, style, and S4 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. With NumPyro enabled, the full optional suite reports 274 passed and 8 skipped; one historical 32-warm-up/32-draw G3 smoke does not meet its toy mixing threshold under NumPyro 0.21.0. The production campaign uses 1000 warm-up and 1000 retained draws and will be judged only from its recorded diagnostics. The first NUTS launch failed explicitly with `libgomp` thread oversubscription and is retained. Attempt 2 now pins eight workers to disjoint four-core CPU sets and checkpoints adaptation every 100 warm-up steps; all eight emit live ASCII heartbeats.
-* **Next Step:** Continue NUTS without changing the dual-accepted MAP-only packet. After all eight chains finish, generate chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate.
+* **Verification:** Forty focused transform, S3, imaging, style, and S4 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. The CANFAR dispatch and runner suite adds 28 passing focused tests plus Python and shell syntax checks. With NumPyro enabled, the full optional suite reports 274 passed and 8 skipped; one historical 32-warm-up/32-draw G3 smoke does not meet its toy mixing threshold under NumPyro 0.21.0. The production campaign uses 1000 warm-up and 1000 retained draws and will be judged only from its recorded diagnostics. Attempt 4 records eight durable `WARMUP` states with the expected independent seeds and zero failures.
+* **Next Step:** Monitor headless attempt 4 without changing the dual-accepted MAP-only packet. Atomic sampler checkpoints move from each session's `/scratch` area to `/arc` every 100 steps. After all eight chains finish, the headless postprocessor generates chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate.
 
 ## 2026-09-08 collaborator delivery campaign
 
@@ -77,11 +77,29 @@ handoff all eight chains are in warm-up, none is queued, and every worker has a
 live heartbeat. The controller runs in detached tmux session
 `kinuv-nuts-controller`; its mutable evidence is under
 `results/incoming/collaborator-delivery-20260908/nuts/`.
-Commit `fc67307` adds the detached postprocessing handoff. Controller PID
-2451633 waits for all eight retained-chain exit codes, then creates rank-based
+Commit `fc67307` added the original detached postprocessing handoff. Controller
+PID 2451633 was launched to wait for all eight retained-chain exit codes and then create rank-based
 posterior summaries, trace/covariance products, and a separately versioned
 posterior candidate under `results/incoming/collaborator-delivery-20260908/`.
 It does not promote that candidate or alter the dual-accepted MAP-only packet.
+
+The PI subsequently clarified that CANFAR compute must run as platform-managed
+headless sessions visible to `canfar ps`, rather than as orphaned processes
+inside an interactive session. The local attempt-2 workers completed zero
+warm-up checkpoints and zero draws, so they were stopped and marked
+`SUPERSEDED`; their evidence and final disposition remain under the path above.
+Commit `de9d763` introduced flexible per-target headless dispatch, resumable
+sampler-state checkpoints, scratch-first logs, and headless synthesis. Attempt 3
+failed before sampling because its scratch checkout incorrectly resolved the
+S2 covariance path beneath `/scratch`; the complete failure evidence is retained
+under `results/incoming/collaborator-delivery-20260908/nuts-headless-attempt3/`.
+Commit `fc93a56` repaired workspace resolution. Attempt 4 runs from exact commit
+`fc93a5672597d5fbb320d7591de8077371606942` in three flexible headless sessions:
+`lhcamyhk` for KGAS066, `bkrzseva` for KGAS007, and `kd0xtaty` for monitoring and
+posterior synthesis. No explicit CPU or memory request was made. Both target
+sessions run four chains concurrently, perform high-frequency work on local
+`/scratch`, and publish status and atomic recovery checkpoints to
+`results/incoming/collaborator-delivery-20260908/nuts-headless-attempt4/`.
 
 ## 2026-09-07 diagnostic coordinate and checkpoint repair
 
