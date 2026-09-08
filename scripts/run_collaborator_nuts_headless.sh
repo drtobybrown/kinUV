@@ -30,6 +30,7 @@ export PYTHONUNBUFFERED=1
 export MPLBACKEND=Agg
 export TERM=dumb
 export PYTHONPATH="${CODE_ROOT}/src"
+export KINUV_WORKSPACE="${PROJECT}"
 
 sync_logs() {
   cp -a "${LOG_ROOT}/." "${ARC_LOG_ROOT}/" 2>/dev/null || true

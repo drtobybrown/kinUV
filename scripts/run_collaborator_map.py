@@ -26,7 +26,7 @@ from kinuv.io.vis import load_target_vis
 
 
 REPO = Path(__file__).resolve().parents[1]
-WORKSPACE = REPO.parent
+WORKSPACE = Path(os.environ.get("KINUV_WORKSPACE", REPO.parent))
 RECOVERY = WORKSPACE / "results/validation/crossdomain-recovery-s4-remediation-20260907-r1"
 COVARIANCE = WORKSPACE / "results/validation/crossdomain-recovery-s2-20260907-r1/metrics.json"
 

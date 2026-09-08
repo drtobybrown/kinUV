@@ -65,7 +65,7 @@ def main() -> int:
     parser.add_argument(
         "--attempt-root",
         type=Path,
-        default=PROJECT / "results/incoming/collaborator-delivery-20260908/nuts-headless-attempt3",
+        default=PROJECT / "results/incoming/collaborator-delivery-20260908/nuts-headless-attempt4",
     )
     parser.add_argument("--image", default="skaha/astroml:latest")
     parser.add_argument("--dry-run", action="store_true")
@@ -91,7 +91,7 @@ def main() -> int:
     }
     write_json(dispatch_path, record)
     for target in ("KGAS066", "KGAS007"):
-        name = f"kinuv-{target}-{short}-nuts-a3"
+        name = f"kinuv-{target}-{short}-nuts-a4"
         result = submit(
             name=name,
             image=args.image,
@@ -107,7 +107,7 @@ def main() -> int:
             record["state"] = "PARTIAL_SUBMIT_FAILURE"
             write_json(dispatch_path, record)
             return 1
-    monitor_name = f"kinuv-collab-{short}-post-a3"
+    monitor_name = f"kinuv-collab-{short}-post-a4"
     monitor = submit(
         name=monitor_name,
         image=args.image,
