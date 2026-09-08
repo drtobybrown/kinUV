@@ -180,11 +180,12 @@ MAP, scaled in its conditioned coordinates. Retained competitive modes must
 be investigated or explicitly identified as unsampled; four near-identical
 chains alone do not demonstrate global exploration.
 
-Sol may schedule chains in waves or use the available parallel-chain backend.
-Do not run eight memory-intensive chain processes merely to make both targets
-appear simultaneous. Checkpoint chain identity, RNG state, adaptation state and
-draw position. Resume only a compatible chain; never merge overlapping draws
-or warm-up samples into production draws.
+Run the four chains for both targets concurrently when the CANFAR allocation is
+available. The active platform permits approximately 400 concurrent sessions;
+this campaign therefore uses exactly eight CPU-pinned workers, four per target,
+without an artificial cross-target queue. Checkpoint chain identity, RNG state,
+adaptation state and draw position. Resume only a compatible chain; never merge
+overlapping draws or warm-up samples into production draws.
 
 On completion, automatically write chain/draw-labelled posterior samples,
 16th/50th/84th percentiles in physical units, covariance and correlation matrices,

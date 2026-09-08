@@ -1,5 +1,5 @@
 ---
-generation: 35
+generation: 36
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -24,10 +24,10 @@ canon_generation: 34
 ## Agent Run Status
 
 * **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
-* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. Reviewer A and Reviewer B accept corrected packet v2 under `results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`; four CPU-pinned KGAS066 NUTS chains are in warm-up and KGAS007 is queued.
+* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. Reviewer A and Reviewer B accept corrected packet v2 under `results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`. All eight production NUTS chains now run concurrently: KGAS066 occupies CPU sets 0--15 and KGAS007 occupies CPU sets 16--31, with no queued chains.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** Forty focused transform, S3, imaging, style, and S4 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. With NumPyro enabled, the full optional suite reports 274 passed and 8 skipped; one historical 32-warm-up/32-draw G3 smoke does not meet its toy mixing threshold under NumPyro 0.21.0. The production campaign uses 1000 warm-up and 1000 retained draws and will be judged only from its recorded diagnostics. The first NUTS launch failed explicitly with `libgomp` thread oversubscription and is retained; attempt 2 pins four workers to disjoint four-core CPU sets and checkpoints adaptation every 100 warm-up steps.
+* **Verification:** Forty focused transform, S3, imaging, style, and S4 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. With NumPyro enabled, the full optional suite reports 274 passed and 8 skipped; one historical 32-warm-up/32-draw G3 smoke does not meet its toy mixing threshold under NumPyro 0.21.0. The production campaign uses 1000 warm-up and 1000 retained draws and will be judged only from its recorded diagnostics. The first NUTS launch failed explicitly with `libgomp` thread oversubscription and is retained. Attempt 2 now pins eight workers to disjoint four-core CPU sets and checkpoints adaptation every 100 warm-up steps; all eight emit live ASCII heartbeats.
 * **Next Step:** Continue NUTS without changing the dual-accepted MAP-only packet. After all eight chains finish, generate chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate.
 
 ## 2026-09-08 collaborator delivery campaign
@@ -64,11 +64,19 @@ The first detached NUTS attempt used unrestricted JAX CPU affinity. Each worker
 created approximately 1183 threads and all workers exited nonzero with
 `libgomp: Thread creation failed`. Its controller records and logs are retained
 under `results/incoming/collaborator-delivery-20260908/nuts-attempt1-thread-oversubscription/`.
-Commit `af79bb3` replaced monolithic warm-up with explicit state checkpoints and
-pins four workers to CPU sets `0-3`, `4-7`, `8-11`, and `12-15`. Attempt 2 uses
-controller PID 1700497, four independent seeds per target, 1000 warm-up and
-1000 retained draws, target acceptance 0.90, and maximum tree depth 10. Its
-live evidence is under `results/incoming/collaborator-delivery-20260908/nuts/`.
+Commit `af79bb3` replaced monolithic warm-up with explicit state checkpoints.
+The original attempt-2 controller serialized the targets through four worker
+slots. The PI clarified that the CANFAR platform permits approximately 400
+concurrent sessions and requires both targets to run together. Commit `1a21daa`
+made the controller restart-safe; replacement controller PID 918893 adopted the
+four live KGAS066 workers without restarting them and launched all four KGAS007
+workers. Attempt 2 now uses eight disjoint four-core CPU sets from `0-3` through
+`28-31`, four independent seeds per target, 1000 warm-up and 1000 retained
+draws, target acceptance 0.90, and maximum tree depth 10. At the 2026-09-08
+handoff all eight chains are in warm-up, none is queued, and every worker has a
+live heartbeat. The controller runs in detached tmux session
+`kinuv-nuts-controller`; its mutable evidence is under
+`results/incoming/collaborator-delivery-20260908/nuts/`.
 Commit `fc67307` adds the detached postprocessing handoff. Controller PID
 2451633 waits for all eight retained-chain exit codes, then creates rank-based
 posterior summaries, trace/covariance products, and a separately versioned
