@@ -82,6 +82,21 @@ def copy_checkpoint(scratch: Path, durable: Path):
     os.replace(temporary, durable)
 
 
+def bounded_initial_point(energy, map_point, direction, requested_scale, max_delta):
+    """Shrink a chart-space perturbation until it remains near the MAP basin."""
+    point = np.asarray(map_point, dtype=np.float64)
+    direction = np.asarray(direction, dtype=np.float64)
+    map_energy = float(energy(point))
+    scale = float(requested_scale)
+    while scale > 1.0e-8:
+        candidate = point + scale * direction
+        candidate_energy = float(energy(candidate))
+        if np.isfinite(candidate_energy) and candidate_energy - map_energy <= max_delta:
+            return candidate, map_energy, candidate_energy, scale
+        scale *= 0.5
+    return point, map_energy, map_energy, 0.0
+
+
 def setup_problem(selected_path: Path):
     selected_doc = json.loads(selected_path.read_text(encoding="utf-8"))
     selected = selected_doc["selected"]
@@ -134,6 +149,8 @@ def main() -> int:
     parser.add_argument("--chunk", type=int, default=100)
     parser.add_argument("--target-accept", type=float, default=0.90)
     parser.add_argument("--max-tree-depth", type=int, default=10)
+    parser.add_argument("--initial-jitter", type=float, default=0.01)
+    parser.add_argument("--max-initial-energy-delta", type=float, default=10.0)
     args = parser.parse_args()
     chain = f"chain-{args.chain_id}"
     scratch = args.scratch / chain
@@ -148,7 +165,7 @@ def main() -> int:
     target = selected["target_id"]
     y0 = transform.active_initial_unconstrained(fixed_full)
     rng = np.random.default_rng(args.seed)
-    y0 = y0 + 0.01 * rng.standard_normal(y0.shape)
+    jitter_direction = rng.standard_normal(y0.shape)
     prior_status_path = durable / "status.json"
     prior = json.loads(prior_status_path.read_text(encoding="utf-8")) if prior_status_path.is_file() else None
     compatible_resume = bool(
@@ -187,9 +204,32 @@ def main() -> int:
         from numpyro.infer import NUTS
 
         compiled = jax.jit(potential)
-        initial_energy = float(compiled(jnp.asarray(y0)))
+        y0, map_energy, initial_energy, jitter_scale = bounded_initial_point(
+            lambda value: compiled(jnp.asarray(value)),
+            y0,
+            jitter_direction,
+            args.initial_jitter,
+            args.max_initial_energy_delta,
+        )
         if not np.isfinite(initial_energy):
             raise RuntimeError("non-finite NUTS energy at initialization")
+        state_doc.update(
+            {
+                "map_energy": map_energy,
+                "initial_energy": initial_energy,
+                "initial_energy_delta": initial_energy - map_energy,
+                "initial_jitter_requested": float(args.initial_jitter),
+                "initial_jitter_effective": jitter_scale,
+            }
+        )
+        atomic_json(durable / "status.json", state_doc)
+        log.info(
+            "initialization target=%s chain=%d jitter=%.8g energy_delta=%.8g",
+            target,
+            args.chain_id,
+            jitter_scale,
+            initial_energy - map_energy,
+        )
         kernel = NUTS(potential_fn=compiled, target_accept_prob=args.target_accept, max_tree_depth=args.max_tree_depth, adapt_mass_matrix=True)
         key = jax.random.PRNGKey(args.seed)
         state_doc["state"] = "WARMUP"
@@ -213,6 +253,7 @@ def main() -> int:
         for warmup_index in range(state_doc["completed_warmup"], args.warmup):
             sampler_state = sample_once(sampler_state)
             completed = warmup_index + 1
+            state_doc["current_warmup"] = completed
             if completed % args.chunk == 0 or completed == args.warmup:
                 atomic_pickle(scratch / "sampler_state.pkl", sampler_state)
                 copy_checkpoint(scratch / "sampler_state.pkl", durable / "sampler_state.pkl")
@@ -237,6 +278,7 @@ def main() -> int:
             chunk_extras["accept_prob"].append(np.asarray(sampler_state.accept_prob))
             chunk_extras["energy"].append(np.asarray(sampler_state.energy))
             completed = draw_index + 1
+            state_doc["current_draws"] = completed
             if completed % args.chunk != 0 and completed != args.samples:
                 continue
             draws.append(np.stack(chunk_draws, axis=0))

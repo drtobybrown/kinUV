@@ -68,6 +68,12 @@ def main() -> int:
         default=PROJECT / "results/incoming/collaborator-delivery-20260908/nuts-headless-attempt4",
     )
     parser.add_argument("--image", default="skaha/astroml:latest")
+    parser.add_argument(
+        "--targets", nargs="+", choices=("KGAS066", "KGAS007"),
+        default=("KGAS066", "KGAS007"),
+    )
+    parser.add_argument("--chains", nargs="+", type=int, choices=(1, 2, 3, 4), default=(1, 2, 3, 4))
+    parser.add_argument("--skip-postprocess", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip()
@@ -87,37 +93,48 @@ def main() -> int:
             "platform_ceiling": {"cpu": 16, "memory_gb": 32},
         },
         "attempt_root": str(args.attempt_root.resolve()),
+        "execution": {
+            "topology": "one-flexible-headless-session-per-chain",
+            "targets": list(args.targets),
+            "chains": list(args.chains),
+        },
         "sessions": [],
     }
     write_json(dispatch_path, record)
-    for target in ("KGAS066", "KGAS007"):
-        name = f"kinuv-{target}-{short}-nuts-a4"
-        result = submit(
-            name=name,
+    attempt_tag = re.sub(r"[^A-Za-z0-9]+", "-", args.attempt_root.name).strip("-")[-16:]
+    for target in args.targets:
+        for chain in args.chains:
+            name = f"kinuv-{target}-{short}-c{chain}-{attempt_tag}"
+            result = submit(
+                name=name,
+                image=args.image,
+                command=[
+                    "/bin/bash", str(REPO / "scripts/run_collaborator_nuts_chain_headless.sh"),
+                    target, str(chain), str(args.attempt_root.resolve()), commit,
+                ],
+                dry_run=args.dry_run,
+            )
+            record["sessions"].append(
+                {"role": "nuts-chain", "target": target, "chain": chain, "name": name, **result}
+            )
+            write_json(dispatch_path, record)
+            if not result["ok"]:
+                record["state"] = "PARTIAL_SUBMIT_FAILURE"
+                write_json(dispatch_path, record)
+                return 1
+    monitor = {"ok": True}
+    if not args.skip_postprocess:
+        monitor_name = f"kinuv-collab-{short}-post-{attempt_tag}"
+        monitor = submit(
+            name=monitor_name,
             image=args.image,
             command=[
-                "/bin/bash", str(REPO / "scripts/run_collaborator_nuts_headless.sh"),
-                target, str(args.attempt_root.resolve()), commit,
+                "/bin/bash", str(REPO / "scripts/run_collaborator_postprocess_headless.sh"),
+                str(args.attempt_root.resolve()), commit,
             ],
             dry_run=args.dry_run,
         )
-        record["sessions"].append({"role": "nuts", "target": target, "name": name, **result})
-        write_json(dispatch_path, record)
-        if not result["ok"]:
-            record["state"] = "PARTIAL_SUBMIT_FAILURE"
-            write_json(dispatch_path, record)
-            return 1
-    monitor_name = f"kinuv-collab-{short}-post-a4"
-    monitor = submit(
-        name=monitor_name,
-        image=args.image,
-        command=[
-            "/bin/bash", str(REPO / "scripts/run_collaborator_postprocess_headless.sh"),
-            str(args.attempt_root.resolve()), commit,
-        ],
-        dry_run=args.dry_run,
-    )
-    record["sessions"].append({"role": "postprocess", "target": None, "name": monitor_name, **monitor})
+        record["sessions"].append({"role": "postprocess", "target": None, "name": monitor_name, **monitor})
     record["state"] = "DRY_RUN" if args.dry_run else "SUBMITTED" if monitor["ok"] else "PARTIAL_SUBMIT_FAILURE"
     write_json(dispatch_path, record)
     print(json.dumps(record, indent=2, sort_keys=True, ensure_ascii=True))
