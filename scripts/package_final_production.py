@@ -105,9 +105,26 @@ def build_profiles(target: str, source: Path, header, parameters: dict, selected
         outer = 0.5 * (1.0 + np.tanh((radius - transition) / (0.25 * beam)))
         sigma_map = fitted["sigma_inner_kms"] * (1 - outer) + fitted["sigma_outer_kms"] * outer
         turnover = fitted["turnover_over_bmaj"] * beam
+        asymptotic = float(fitted["arctan_u_kms"]) / np.sin(np.deg2rad(float(fitted["inc_deg"])))
+        gradient = (2.0 / np.pi) * asymptotic / turnover
+        inflation = float(kinms["r_t_arcsec"]) / turnover
+        profile_metrics = {
+            "turnover": rf"$R_{{\rm turn}}={turnover:.3f}''$ ({turnover / beam:.2f} BMAJ)",
+            "velocity": rf"$V_\infty={asymptotic:.1f}\ \mathrm{{km\ s^{{-1}}}}$",
+            "inner_gradient": rf"$(dV/dr)_0={gradient:.1f}\ \mathrm{{km\ s^{{-1}}\ arcsec^{{-1}}}}$",
+            "smearing": rf"KinMS $R_{{\rm turn}}$ inflation = {inflation:.2f}x",
+        }
     else:
         sigma_map = np.full_like(radius, fitted["sigma_inner_kms"])
         turnover = None
+        outer_speed = float(intrinsic[-1])
+        gradient = float(intrinsic[1] / radius[1])
+        profile_metrics = {
+            "turnover": r"$R_{\rm turn}$: spline/knot model",
+            "velocity": rf"$V_{{\rm knot,out}}={outer_speed:.1f}\ \mathrm{{km\ s^{{-1}}}}$",
+            "inner_gradient": rf"$(dV/dr)_0={gradient:.1f}\ \mathrm{{km\ s^{{-1}}\ arcsec^{{-1}}}}$",
+            "smearing": r"KinMS turnover inflation: not applicable",
+        }
     result = {
         "radius": radius,
         "kinuv_projected": projected,
@@ -120,6 +137,7 @@ def build_profiles(target: str, source: Path, header, parameters: dict, selected
         "turnover": turnover,
         "beam": beam,
         "moment0": moment0,
+        "profile_metrics": profile_metrics,
     }
     result.update(_posterior_profiles(target, source, radius, knot_radii))
     return result

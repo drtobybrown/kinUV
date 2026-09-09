@@ -80,11 +80,11 @@ def _crop(moment0, header, centre, beam):
 def render_moments(target, moments, header, geometry, stage, output):
     """Render M0/M1/M2 as Data | kinUV | KinMS | two residuals."""
 
-    apply_style(columns=2, aspect_ratio=9.0 / 7.1)
-    figure = plt.figure(figsize=(7.1, 9.0))
+    apply_style(columns=2, aspect_ratio=7.0 / 10.2, width_ratio=10.2 / 7.1)
+    figure = plt.figure(figsize=(10.2, 7.0))
     grid = GridSpec(
-        6, 5, figure=figure, height_ratios=(1, 0.10, 1, 0.10, 1, 0.10),
-        left=0.08, right=0.99, bottom=0.12, top=0.92, wspace=0.05, hspace=0.25,
+        3, 7, figure=figure, width_ratios=(1, 1, 1, 1, 1, 0.055, 0.055),
+        left=0.065, right=0.965, bottom=0.13, top=0.91, wspace=0.06, hspace=0.08,
     )
     extent = sky_extent_arcsec(header)
     centre = (float(geometry["dx_arcsec"]), float(geometry["dy_arcsec"]))
@@ -109,10 +109,12 @@ def render_moments(target, moments, header, geometry, stage, output):
         else:
             common_limits, common_cmap = sequential_clim(*images[:3], p=99), intensity_cmap()
         residual_limits = symmetric_clim(*images[3:], p=97.5)
+        common_mask = np.isfinite(images[0])
+        images = [np.where(common_mask, image, np.nan) for image in images]
         common_artist = residual_artist = None
         axes = []
         for column, image in enumerate(images):
-            axis = figure.add_subplot(grid[2 * row, column])
+            axis = figure.add_subplot(grid[row, column])
             axes.append(axis)
             limits = common_limits if column < 3 else residual_limits
             cmap = common_cmap if column < 3 else residual_cmap()
@@ -123,19 +125,24 @@ def render_moments(target, moments, header, geometry, stage, output):
             axis.tick_params(labelbottom=row == 2, labelleft=column == 0)
             if row == 0:
                 axis.set_title(titles[column], fontsize=11)
-            panel_letter(axis, next(letters), fontsize=10)
+            panel_letter(axis, next(letters), fontsize=11)
         axes[0].text(0.96, 0.94, row_name, transform=axes[0].transAxes, ha="right", va="top", fontsize=10,
                      bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8})
-        common_bar = cbar(figure, common_artist, unit, cax=figure.add_subplot(grid[2 * row + 1, :3]), orientation="horizontal")
-        residual_bar = cbar(figure, residual_artist, unit, cax=figure.add_subplot(grid[2 * row + 1, 3:]), orientation="horizontal")
+        common_bar = cbar(figure, common_artist, unit, cax=figure.add_subplot(grid[row, 5]), orientation="vertical")
+        residual_bar = cbar(figure, residual_artist, r"$\Delta$ " + unit, cax=figure.add_subplot(grid[row, 6]), orientation="vertical")
         common_bar.locator = MaxNLocator(nbins=5)
         residual_bar.locator = MaxNLocator(nbins=3, symmetric=True)
         common_bar.update_ticks(); residual_bar.update_ticks()
         if row == 0:
             beam_ellipse(axes[0], *beam, (centre[0] + crop - 1.4, centre[1] - crop + 1.4))
     figure.suptitle(f"{target}: matched moments - kinUV {stage}", y=0.975)
-    figure.supxlabel(r"East offset (arcsec)", y=0.012)
+    figure.supxlabel(r"East offset (arcsec)", y=0.055)
     figure.supylabel(r"North offset (arcsec)", x=0.012)
+    figure.text(
+        0.5, 0.012,
+        r"east left, north up  $\cdot$  optical LSRK  $\cdot$  identical clim per row  $\cdot$  restoring beam on M0 data",
+        ha="center", va="bottom", fontsize=10, color=COLOUR["muted"],
+    )
     return _save(figure, output, "moments_kinuv_vs_kinms")
 
 
@@ -144,73 +151,91 @@ def _curve_on_offsets(offset, radius, speed, vsys):
 
 
 def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
-    """Render matched orthogonal PVDs with major-axis projected curves."""
+    """Render the matched major-axis PVD and intrinsic rotation comparison."""
 
-    support = np.any(mask, axis=0)
     ra, dec = offset_world(float(header["CRVAL1"]), float(header["CRVAL2"]),
                            float(geometry["dx_arcsec"]), float(geometry["dy_arcsec"]))
     beam = float(header["BMAJ"]) * 3600.0
     width = float(header["BMIN"]) * 3600.0
     crop = _crop(profiles["moment0"], header, (geometry["dx_arcsec"], geometry["dy_arcsec"]), beam)
-    rows = []
-    for name, angle in (("Major axis", geometry["pa_deg"]), ("Minor axis", geometry["pa_deg"] + 90.0)):
-        pvs, offset = [], None
-        for cube in cubes:
-            pv, current = pv_diagram(np.where(support[None], cube, np.nan), header, ra, dec, angle, 2 * crop, width)
-            if offset is not None and not np.allclose(offset, current):
-                raise ValueError("matched PVD offsets differ")
-            pvs.append(pv); offset = current
-        rows.append((name, angle % 360.0, offset, pvs))
+    angle = float(geometry["pa_deg"]) % 360.0
+    pvs, offset = [], None
+    for cube in cubes:
+        pv, current = pv_diagram(cube, header, ra, dec, angle, 2 * crop, width)
+        if offset is not None and not np.allclose(offset, current):
+            raise ValueError("matched PVD offsets differ")
+        pvs.append(pv); offset = current
+    pv_support, support_offset = pv_diagram(mask.astype(float), header, ra, dec, angle, 2 * crop, width)
+    if not np.allclose(offset, support_offset):
+        raise ValueError("PVD signal-mask offsets differ")
+    signal = np.isfinite(pv_support) & (pv_support > 0.05)
+    pvs = [np.where(signal, pv, np.nan) for pv in pvs]
     velocity = spectral_axis_kms(header)
-    common_limits = sequential_clim(*(pv for row in rows for pv in row[3]), p=99.2)
-    residual_limits = symmetric_clim(*(row[3][0] - model for row in rows for model in row[3][1:]), p=97.5)
-    apply_style(columns=2, aspect_ratio=6.8 / 7.1)
-    figure = plt.figure(figsize=(7.1, 6.8))
-    grid = GridSpec(3, 5, figure=figure, height_ratios=(1, 1, 0.07), left=0.075, right=0.99,
-                    bottom=0.14, top=0.90, wspace=0.05, hspace=0.10)
+    residuals = [pvs[0] - pvs[1], pvs[0] - pvs[2]]
+    common_limits = sequential_clim(*pvs, p=99.2)
+    residual_limits = symmetric_clim(*residuals, p=97.5)
+    apply_style(columns=2, aspect_ratio=6.8 / 10.2, width_ratio=10.2 / 7.1)
+    figure = plt.figure(figsize=(10.2, 6.8))
+    grid = GridSpec(3, 5, figure=figure, height_ratios=(1.28, 0.07, 1.0), left=0.065, right=0.98,
+                    bottom=0.10, top=0.91, wspace=0.06, hspace=0.31)
     titles = ("Data", f"kinUV {stage}", "KinMS", f"Data - kinUV {stage}", "Data - KinMS")
-    letters = iter("abcdefghij")
-    for row_index, (name, angle, offset, pvs) in enumerate(rows):
-        images = pvs + [pvs[0] - pvs[1], pvs[0] - pvs[2]]
-        extent = (float(offset[0]), float(offset[-1]), float(velocity[0]), float(velocity[-1]))
-        for column, image in enumerate(images):
-            axis = figure.add_subplot(grid[row_index, column])
-            artist = imshow_masked(axis, image, extent, *(common_limits if column < 3 else residual_limits),
-                                   intensity_cmap() if column < 3 else residual_cmap(), aspect="auto")
-            if column < 3: common_artist = artist
-            else: residual_artist = artist
-            axis.axvline(0.0, color="white", lw=0.7, alpha=0.8)
-            axis.axhline(float(geometry["vsys_kms"]), color="white", lw=0.7, ls=":", alpha=0.8)
-            if row_index == 0:
-                axis.axvspan(-beam / 2, beam / 2, color="white", alpha=0.10)
-                show_kinuv = column in (0, 1, 3)
-                show_kinms = column in (0, 2, 4)
-                if show_kinuv:
-                    curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinuv_projected"], geometry["vsys_kms"])
-                    if profiles.get("projected_lo") is not None:
-                        lo = _curve_on_offsets(offset, profiles["radius"], profiles["projected_lo"], geometry["vsys_kms"])
-                        hi = _curve_on_offsets(offset, profiles["radius"], profiles["projected_hi"], geometry["vsys_kms"])
-                        axis.fill_between(offset, np.minimum(lo, hi), np.maximum(lo, hi), color=POSTERIOR_COLOUR, alpha=0.22)
-                    axis.plot(offset, curve, color="#00E5FF", lw=1.5, label=f"kinUV {stage}")
-                if show_kinms:
-                    curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinms_projected"], profiles["kinms_vsys"])
-                    axis.plot(offset, curve, color="#FFD166", lw=1.4, ls="--", label="KinMS")
-                if column == 0:
-                    axis.legend(loc="upper right", fontsize=7.5)
-            if row_index == 0:
-                axis.set_title(titles[column], fontsize=11); axis.tick_params(labelbottom=False)
-            if column == 0:
-                axis.set_ylabel(r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$")
-                axis.text(0.04, 0.04, f"{name}\nPA = {angle:.1f} deg", transform=axis.transAxes,
-                          color="white", fontsize=9, bbox={"facecolor": "black", "edgecolor": "none", "alpha": 0.65})
-            else:
-                axis.tick_params(labelleft=False)
-            panel_letter(axis, next(letters), fontsize=10)
-    cbar(figure, common_artist, r"$T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[2, :3]), orientation="horizontal")
-    bar = cbar(figure, residual_artist, r"$\Delta T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[2, 3:]), orientation="horizontal")
+    images = pvs + residuals
+    extent = (float(offset[0]), float(offset[-1]), float(velocity[0]), float(velocity[-1]))
+    for column, image in enumerate(images):
+        axis = figure.add_subplot(grid[0, column])
+        artist = imshow_masked(axis, image, extent, *(common_limits if column < 3 else residual_limits),
+                               intensity_cmap() if column < 3 else residual_cmap(), aspect="auto")
+        if column < 3: common_artist = artist
+        else: residual_artist = artist
+        axis.axvline(0.0, color="white", lw=0.8, alpha=0.9)
+        axis.axhline(float(geometry["vsys_kms"]), color="white", lw=0.8, ls=":", alpha=0.9)
+        axis.axvspan(-beam / 2, beam / 2, color="white", alpha=0.10)
+        if column in (0, 1, 3):
+            curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinuv_projected"], geometry["vsys_kms"])
+            if profiles.get("projected_lo") is not None:
+                lo = _curve_on_offsets(offset, profiles["radius"], profiles["projected_lo"], geometry["vsys_kms"])
+                hi = _curve_on_offsets(offset, profiles["radius"], profiles["projected_hi"], geometry["vsys_kms"])
+                axis.fill_between(offset, np.minimum(lo, hi), np.maximum(lo, hi), color=POSTERIOR_COLOUR, alpha=0.25)
+            axis.plot(offset, curve, color="#00E5FF", lw=1.6, label=f"kinUV {stage}")
+        if column in (0, 2, 4):
+            curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinms_projected"], profiles["kinms_vsys"])
+            axis.plot(offset, curve, color="#FFD166", lw=1.5, ls="--", label="KinMS")
+        axis.set_title(titles[column], fontsize=11)
+        axis.set_xlabel(r"Offset (arcsec; receding $+$)")
+        if column == 0:
+            axis.set_ylabel(r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$")
+            axis.legend(loc="upper right", fontsize=8)
+            axis.text(0.04, 0.04, f"Major axis\nPA = {angle:.1f} deg", transform=axis.transAxes,
+                      color="white", fontsize=9, bbox={"facecolor": "black", "edgecolor": "none", "alpha": 0.65})
+        else:
+            axis.tick_params(labelleft=False)
+        panel_letter(axis, chr(ord("a") + column), fontsize=11)
+    cbar(figure, common_artist, r"$T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[1, :3]), orientation="horizontal")
+    bar = cbar(figure, residual_artist, r"$\Delta T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[1, 3:]), orientation="horizontal")
     bar.locator = MaxNLocator(nbins=3, symmetric=True); bar.update_ticks()
-    figure.suptitle(f"{target}: matched PVDs - kinUV {stage}", y=0.975)
-    figure.supxlabel(r"Offset (arcsec; receding $+$)", y=0.018)
+
+    axis = figure.add_subplot(grid[2, :])
+    radius = profiles["radius"]
+    axis.axvspan(0, beam, color="0.92", label=r"$R\leq1\,\mathrm{BMAJ}$")
+    axis.plot(radius, profiles["kinuv_intrinsic"], color=COLOUR["model"], lw=2.1, label=f"kinUV {stage}")
+    if profiles.get("intrinsic_lo") is not None:
+        axis.fill_between(radius, profiles["intrinsic_lo"], profiles["intrinsic_hi"],
+                          color=POSTERIOR_COLOUR, alpha=0.28, label="NUTS 16th-84th percentile")
+    axis.plot(radius, profiles["kinms_intrinsic"], color=KINMS_COLOUR, lw=1.7, ls="--", label="KinMS")
+    if profiles.get("turnover") is not None:
+        axis.axvline(profiles["turnover"], color=COLOUR["model"], ls=":", lw=1.1)
+    axis.set(xlabel=r"Galactocentric radius $R\ (\mathrm{arcsec})$",
+             ylabel=r"$V_{\rm c}\ (\mathrm{km\ s^{-1}})$", xlim=(0, float(radius[-1])), ylim=(0, None))
+    axis.xaxis.set_minor_locator(AutoMinorLocator()); axis.yaxis.set_minor_locator(AutoMinorLocator())
+    axis.legend(fontsize=9, ncol=3, loc="lower right")
+    metrics = profiles["profile_metrics"]
+    badge = "\n".join((
+        metrics["turnover"], metrics["velocity"], metrics["inner_gradient"], metrics["smearing"],
+    ))
+    axis.text(0.015, 0.96, badge, transform=axis.transAxes, ha="left", va="top", fontsize=10,
+              bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "0.45", "alpha": 0.94})
+    panel_letter(axis, "f", fontsize=11)
+    figure.suptitle(f"{target}: major-axis PVD and intrinsic rotation - kinUV {stage}", y=0.975)
     return _save(figure, output, "pvd_kinuv_vs_kinms")
 
 
