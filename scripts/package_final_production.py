@@ -102,6 +102,7 @@ def build_profiles(target: str, source: Path, header, parameters: dict, selected
     beam = float(header["BMAJ"]) * 3600.0
     candidate = parameters["candidate"]
     fitted = parameters["fitted_native_parameters"]
+    replay = load_json(source / "best_model" / "replay.json")
     if candidate == "two_zone_dispersion":
         transition = knot_radii[1]
         outer = 0.5 * (1.0 + np.tanh((radius - transition) / (0.25 * beam)))
@@ -135,6 +136,14 @@ def build_profiles(target: str, source: Path, header, parameters: dict, selected
         "kinms_intrinsic": arctan(radius, kinms["v0_kms"], kinms["r_t_arcsec"]),
         "kinms_sigma": float(kinms["gas_sigma_kms"]),
         "kinms_vsys": float(kinms["vsys_optical_kms"]),
+        "kinuv_spectral_transform": {
+            "native_convention": "radio_TOPO",
+            "reporting_convention": "optical_LSRK",
+            "native_vsys_radio_topo_kms": float(fitted["vsys_kms"]),
+            "frequency_equivalent_correction_kms": float(
+                replay["frame"]["frequency_equivalent_correction_kms"]
+            ),
+        },
         "sigma_map": sigma_map,
         "turnover": turnover,
         "beam": beam,

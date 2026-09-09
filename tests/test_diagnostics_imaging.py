@@ -18,12 +18,43 @@ from kinuv.diagnostics.imaging import (
 )
 from kinuv.io.vis import optical_to_radio_kms, radio_to_optical_kms
 from kinuv.template.wiener import k_to_jy_per_beam
+from kinuv.validation.s4 import topo_radio_to_lsrk_radio
 
 
 def test_radio_optical_roundtrip():
     v = np.array([8000.0, 8299.563, 8500.0])
     assert np.allclose(optical_to_radio_kms(radio_to_optical_kms(v)), v)
     assert np.allclose(radio_to_optical_kms(optical_to_radio_kms(v)), v)
+
+
+def test_native_radio_pvd_curve_transforms_each_endpoint_to_optical_lsrk():
+    from kinuv.diagnostics.delivery import (
+        _native_radio_curve_on_optical_lsrk_offsets,
+    )
+
+    offset = np.array([-4.0, 0.0, 4.0])
+    radius = np.array([0.0, 4.0])
+    projected = np.array([0.0, 180.60325616735634])
+    native_vsys = 8099.2759442714005
+    correction = 10.9850680313608
+    actual = _native_radio_curve_on_optical_lsrk_offsets(
+        offset, radius, projected, native_vsys, correction
+    )
+    expected = radio_to_optical_kms(
+        topo_radio_to_lsrk_radio(
+            native_vsys + np.array([-projected[-1], 0.0, projected[-1]]),
+            correction,
+        )
+    )
+    np.testing.assert_allclose(actual, expected, rtol=0.0, atol=1e-10)
+
+    reporting_vsys = radio_to_optical_kms(
+        topo_radio_to_lsrk_radio(native_vsys, correction)
+    )
+    assert actual[1] == pytest.approx(reporting_vsys)
+    assert actual[2] - reporting_vsys != pytest.approx(projected[-1])
+    assert reporting_vsys - actual[0] != pytest.approx(projected[-1])
+    assert actual[2] - reporting_vsys != pytest.approx(reporting_vsys - actual[0])
 
 
 def test_rebin_spectrum_preserves_constant():

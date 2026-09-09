@@ -31,6 +31,8 @@ from kinuv.diagnostics.style import (
     symmetric_clim,
     velocity_cmap,
 )
+from kinuv.io.vis import radio_to_optical_kms
+from kinuv.validation.s4 import topo_radio_to_lsrk_radio
 
 KINMS_COLOUR = "#D55E00"
 POSTERIOR_COLOUR = "#56B4E9"
@@ -157,6 +159,30 @@ def _curve_on_offsets(offset, radius, speed, vsys):
     return float(vsys) + np.sign(offset) * np.interp(np.abs(offset), radius, speed)
 
 
+def _native_radio_curve_on_optical_lsrk_offsets(
+    offset,
+    radius,
+    projected_speed,
+    native_vsys_radio_topo_kms,
+    frequency_equivalent_correction_kms,
+):
+    """Evaluate a native radio/TOPO curve in optical-LSRK coordinates.
+
+    Radio-to-optical velocity is nonlinear, so the approaching and receding
+    endpoints must each be transformed.  Adding native projected speeds to an
+    already converted systemic velocity gives the wrong PVD overlay.
+    """
+
+    offset = np.asarray(offset, dtype=np.float64)
+    native_velocity = float(native_vsys_radio_topo_kms) + np.sign(offset) * np.interp(
+        np.abs(offset), radius, projected_speed
+    )
+    lsrk_radio = topo_radio_to_lsrk_radio(
+        native_velocity, frequency_equivalent_correction_kms
+    )
+    return radio_to_optical_kms(lsrk_radio)
+
+
 def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     """Render the matched major-axis PVD and intrinsic rotation comparison."""
 
@@ -198,10 +224,29 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
         axis.axhline(float(geometry["vsys_kms"]), color="white", lw=0.8, ls=":", alpha=0.9)
         axis.axvspan(-beam / 2, beam / 2, color="white", alpha=0.10)
         if column in (0, 1, 3):
-            curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinuv_projected"], geometry["vsys_kms"])
+            transform = profiles["kinuv_spectral_transform"]
+            curve = _native_radio_curve_on_optical_lsrk_offsets(
+                offset,
+                profiles["radius"],
+                profiles["kinuv_projected"],
+                transform["native_vsys_radio_topo_kms"],
+                transform["frequency_equivalent_correction_kms"],
+            )
             if profiles.get("projected_lo") is not None:
-                lo = _curve_on_offsets(offset, profiles["radius"], profiles["projected_lo"], geometry["vsys_kms"])
-                hi = _curve_on_offsets(offset, profiles["radius"], profiles["projected_hi"], geometry["vsys_kms"])
+                lo = _native_radio_curve_on_optical_lsrk_offsets(
+                    offset,
+                    profiles["radius"],
+                    profiles["projected_lo"],
+                    transform["native_vsys_radio_topo_kms"],
+                    transform["frequency_equivalent_correction_kms"],
+                )
+                hi = _native_radio_curve_on_optical_lsrk_offsets(
+                    offset,
+                    profiles["radius"],
+                    profiles["projected_hi"],
+                    transform["native_vsys_radio_topo_kms"],
+                    transform["frequency_equivalent_correction_kms"],
+                )
                 axis.fill_between(offset, np.minimum(lo, hi), np.maximum(lo, hi), color=POSTERIOR_COLOUR, alpha=0.25)
             axis.plot(offset, curve, color="#00E5FF", lw=1.6, label=f"kinUV {stage}")
         if column in (0, 2, 4):
