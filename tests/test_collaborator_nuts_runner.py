@@ -100,3 +100,11 @@ def test_race_status_waits_for_requested_extension_draws(tmp_path):
     assert initial["state"] == "SUCCEEDED"
     assert extended["state"] == "RUNNING"
     assert extended["chains"][0]["state"] == "AWAITING_EXTENSION"
+
+
+def test_race_status_represents_not_yet_started_chains_with_zero_progress(tmp_path):
+    status = campaign_status(tmp_path, {"KGAS066": 500, "KGAS007": 500})
+
+    assert status["state"] == "RUNNING"
+    assert all(row["state"] == "QUEUED" for row in status["chains"])
+    assert sum(row["completed_draws"] for row in status["chains"]) == 0

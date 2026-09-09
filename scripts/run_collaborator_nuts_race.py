@@ -39,7 +39,17 @@ def campaign_status(root: Path, required_draws: dict[str, int]) -> dict:
         for chain in range(1, 5):
             status_path = root / target / f"chain-{chain}" / "status.json"
             if not status_path.is_file():
-                rows.append({"target": target, "chain": chain, "state": "QUEUED"})
+                rows.append(
+                    {
+                        "target": target,
+                        "chain": chain,
+                        "state": "QUEUED",
+                        "completed_warmup": 0,
+                        "completed_draws": 0,
+                        "required_draws": required_draws[target],
+                        "updated_utc": None,
+                    }
+                )
                 continue
             item = json.loads(status_path.read_text(encoding="utf-8"))
             state = item.get("state", "UNKNOWN")
