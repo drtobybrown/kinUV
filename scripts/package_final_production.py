@@ -107,7 +107,7 @@ def build_profiles(target: str, source: Path, header, parameters: dict, selected
         outer = 0.5 * (1.0 + np.tanh((radius - transition) / (0.25 * beam)))
         sigma_map = fitted["sigma_inner_kms"] * (1 - outer) + fitted["sigma_outer_kms"] * outer
         turnover = fitted["turnover_over_bmaj"] * beam
-        asymptotic = float(fitted["arctan_u_kms"]) / np.sin(np.deg2rad(float(fitted["inc_deg"])))
+        asymptotic = float(fitted["arctan_u_kms"]) / np.sin(np.deg2rad(float(fitted["inclination_deg"])))
         gradient = (2.0 / np.pi) * asymptotic / turnover
         inflation = float(kinms["r_t_arcsec"]) / turnover
         profile_metrics = {
