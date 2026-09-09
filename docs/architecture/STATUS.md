@@ -1,16 +1,17 @@
 ---
-generation: 43
-phase: collaborator-delivery-running
+generation: 44
+phase: unified-foundation-bounded-prototyping
 code_freeze: false
 next_role: senior-implementer-sol
-board: collaborator-map-packet-dual-accept
+board: unified-foundation-architecture-licensed
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - exact-workflow-posterior-calibration
   - collaborator-nuts-completion
-last_propose: docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md
+  - unified-foundation-new-mock-and-real-verification
+last_propose: docs/decisions/DEC-KINUV-UNIFIED-FOUNDATION.md
 last_review: docs/reviews/2026-09-08-collaborator-map-review-b.md
 last_review_a: docs/reviews/2026-09-08-collaborator-map-review-a.md
 last_review_b: docs/reviews/2026-09-08-collaborator-map-review-b.md
@@ -23,12 +24,13 @@ canon_generation: 36
 
 ## Agent Run Status
 
-* **Phase:** Final target-centred diagnostic packaging is complete on top of the closed S0--S5 baseline. KGAS066 posterior sampling continues outside accepted products.
-* **Last Action:** Commits `30d535f`, `e3af78f`, `197e3cd`, `8318d97`, `c4f2ba3`, `9fdb32b`, and `7036128` refine the frozen-product renderer to the gold publication layout. The active production trees contain matched 3-by-5 moments with two independent right-side colorbars per row, signal-masked major-axis PVD comparisons, intrinsic rotation panels, quantitative turnover/gradient badges, and an exact white residual zero point. `best_model/selection.json` still selects MAP for both targets because it defines the minimum-chi-square delivered cube. KGAS007's accepted NUTS posterior supplies covariance and 16th--84th percentile bands; KGAS066's incomplete, depth-saturated NUTS campaign remains explicitly unaccepted.
-* **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
-* **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** Thirty-seven focused diagnostics tests pass. Visual inspection covers both dense benchmark layouts for both targets. All 44 KGAS066 and 52 KGAS007 manifest entries verify by size and SHA-256. The production manifest hashes are `b9966b3fa28cd094aaae611fbaeb960f18feee5d74d50a58597a54a5851447f2` and `eeb34417d939c31a37c66a320f449c706e1ebc848e8ffbea69431f7779fbb2db`. KGAS007 retains maximum primary rank-normalized split R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, BFMI >= 0.874732, zero divergences, and zero retained tree-depth saturations.
-* **Next Step:** KGAS066 continues from four durable 100-draw checkpoints toward 500 draws outside production. Its current retained checkpoints have zero divergences but near-universal maximum-depth saturation, so MAP remains selected unless a later independently verified posterior passes the frozen gates.
+* **Phase:** The PI has licensed a bounded unified-foundation prototype. Production adoption is not accepted, and all accepted KGAS066/KGAS007 products remain immutable. Existing KGAS066 posterior workers continue independently.
+* **Production baseline:** Both targets still select MAP. KGAS007's accepted conditional posterior retains maximum primary R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, zero divergences, and zero retained depth saturations. KGAS066 has 400 current draws outside accepted products and remains unaccepted: mean leapfrog steps are 249.56--255.00 per draw and 395 of 400 retained draws reached the 255-step cap. The unified spike is based on `71b9d9e0d55df19bdb6ac2b0fb475d4eeea30142`.
+* **Last Action:** The Registrar recorded `DEC-KINUV-UNIFIED-FOUNDATION`. The diagnostics spike adapted both accepted checkpoint profiles to one versioned schema and rendered moments, both PVD axes, spectra, and rotation/dispersion products without fitting or rescoring. Corrected P-spline and finite-GP three-iteration representation pilots completed but remain unconverged and source-incomparable. The bounded sampler probes completed with no accepted posterior comparison.
+* **Decisions Made:** One fixed-dimensional smooth projected-velocity and dispersion chart, proper common priors, common sampler semantics, explicit support/missingness, and a model-neutral output are licensed for prototyping. R50 is derived only from a constrained outer reference. Existing arctan/ring products are adapter fixtures, not evidence that the new model has been fitted.
+* **Gates:** No unified-foundation scientific or sampler gate has passed. Historical mock ratios do not transfer. The present P-spline carrier/shape chart is ineligible for sampling because KGAS007 collapsed its carrier scale to 0.00069 arcsec. The production PVD overlay has an open native-radio to optical-LSRK offset error; the scratch adapter corrects it without changing production products.
+* **Verification:** The two-target diagnostic self-check, schema validation, cube load, and eight-figure smoke render completed in 11.238 seconds. Corrected P-spline warmed value-plus-gradient calls measured 0.564/0.417 s for KGAS066/KGAS007 versus 0.539/0.441 s for finite GP; no winner is inferred. A forced-bound `rslice` probe took 102.807 s total, made 28 actual likelihood calls and three constrained replacements, and had weighted ESS 1; its paired NUTS probe produced no draw within the 10-minute bound. Durable diagnostic evidence is `results/validation/unified-foundation-spikes-20260909/diagnostics/`. The accepted production manifest and S0--S5 states are unchanged.
+* **Next Step:** Sol resolves the shared chart's scale/shape degeneracy and dispersion capacity, then runs an exact same-prior sampler comparison on frozen source. New matched mock and real held-out validation, independent reviews, and an explicit promotion decision are required before production adoption.
 
 ## 2026-09-09 gold publication figure refinement
 

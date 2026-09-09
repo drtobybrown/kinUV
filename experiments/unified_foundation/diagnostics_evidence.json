@@ -1,0 +1,37 @@
+{
+  "artifact_state": "ADAPTER_PROTOTYPE",
+  "code_base_commit": "71b9d9e0d55df19bdb6ac2b0fb475d4eeea30142",
+  "prototype_source_sha256": "033b2b477811e2839f9ca97f0aab7ae92dc91b7a6c66684187d747f98cbf5f90",
+  "prototype_source_state": "pre_commit_dirty_source_bound_by_sha256",
+  "durable_artifact_root": "/arc/projects/KILOGAS/analysis/toby_sandbox/results/validation/unified-foundation-spikes-20260909/diagnostics",
+  "file_count": 13,
+  "total_bytes": 1231491,
+  "schema_version": "kinuv-unified-diagnostics-v0",
+  "self_check": "pass",
+  "wall_seconds": 11.238,
+  "targets": {
+    "KGAS066": {
+      "adapter_seconds": 0.5232611913233995,
+      "render_seconds": 5.002401748672128,
+      "rendered_products": 4,
+      "posterior_status": "missing",
+      "r50_status": "resolved_within_retained_conditional_arctan_model",
+      "r50_arcsec": 0.28957931167698714,
+      "analytic_arctan_rt_arcsec": 0.28925725889556814,
+      "maximum_naive_pvd_overlay_error_kms": 10.279848995858742,
+      "contract_sha256": "a182a5fffddad6dcd6f7612b28fc4f9f8b05790eef4ea257c2eb5515eea410c3",
+      "profiles_sha256": "2337a2835fd02bd90e156bc796f2abcc29cfe71fc1ec78bc018554d2643daf72"
+    },
+    "KGAS007": {
+      "adapter_seconds": 0.4930269531905651,
+      "render_seconds": 2.964021684601903,
+      "rendered_products": 4,
+      "posterior_status": "accepted_conditional",
+      "r50_status": "unresolved_outer_reference_imposed",
+      "maximum_naive_pvd_overlay_error_kms": 9.305597593611608,
+      "contract_sha256": "357d9d354f4b6d5f4ae27049ea41c7fddb6e5335e11290b71d684ccd03b27ca7",
+      "profiles_sha256": "8420d12274405e467cacbd8580e48b911be48c68c3e861372a147593a2d1bfe7"
+    }
+  },
+  "summary_sha256": "95373a851b3e5d5e5dbe4847c77c19557a5668210bf422115a4b57142f30a92f"
+}

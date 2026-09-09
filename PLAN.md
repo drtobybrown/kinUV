@@ -10,6 +10,16 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
+The PI has licensed the bounded architecture and prototype sequence in
+[`DEC-KINUV-UNIFIED-FOUNDATION`](docs/decisions/DEC-KINUV-UNIFIED-FOUNDATION.md).
+Production adoption is not accepted.  Complete the representation comparison
+and corrected same-prior sampler benchmark, implement one common model for
+both targets, then run new matched mock and grouped-real predictive validation.
+The diagnostic adapter/render smoke is complete; its open production
+spectral-frame overlay defect must be corrected and independently reviewed
+before any figure promotion.  Existing production products and active KGAS066
+workers remain untouched.
+
 The active, PI-authorized pre-meeting campaign is defined by
 [`COLLABORATOR_DELIVERY_PLAN_20260908`](docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).
 Both four-start joint visibility MAP sweeps are complete. Reviewer A and
@@ -48,6 +58,7 @@ and 16th--84th percentile radial bands. No fit or synthetic score was rerun.
 2. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes exact-workflow coverage before calibrated interval claims.
 3. **Broaden the recovery frontier.** Test warped, lopsided, thick, noncircular, and radially varying dispersion truths under fixed evaluation samples. Preserve the accepted thin axisymmetric arctan result as the baseline.
 4. **Prepare survey expansion.** Define a target-selection and resource contract before adding more galaxies or a population runner.
+5. **Unify without forcing adequacy.** Preserve one schema and explicit unresolved/noncircular flags across the survey; do not introduce target-specific model fallbacks or force an accepted measurement when the common thin circular model is inadequate.
 
 ## Exit criteria for the next production increment
 
