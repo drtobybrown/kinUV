@@ -1,5 +1,5 @@
 ---
-generation: 42
+generation: 43
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -24,11 +24,35 @@ canon_generation: 36
 ## Agent Run Status
 
 * **Phase:** Final target-centred diagnostic packaging is complete on top of the closed S0--S5 baseline. KGAS066 posterior sampling continues outside accepted products.
-* **Last Action:** Commit `64e314c83f145ef63b0824f5e265b300421459cb` adds the frozen-product delivery renderer and transactional packager. Both targets now expose `results/production/<TARGET>/{best_model,map,nuts,plots,benchmarks,provenance}` with no audience-specific path layer. `best_model/selection.json` selects MAP for both targets because it defines the minimum-chi-square delivered cube. KGAS007's accepted NUTS posterior supplies covariance and 16th--84th percentile bands; KGAS066's incomplete, depth-saturated NUTS campaign is explicitly unaccepted.
+* **Last Action:** Commits `30d535f`, `e3af78f`, `197e3cd`, `8318d97`, `c4f2ba3`, `9fdb32b`, and `7036128` refine the frozen-product renderer to the gold publication layout. The active production trees contain matched 3-by-5 moments with two independent right-side colorbars per row, signal-masked major-axis PVD comparisons, intrinsic rotation panels, quantitative turnover/gradient badges, and an exact white residual zero point. `best_model/selection.json` still selects MAP for both targets because it defines the minimum-chi-square delivered cube. KGAS007's accepted NUTS posterior supplies covariance and 16th--84th percentile bands; KGAS066's incomplete, depth-saturated NUTS campaign remains explicitly unaccepted.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** Thirty-six focused diagnostics tests pass. All 44 KGAS066 and 52 KGAS007 manifest entries verify by size and SHA-256. The production manifest hashes are `1883937344066f5d475781a06e1a15561ffd54d4551e8292e914de1888230c2d` and `410d2937ff5d50e4d2c6c8a994cec95d98e0918a89b1b374066be5f1993d6deb`. KGAS007 retains maximum primary rank-normalized split R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, BFMI >= 0.874732, zero divergences, and zero retained tree-depth saturations.
+* **Verification:** Thirty-seven focused diagnostics tests pass. Visual inspection covers both dense benchmark layouts for both targets. All 44 KGAS066 and 52 KGAS007 manifest entries verify by size and SHA-256. The production manifest hashes are `b9966b3fa28cd094aaae611fbaeb960f18feee5d74d50a58597a54a5851447f2` and `eeb34417d939c31a37c66a320f449c706e1ebc848e8ffbea69431f7779fbb2db`. KGAS007 retains maximum primary rank-normalized split R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, BFMI >= 0.874732, zero divergences, and zero retained tree-depth saturations.
 * **Next Step:** KGAS066 continues from four durable 100-draw checkpoints toward 500 draws outside production. Its current retained checkpoints have zero divergences but near-universal maximum-depth saturation, so MAP remains selected unless a later independently verified posterior passes the frozen gates.
+
+## 2026-09-09 gold publication figure refinement
+
+The production renderer now applies `intensity_cmap()` to Moment 0, Moment 2,
+and PVD intensity; centers Moment 1 on the fitted optical-LSRK systemic
+velocity; and applies one symmetric zero-centered residual scale to each
+matched residual pair. The residual colormap has an explicitly pure-white
+midpoint. A common data-emission mask blanks unsupported pixels to white.
+
+The moments benchmark is a matched 3-by-5 matrix with identical sky cropping,
+one shared data/model colorbar and one residual colorbar in separate right-side
+gutters for every row, inward major/minor ticks, legible panel labels, the
+restoring beam on the Moment 0 data panel, and a compact orientation caption.
+The PVD benchmark is a five-panel matched major-axis comparison over a common
+offset/velocity domain, followed by a full-width intrinsic rotation panel.
+That panel carries the accepted KGAS007 posterior envelope where available and
+a compact card for turnover representation, outer speed, inner gradient, and
+KinMS turnover inflation. No fit, posterior, score, truth seed, cube, or mask
+changed during this figure-only pass.
+
+| Target | Manifest entries | Production manifest SHA-256 | Archived superseded tree | Archive bytes | Archive SHA-256 |
+|---|---:|---|---|---:|---|
+| KGAS066 | 44 | `b9966b3fa28cd094aaae611fbaeb960f18feee5d74d50a58597a54a5851447f2` | `results/archive/KGAS066/20260909_pre-gold-publication-style.tar.gz` | 5208769 | `a07a55f48057dd8a03b1d82bcc1b2d299d15d48038ea3792b6316f21115c9a32` |
+| KGAS007 | 52 | `eeb34417d939c31a37c66a320f449c706e1ebc848e8ffbea69431f7779fbb2db` | `results/archive/KGAS007/20260909_pre-gold-publication-style.tar.gz` | 5278950 | `4d0834bb9db50cef0515f8a792048cad42b038a55ce881d7558366ed9ffdffb5` |
 
 ## 2026-09-08 collaborator delivery campaign
 
