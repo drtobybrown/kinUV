@@ -335,6 +335,18 @@ def package_target(campaign: Path, source_production: Path, output_root: Path, t
             for key in ("visibility_npz", "template_ico", "diagnostic_cube", "diagnostic_mask")
         },
     })
+    (target_root / "README.md").write_text(
+        f"""# {target} unified kinUV production MAP
+
+`best_model/` is the authoritative carrier-free unified MAP product.
+`map/` contains all four deterministic starts, `plots/` contains direct kinUV
+diagnostics, and `benchmarks/` contains the matched KinMS and retained synthetic
+comparisons. `nuts/status.json` states that no posterior has been run for this
+chart. Image-plane products are supporting diagnostics; visibility chi-square
+is the fitted objective. R50 is unresolved until an outer plateau is measured.
+""",
+        encoding="ascii",
+    )
     write_json(best / "manifest.json", {
         "schema_version": "kinuv-unified-best-model-manifest-v1",
         "files": {
