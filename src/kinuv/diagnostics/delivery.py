@@ -133,6 +133,10 @@ def render_moments(target, moments, header, geometry, stage, output):
         common_bar.locator = MaxNLocator(nbins=5)
         residual_bar.locator = MaxNLocator(nbins=3, symmetric=True)
         common_bar.update_ticks(); residual_bar.update_ticks()
+        common_bar.ax.yaxis.set_ticks_position("left")
+        common_bar.ax.yaxis.set_label_position("left")
+        residual_bar.ax.yaxis.set_ticks_position("right")
+        residual_bar.ax.yaxis.set_label_position("right")
         if row == 0:
             beam_ellipse(axes[0], *beam, (centre[0] + crop - 1.4, centre[1] - crop + 1.4))
     figure.suptitle(f"{target}: matched moments - kinUV {stage}", y=0.975)
@@ -201,7 +205,6 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
             curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinms_projected"], profiles["kinms_vsys"])
             axis.plot(offset, curve, color="#FFD166", lw=1.5, ls="--", label="KinMS")
         axis.set_title(titles[column], fontsize=11)
-        axis.set_xlabel(r"Offset (arcsec; receding $+$)")
         if column == 0:
             axis.set_ylabel(r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$")
             axis.legend(loc="upper right", fontsize=8)
@@ -213,6 +216,7 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     cbar(figure, common_artist, r"$T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[1, :3]), orientation="horizontal")
     bar = cbar(figure, residual_artist, r"$\Delta T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[1, 3:]), orientation="horizontal")
     bar.locator = MaxNLocator(nbins=3, symmetric=True); bar.update_ticks()
+    figure.text(0.52, 0.455, r"Major-axis offset (arcsec; receding $+$)", ha="center", va="center", fontsize=12)
 
     axis = figure.add_subplot(grid[2, :])
     radius = profiles["radius"]
@@ -232,7 +236,7 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     badge = "\n".join((
         metrics["turnover"], metrics["velocity"], metrics["inner_gradient"], metrics["smearing"],
     ))
-    axis.text(0.015, 0.96, badge, transform=axis.transAxes, ha="left", va="top", fontsize=10,
+    axis.text(0.055, 0.96, badge, transform=axis.transAxes, ha="left", va="top", fontsize=10,
               bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "0.45", "alpha": 0.94})
     panel_letter(axis, "f", fontsize=11)
     figure.suptitle(f"{target}: major-axis PVD and intrinsic rotation - kinUV {stage}", y=0.975)
