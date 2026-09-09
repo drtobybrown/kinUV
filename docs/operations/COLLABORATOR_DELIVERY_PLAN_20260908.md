@@ -198,7 +198,8 @@ inside a target container. Checkpoint chain identity, RNG state,
 adaptation state and draw position. Resume only a compatible chain; never merge
 overlapping draws or warm-up samples into production draws.
 
-On completion, automatically write chain/draw-labelled posterior samples,
+As soon as one target's four chains complete, finalize and render that target
+independently; never wait for the other target. Write chain/draw-labelled posterior samples,
 16th/50th/84th percentiles in physical units, covariance and correlation matrices,
 and rank-normalized split R-hat, bulk/tail ESS, divergences, BFMI and tree-depth
 saturation. Derive `V_flat` or intrinsic knot velocities draw by draw using each
@@ -215,7 +216,8 @@ primary posterior. Do not discard bad chains or individual divergent draws to
 manufacture acceptance.
 
 If ESS is the only failure, first extend each compatible chain to 1,000 retained
-draws without repeating warm-up.
+draws without repeating warm-up. This extension is also target-local and must
+not delay products from a target that already passed.
 If adaptation is inadequate, one automatic retry with 2,000 warm-up steps and
 target acceptance 0.95 is authorized; Sol may adjust tree depth within the
 resource budget. Retain the unsuccessful attempt. Remaining failure is reported

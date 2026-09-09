@@ -1,5 +1,5 @@
 ---
-generation: 39
+generation: 40
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -24,11 +24,11 @@ canon_generation: 34
 ## Agent Run Status
 
 * **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
-* **Last Action:** Tiger Team recommendations were implemented at `1fbecf52a35453e4d9ba0bd5cd1124907bb2386f`: 200 warm-up plus 500 retained draws, a regularized dense MAP-Hessian metric, heuristic step-size selection, and one flexible CANFAR session per chain. Eight fast workers are active for KGAS066 (`muj0hiso`, `vejymdac`, `a3rgt2v3`, `j86h6pbw`) and KGAS007 (`vydjp7jq`, `ix7idx3s`, `f6sw9cc1`, `koy1teun`). Race watcher `zw6uhago` runs repaired watcher commit `a315d7ad64878aa763841f80a9ffe652faefed69`. All attempt-4 fallback jobs remain active and unchanged.
+* **Last Action:** Commit `feed645731c207805a212f837b72a133a054241a` removes the artificial two-target posterior barrier and the undeclared ArviZ/xarray runtime dependency. KGAS007 was finalized immediately from its four completed fast chains and its checksum-verified posterior candidate landed at `results/production/KGAS007/meeting_candidate/kinuv-collaborator-20260909-posterior/`. KGAS066 continues sampling independently.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** The focused fast-runner suite passes 6 tests; Python compilation, shell syntax, dry-run dispatch, and both real target metric builds pass. KGAS066's 10-dimensional regularized curvature has eigenvalue range 593.862--3.60836e6; KGAS007's 11-dimensional range is 94.4076--89473.4. All eight new jobs entered warm-up with finite initial energy deltas of 2.763--9.779 and live ASCII heartbeats. The full suite reports 279 passed and 8 skipped; the unrelated legacy 32-draw mixing smoke remains failed under its deterministic tiny budget.
-* **Next Step:** Watcher `zw6uhago` polls both campaigns every minute. The first complete two-target campaign is finalized and checked against primary R-hat/ESS, divergence, BFMI, and tree-depth gates. Convergence-limited fast chains extend compatibly to 1,000 retained draws; the losing jobs are terminated only after the winner passes, then posterior summaries, covariance products, corner plots, and the versioned diagnostic candidate render automatically.
+* **Verification:** Seven focused runner tests pass. KGAS007 has maximum primary rank-normalized split R-hat 1.00430, minimum bulk ESS 768.923, minimum tail ESS 627.544, minimum BFMI 0.874732, zero divergences, and zero retained tree-depth saturations. Its posterior manifest, NetCDF trace, samples, covariance, summary, corner PDF/PNG, MAP diagnostics, and KinMS comparisons verify against candidate manifest SHA-256 `a0e9e6f8936da00c3e0577faf96fbe26ecff9afdec6234c340cba724269c3ffc`.
+* **Next Step:** KGAS066 continues from four durable 100-draw checkpoints toward 500 draws. It will be finalized and rendered on its own completion. Any convergence-only extension to 1,000 draws is target-local and cannot delay the already landed KGAS007 products.
 
 ## 2026-09-08 collaborator delivery campaign
 
