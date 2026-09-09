@@ -267,7 +267,14 @@ def velocity_cmap():
 
 
 def residual_cmap():
-    return _cmap_copy(CMAP_RESIDUAL)
+    """Zero-white diverging map for signed data-minus-model residuals."""
+
+    base = _cmap_copy(CMAP_RESIDUAL)
+    colours = base(np.linspace(0.0, 1.0, 257))
+    colours[128] = (1.0, 1.0, 1.0, 1.0)
+    return mpl.colors.ListedColormap(colours, name="kinuv_residual").with_extremes(
+        bad=COLOUR["mask"]
+    )
 
 
 def sky_extent_arcsec(header) -> tuple[float, float, float, float]:

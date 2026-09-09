@@ -11,9 +11,16 @@ from kinuv.diagnostics.style import (
     apj_dimensions,
     apply_style,
     format_sky_ax,
+    residual_cmap,
     save_fig,
     save_publication,
 )
+
+
+def test_residual_cmap_has_pure_white_zero_point():
+    import numpy as np
+
+    assert np.allclose(residual_cmap()(0.5), (1.0, 1.0, 1.0, 1.0))
 
 
 def test_apply_style_callable():
