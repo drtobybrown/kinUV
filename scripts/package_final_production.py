@@ -69,6 +69,8 @@ def arctan(radius, speed, turnover):
 
 def _posterior_profiles(target: str, source: Path, radius: np.ndarray, knot_radii: np.ndarray):
     posterior = source / "best_model" / "posterior" / "posterior_samples.npz"
+    if not posterior.is_file():
+        posterior = source / "nuts" / "posterior_samples.npz"
     if target != "KGAS007" or not posterior.is_file():
         return {}
     with np.load(posterior, allow_pickle=False) as archive:
@@ -160,9 +162,13 @@ def copy_map_record(target, destination: Path, map_root: Path):
 def copy_nuts_record(target, source: Path, destination: Path, nuts_live_root: Path):
     destination.mkdir()
     accepted = source / "best_model" / "posterior"
+    packaged = source / "nuts"
+    if not accepted.is_dir() and (packaged / "status.json").is_file():
+        if load_json(packaged / "status.json").get("state") == "ACCEPTED":
+            accepted = packaged
     if accepted.is_dir():
         for path in accepted.iterdir():
-            if path.is_file():
+            if path.is_file() and path.name not in {"manifest.json", "status.json"}:
                 shutil.copy2(path, destination / path.name)
         for suffix in ("pdf", "png"):
             corner = source / "plots" / f"posterior_corner.{suffix}"
