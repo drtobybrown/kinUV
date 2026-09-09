@@ -1,5 +1,5 @@
 ---
-generation: 44
+generation: 45
 phase: unified-foundation-bounded-prototyping
 code_freeze: false
 next_role: senior-implementer-sol
@@ -28,9 +28,39 @@ canon_generation: 36
 * **Production baseline:** Both targets still select MAP. KGAS007's accepted conditional posterior retains maximum primary R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, zero divergences, and zero retained depth saturations. KGAS066 has 400 current draws outside accepted products and remains unaccepted: mean leapfrog steps are 249.56--255.00 per draw and 395 of 400 retained draws reached the 255-step cap. The unified spike is based on `71b9d9e0d55df19bdb6ac2b0fb475d4eeea30142`.
 * **Last Action:** The Registrar recorded `DEC-KINUV-UNIFIED-FOUNDATION`. The diagnostics spike adapted both accepted checkpoint profiles to one versioned schema and rendered moments, both PVD axes, spectra, and rotation/dispersion products without fitting or rescoring. Corrected P-spline and finite-GP three-iteration representation pilots completed but remain unconverged and source-incomparable. The bounded sampler probes completed with no accepted posterior comparison.
 * **Decisions Made:** One fixed-dimensional smooth projected-velocity and dispersion chart, proper common priors, common sampler semantics, explicit support/missingness, and a model-neutral output are licensed for prototyping. R50 is derived only from a constrained outer reference. Existing arctan/ring products are adapter fixtures, not evidence that the new model has been fitted.
-* **Gates:** No unified-foundation scientific or sampler gate has passed. Historical mock ratios do not transfer. The present P-spline carrier/shape chart is ineligible for sampling because KGAS007 collapsed its carrier scale to 0.00069 arcsec. The production PVD overlay has an open native-radio to optical-LSRK offset error; the scratch adapter corrects it without changing production products.
-* **Verification:** The two-target diagnostic self-check, schema validation, cube load, and eight-figure smoke render completed in 11.238 seconds. Corrected P-spline warmed value-plus-gradient calls measured 0.564/0.417 s for KGAS066/KGAS007 versus 0.539/0.441 s for finite GP; no winner is inferred. A forced-bound `rslice` probe took 102.807 s total, made 28 actual likelihood calls and three constrained replacements, and had weighted ESS 1; its paired NUTS probe produced no draw within the 10-minute bound. Durable diagnostic evidence is `results/validation/unified-foundation-spikes-20260909/diagnostics/`. The accepted production manifest and S0--S5 states are unchanged.
+* **Gates:** No unified-foundation scientific or sampler gate has passed. Historical mock ratios do not transfer. The present P-spline carrier/shape chart is ineligible for sampling because KGAS007 collapsed its carrier scale to 0.00069 arcsec. The production PVD spectral-frame overlay defect is closed by the bounded repair below; this changes no fit, cube, mask, or profile.
+* **Verification:** The two-target diagnostic self-check, schema validation, cube load, and eight-figure smoke render completed in 11.238 seconds. Corrected P-spline warmed value-plus-gradient calls measured 0.564/0.417 s for KGAS066/KGAS007 versus 0.539/0.441 s for finite GP; no winner is inferred. A forced-bound `rslice` probe took 102.807 s total, made 28 actual likelihood calls and three constrained replacements, and had weighted ESS 1; its paired NUTS probe produced no draw within the 10-minute bound. Durable diagnostic evidence is `results/validation/unified-foundation-spikes-20260909/diagnostics/`. The PVD repair changed only reporting overlays and production manifests; S0--S5 states are unchanged.
 * **Next Step:** Sol resolves the shared chart's scale/shape degeneracy and dispersion capacity, then runs an exact same-prior sampler comparison on frozen source. New matched mock and real held-out validation, independent reviews, and an explicit promotion decision are required before production adoption.
+
+## 2026-09-09 PVD spectral-frame overlay repair
+
+Commit `1e8ea5bf645a3c3bd00144fb364c3acea024cf81` repairs the production
+major-axis PVD overlay at the reporting boundary. Each native radio/TOPO
+endpoint `vsys +/- u(R)` now receives the saved frequency-equivalent frame
+correction and radio-to-optical conversion. The renderer no longer adds native
+projected speeds directly to an optical-LSRK systemic velocity. The focused
+physical-invariant suite passes 18 tests in 87.12 s.
+
+Both figures were regenerated from the accepted checkpoint profiles and frozen
+cubes without fitting, rescoring, or changing any cube, mask, parameter, or
+profile. Rendering both targets took 26.59 s. At the outer plotted radius, the
+old shortcut displaced the kinUV overlay by as much as 10.279849 km/s for
+KGAS066 and 9.305598 km/s for KGAS007. Endpoint-wise conversion gives
+approaching/receding optical-LSRK offset magnitudes of
+190.646879/190.883105 km/s for KGAS066 and 104.810588/104.880603 km/s for
+KGAS007; their small asymmetries are required by the nonlinear optical
+convention.
+
+| Target | Manifest entries | Production manifest SHA-256 | Archived superseded tree | Archive bytes | Archive SHA-256 |
+|---|---:|---|---|---:|---|
+| KGAS066 | 45 | `96d2067385dabbb15d19e063c08023015d8caa7a8d5547f52909a08c669177c7` | `results/archive/KGAS066/20260909_pre-pvd-frame-overlay-repair.tar.gz` | 5484487 | `7cefffe13dc2261862c346c9abc1d0beb0dbff1783748738dc74c05aae3191c7` |
+| KGAS007 | 53 | `8e7cc0d1683b06664b2083ebe73cdc48c6fbe59bb4dfecca80e1eb6d09b52c82` | `results/archive/KGAS007/20260909_pre-pvd-frame-overlay-repair.tar.gz` | 5647450 | `25ff171698287755ba9d03a73e68afe61adacf7c9d98e9dd168cdf3c2d11cb56` |
+
+Both manifests verify with zero failures. Their only changed pre-existing
+entries are the four PVD paths and `best_model/manifest.json`; each adds
+`provenance/PVD_OVERLAY_REPAIR.json`. The next responsible role is the Senior
+Implementer for the already licensed unified-foundation sequence; this repair
+does not advance a scientific gate.
 
 ## 2026-09-09 gold publication figure refinement
 
