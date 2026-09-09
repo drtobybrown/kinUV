@@ -25,8 +25,7 @@ cd "${CODE_ROOT}"
 "${VENV}/bin/python" scripts/run_collaborator_postprocess_controller.py \
   --map-root "${CAMPAIGN_ROOT}/map" \
   --nuts-root "${NUTS_ROOT}" \
-  --controller-status "${NUTS_ROOT}/controller_status_KGAS066.json" \
-  --controller-status "${NUTS_ROOT}/controller_status_KGAS007.json" \
+  --targets KGAS066 KGAS007 \
   --map-candidate-root "${CAMPAIGN_ROOT}/early-candidate" \
   --posterior-root "${CAMPAIGN_ROOT}/posterior-headless" \
   --candidate-root "${CAMPAIGN_ROOT}/posterior-candidate-headless" \

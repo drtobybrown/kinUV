@@ -22,6 +22,35 @@ def write_status(path: Path, payload: dict) -> None:
     os.replace(temporary, path)
 
 
+def aggregate_chain_statuses(nuts_root: Path, targets: tuple[str, ...]) -> dict:
+    completed = []
+    active = []
+    queued = []
+    for target in targets:
+        for chain in range(1, 5):
+            path = nuts_root / target / f"chain-{chain}" / "status.json"
+            if not path.is_file():
+                queued.append({"target": target, "chain": chain})
+                continue
+            item = json.loads(path.read_text(encoding="utf-8"))
+            row = {
+                key: item.get(key)
+                for key in ("target", "chain_id", "seed", "pid", "started_utc")
+            }
+            row["chain"] = row.pop("chain_id")
+            if item.get("state") in {"SUCCEEDED", "FAILED"}:
+                row["exit_code"] = int(item.get("exit_code", item["state"] != "SUCCEEDED"))
+                row["completed_utc"] = item.get("completed_utc")
+                completed.append(row)
+            else:
+                row["state"] = item.get("state", "UNKNOWN")
+                active.append(row)
+    terminal_count = len(completed)
+    failed = any(row["exit_code"] != 0 for row in completed)
+    state = "FAILED" if failed else "SUCCEEDED" if terminal_count == 4 * len(targets) else "RUNNING"
+    return {"state": state, "completed": completed, "active": active, "queued": queued}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--map-root", type=Path, required=True)
@@ -31,6 +60,7 @@ def main() -> int:
     parser.add_argument("--candidate-root", type=Path, required=True)
     parser.add_argument("--python", type=Path, required=True)
     parser.add_argument("--controller-status", type=Path, action="append", default=[])
+    parser.add_argument("--targets", nargs="+", default=("KGAS066", "KGAS007"))
     parser.add_argument("--status-file", type=Path, default=None)
     parser.add_argument("--log-file", type=Path, default=None)
     args = parser.parse_args()
@@ -43,11 +73,21 @@ def main() -> int:
     write_status(status_path, state)
     with log_path.open("a", encoding="ascii") as log:
         while True:
-            status_paths = args.controller_status or [args.nuts_root / "controller_status.json"]
-            controllers = [json.loads(path.read_text(encoding="utf-8")) for path in status_paths if path.is_file()]
-            if len(controllers) != len(status_paths):
-                controller = {"state": "RUNNING", "completed": [], "active": [], "queued": []}
+            status_paths = args.controller_status
+            if not status_paths:
+                controller = aggregate_chain_statuses(args.nuts_root, tuple(args.targets))
+                controller["chain_status_source"] = "direct"
             else:
+                controllers = [json.loads(path.read_text(encoding="utf-8")) for path in status_paths if path.is_file()]
+                if len(controllers) != len(status_paths):
+                    controller = {"state": "RUNNING", "completed": [], "active": [], "queued": []}
+                    controllers = []
+                if not controllers:
+                    write_status(args.nuts_root / "controller_status.json", controller)
+                    log.write(f"{now()} heartbeat state=RUNNING completed=0 active=0 queued=0\n")
+                    log.flush()
+                    time.sleep(60.0)
+                    continue
                 states = {item["state"] for item in controllers}
                 controller = {
                     "state": "FAILED" if "FAILED" in states else "SUCCEEDED" if states == {"SUCCEEDED"} else "RUNNING",
@@ -56,7 +96,7 @@ def main() -> int:
                     "queued": [row for item in controllers for row in item["queued"]],
                     "target_controller_statuses": [str(path) for path in status_paths],
                 }
-                write_status(args.nuts_root / "controller_status.json", controller)
+            write_status(args.nuts_root / "controller_status.json", controller)
             log.write(f"{now()} heartbeat state={controller['state']} completed={len(controller['completed'])} active={len(controller['active'])} queued={len(controller['queued'])}\n")
             log.flush()
             if controller["state"] != "RUNNING":
