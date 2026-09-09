@@ -270,6 +270,14 @@ Paths are resolved from deployment configuration. Source code must not embed a u
 
 Write large intermediate arrays to scratch first. Promote a checkpoint by closing it, validating it, copying to a temporary durable path, fsyncing file and directory, verifying size/checksum, and atomically renaming it. Never stream high-volume progress output, JIT caches, or repeatedly rewritten arrays directly to `/arc`.
 
+Accepted products use one stable path per target:
+`results/production/<TARGET>/{best_model,plots,benchmarks,provenance}`. The
+production tree contains the best accepted scientific products, independent of
+the audience or delivery event. Candidate, collaborator, meeting, and run-ID
+directory layers are prohibited there. Stage candidates remain under
+`results/incoming/`; delivery indexes belong under `results/records/`; replaced
+production trees move to checksum-verified dated archives before promotion.
+
 Each headless session performs compilation, sampling, optimization, rendering,
 and high-frequency logging in its own node-local `/scratch` directory. It copies
 bounded logs and atomic, resume-compatible checkpoints to `/arc` periodically

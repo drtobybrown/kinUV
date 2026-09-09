@@ -21,7 +21,7 @@ Each target advances to NUTS as soon as its selected MAP is valid and resources
 are available; it need not wait for the other target. At that same transition,
 enqueue the complete MAP diagnostic suite. Start phase 3 synthetic rendering
 concurrently; neither rendering branch waits for warm-up or retained draws.
-Seal an early MAP-plus-synthetic meeting packet while sampling continues.
+Seal an early MAP-plus-synthetic candidate under `results/incoming/` while sampling continues.
 Final production promotion requires independent dual accept.
 No new proposal/ADR round is required before implementation. Sol owns software
 design, worker scheduling, and routine numerical repairs inside this contract.
@@ -129,7 +129,7 @@ Non-finite fits, an unidentifiable primary parameter at a bound, or an invalid
 gradient cannot qualify for automatic sampling. Local solver repairs are allowed;
 do not hide failures or change the physical model to obtain a passing status.
 
-### Immediate MAP deliverables and early meeting packet
+### Immediate MAP deliverables and early candidate
 
 As soon as each target's best valid MAP is selected, render its matched model
 cube, moment maps 0/1/2 with residuals, corrected major/minor-axis PVDs,
@@ -138,16 +138,16 @@ style, units and provenance contract. Do not wait for NUTS or borrow posterior
 intervals from another checkpoint. Reserve a rendering worker or schedule short
 rendering jobs between chain allocations so sampling cannot starve delivery.
 
-Write this early candidate directly beneath
-`results/production/<TARGET>/meeting_candidate/<run_id>/`, using `best_model/`,
-`plots/` and `benchmarks/` inside it. This is explicitly a candidate namespace,
-not a replacement of the accepted canonical directories. Include the phase 3
-mock comparisons as soon as their concurrent rendering completes. Preserve the
-previous accepted products until independent review authorizes replacement.
+Write this early candidate beneath `results/incoming/<run_id>/<TARGET>/`, using
+`best_model/`, `plots/` and `benchmarks/` inside it. Include the phase 3 mock
+comparisons as soon as their concurrent rendering completes. Once its applicable
+gates pass, archive the previous target root and install the candidate directly
+at `results/production/<TARGET>/`. Production must never contain candidate,
+collaborator, meeting, or run-ID directory layers.
 
 Once both target suites and the authenticated mock figures are ready, seal
-their manifests and compile a meeting-packet index under
-`results/production/meeting_packets/<run_id>/`. The index identifies both frozen
+their manifests and compile a delivery index under `results/records/<run_id>/`.
+The index identifies both frozen
 MAP checkpoints, figure locations, truth/seed/source hashes and the code commit.
 Label it `MAP_ONLY_CANDIDATE`, with posterior status `RUNNING` or its actual
 state. Complete the phase 4 checksum/provenance and independent review checks
@@ -155,7 +155,7 @@ on this MAP-only packet while the detached NUTS workers continue. On dual accept
 it becomes an authenticated MAP-only presentation deliverable; posterior
 completion is not required for that review or delivery.
 
-Keep the sealed early packet immutable. Record subsequent chain progress in
+Keep the sealed early candidate immutable under `results/incoming/`. Record subsequent chain progress in
 the controller's live status under `results/incoming/`. Later posterior products
 form a new version with their own verification and review; they do not silently
 change the earlier packet or inherit its posterior acceptance.
@@ -237,7 +237,7 @@ synthetic evidence from
 Verify their manifests and retain truth, seed and fitted-model identities.
 No CASA dependency or training-fold reimaging is permitted.
 This work starts concurrently with MAP/NUTS execution and feeds the early
-meeting packet; phase numbering is not a dependency on NUTS completion.
+candidate; phase numbering is not a dependency on NUTS completion.
 
 For truths with `R_turn < BMAJ`, show the per-realization absolute turnover error
 normalized by BMAJ and projected-velocity RMSE restricted to `r <= BMAJ`, alongside
@@ -320,7 +320,7 @@ Keep large cubes/traces in durable `/arc` storage; commit code, configurations,
 compact evidence, manifests and documentation to Git, not caches or raw MS data.
 
 **Independent review board:** Sol commissions Reviewer A and Reviewer B after
-candidate outputs are sealed, first for the early MAP-only meeting packet and
+candidate outputs are sealed, first for the early MAP-only candidate and
 then for the final posterior-bearing bundle. The early review must not wait for
 NUTS; the final review may reuse unchanged verified evidence while checking all
 new posterior products. Each reviews the same exact code/evidence hashes
@@ -353,7 +353,7 @@ time must remain visible. Do not relax convergence gates or claim a global best
 model or universal superiority to meet the presentation deadline.
 
 If NUTS cannot finish and pass, deliver the independently reviewed MAP-only
-meeting packet with that explicit label, preserve the prior accepted production
+candidate with that explicit label, preserve the prior accepted production
 bundle, and keep incomplete chains outside accepted posterior products. Continue
 authorized recoverable work automatically; escalate genuine blockers with
 evidence. A posterior may be promoted later only after its own dual acceptance.

@@ -1,5 +1,5 @@
 ---
-generation: 40
+generation: 41
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -18,13 +18,13 @@ user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - How broadly does the demonstrated advantage extend beyond the tested thin axisymmetric arctan family?
 deadlocks: []
-canon_generation: 34
+canon_generation: 35
 ---
 
 ## Agent Run Status
 
-* **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
-* **Last Action:** Commit `feed645731c207805a212f837b72a133a054241a` removes the artificial two-target posterior barrier and the undeclared ArviZ/xarray runtime dependency. KGAS007 was finalized immediately from its four completed fast chains and its checksum-verified posterior candidate landed at `results/production/KGAS007/meeting_candidate/kinuv-collaborator-20260909-posterior/`. KGAS066 continues sampling independently.
+* **Phase:** The PI-authorized posterior campaign is active on top of the closed S0--S5 baseline. Accepted products occupy only the flat canonical target roots while KGAS066 sampling continues.
+* **Last Action:** Commit `feed645731c207805a212f837b72a133a054241a` removes the artificial two-target posterior barrier and undeclared ArviZ/xarray runtime dependency. KGAS007 was finalized immediately from its four completed fast chains. Its accepted posterior and best diagnostic suite now live directly at `results/production/KGAS007/{best_model,plots,benchmarks}/`; KGAS066's accepted MAP suite occupies the same flat canonical layout while its posterior continues sampling. The superseded target trees and presentation records were checksum-verified and moved to dated archives; no meeting- or collaborator-specific directory remains under `results/production/`.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
 * **Verification:** Seven focused runner tests pass. KGAS007 has maximum primary rank-normalized split R-hat 1.00430, minimum bulk ESS 768.923, minimum tail ESS 627.544, minimum BFMI 0.874732, zero divergences, and zero retained tree-depth saturations. Its posterior manifest, NetCDF trace, samples, covariance, summary, corner PDF/PNG, MAP diagnostics, and KinMS comparisons verify against candidate manifest SHA-256 `a0e9e6f8936da00c3e0577faf96fbe26ecff9afdec6234c340cba724269c3ffc`.

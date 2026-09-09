@@ -13,14 +13,15 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 The active, PI-authorized pre-meeting campaign is defined by
 [`COLLABORATOR_DELIVERY_PLAN_20260908`](docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).
 Both four-start joint visibility MAP sweeps are complete. Reviewer A and
-Reviewer B independently accept their immutable MAP-only meeting packet at
-`results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`.
-Four KGAS007 NUTS chains continue in their original flexible target session.
+Reviewer B independently accepted the MAP-only candidate; its best products are
+installed directly under each `results/production/<TARGET>/` root. KGAS007's
+four-chain conditional posterior is accepted and installed in its canonical
+`best_model/posterior/` directory.
 The pathological KGAS066 start was diagnosed and preserved; its replacements
 run in four independent flexible headless sessions from commit `8f11648`, one
 per chain. The first oversubscribed launch and the superseded unbounded-jitter
-launch remain explicit evidence. The early packet remains available and
-unchanged while posterior sampling proceeds.
+launch remain explicit evidence. Archived candidate history remains available
+while KGAS066 posterior sampling proceeds.
 
 The cross-domain recovery program is complete through S5 under
 [`DEC-PI-S4-STANDARD-USE-BENCHMARK`](docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).

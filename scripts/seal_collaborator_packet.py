@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install and checksum-seal the immutable MAP-only collaborator packet."""
+"""Install and checksum-seal canonical MAP-only production products."""
 
 from __future__ import annotations
 
@@ -109,9 +109,11 @@ def main() -> int:
         render_count = verify_manifest(source, source / "MANIFEST.json")
         selected_path = args.map_root / target / "selected_map.json"
         selected = load_json(selected_path)
-        destination = args.production_root / target / "meeting_candidate" / args.run_id
+        destination = args.production_root / target
         if destination.exists():
-            raise FileExistsError(destination)
+            raise FileExistsError(
+                f"archive and remove the prior canonical target before installation: {destination}"
+            )
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(source, destination, copy_function=shutil.copy2)
         shutil.copy2(selected_path, destination / "best_model" / "selected_map.json")
@@ -144,7 +146,7 @@ def main() -> int:
             }
         )
 
-    packet_root = args.production_root / "meeting_packets" / args.run_id
+    packet_root = args.production_root.parent / "records" / args.run_id
     if packet_root.exists():
         raise FileExistsError(packet_root)
     packet_root.mkdir(parents=True)
@@ -152,7 +154,7 @@ def main() -> int:
     shutil.copy2(args.attempt_ledger, packet_root / "ATTEMPT_LEDGER.json")
     shutil.copy2(ledger_manifest_path, packet_root / "ATTEMPT_LEDGER_MANIFEST.json")
     index = {
-        "schema_version": "kinuv-collaborator-meeting-packet-v1",
+        "schema_version": "kinuv-production-delivery-record-v1",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "run_id": args.run_id,
         "status": "MAP_ONLY_CANDIDATE",
@@ -192,7 +194,7 @@ def main() -> int:
     }
     write_json_atomic(packet_root / "INDEX.json", index)
     lines = [
-        f"# Collaborator packet: {args.run_id}",
+        f"# Production delivery record: {args.run_id}",
         "",
         "Status: **MAP_ONLY_CANDIDATE**. The posterior campaign was running when this immutable packet was sealed.",
         "",
@@ -212,7 +214,7 @@ def main() -> int:
     write_json_atomic(
         packet_root / "MANIFEST.json",
         {
-            "schema_version": "kinuv-collaborator-meeting-packet-manifest-v1",
+            "schema_version": "kinuv-production-delivery-record-manifest-v1",
             "git": state,
             "files": {
                 path.relative_to(packet_root).as_posix(): file_record(path)
