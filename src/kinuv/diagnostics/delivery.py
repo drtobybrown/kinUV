@@ -80,11 +80,11 @@ def _crop(moment0, header, centre, beam):
 def render_moments(target, moments, header, geometry, stage, output):
     """Render M0/M1/M2 as Data | kinUV | KinMS | two residuals."""
 
-    apply_style(columns=2, aspect_ratio=7.0 / 10.2, width_ratio=10.2 / 7.1)
-    figure = plt.figure(figsize=(10.2, 7.0))
+    apply_style(columns=2, aspect_ratio=7.0 / 11.5, width_ratio=11.5 / 7.1)
+    figure = plt.figure(figsize=(11.5, 7.0))
     grid = GridSpec(
-        3, 7, figure=figure, width_ratios=(1, 1, 1, 1, 1, 0.055, 0.055),
-        left=0.065, right=0.965, bottom=0.13, top=0.91, wspace=0.06, hspace=0.08,
+        3, 5, figure=figure,
+        left=0.06, right=0.80, bottom=0.13, top=0.91, wspace=0.06, hspace=0.08,
     )
     extent = sky_extent_arcsec(header)
     centre = (float(geometry["dx_arcsec"]), float(geometry["dy_arcsec"]))
@@ -128,8 +128,11 @@ def render_moments(target, moments, header, geometry, stage, output):
             panel_letter(axis, next(letters), fontsize=11)
         axes[0].text(0.96, 0.94, row_name, transform=axes[0].transAxes, ha="right", va="top", fontsize=10,
                      bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8})
-        common_bar = cbar(figure, common_artist, unit, cax=figure.add_subplot(grid[row, 5]), orientation="vertical")
-        residual_bar = cbar(figure, residual_artist, r"$\Delta$ " + unit, cax=figure.add_subplot(grid[row, 6]), orientation="vertical")
+        bounds = axes[-1].get_position()
+        common_cax = figure.add_axes((0.835, bounds.y0, 0.016, bounds.height))
+        residual_cax = figure.add_axes((0.925, bounds.y0, 0.016, bounds.height))
+        common_bar = cbar(figure, common_artist, unit, cax=common_cax, orientation="vertical")
+        residual_bar = cbar(figure, residual_artist, r"$\Delta$ " + unit, cax=residual_cax, orientation="vertical")
         common_bar.locator = MaxNLocator(nbins=5)
         residual_bar.locator = MaxNLocator(nbins=3, symmetric=True)
         common_bar.update_ticks(); residual_bar.update_ticks()
@@ -205,6 +208,8 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
             curve = _curve_on_offsets(offset, profiles["radius"], profiles["kinms_projected"], profiles["kinms_vsys"])
             axis.plot(offset, curve, color="#FFD166", lw=1.5, ls="--", label="KinMS")
         axis.set_title(titles[column], fontsize=11)
+        if column == 2:
+            axis.set_xlabel(r"Major-axis offset (arcsec; receding $+$)")
         if column == 0:
             axis.set_ylabel(r"$v_{\rm opt,LSRK}\ (\mathrm{km\ s^{-1}})$")
             axis.legend(loc="upper right", fontsize=8)
@@ -216,7 +221,6 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     cbar(figure, common_artist, r"$T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[1, :3]), orientation="horizontal")
     bar = cbar(figure, residual_artist, r"$\Delta T_{\rm B}\ (\mathrm{K})$", cax=figure.add_subplot(grid[1, 3:]), orientation="horizontal")
     bar.locator = MaxNLocator(nbins=3, symmetric=True); bar.update_ticks()
-    figure.text(0.52, 0.455, r"Major-axis offset (arcsec; receding $+$)", ha="center", va="center", fontsize=12)
 
     axis = figure.add_subplot(grid[2, :])
     radius = profiles["radius"]
@@ -236,7 +240,7 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     badge = "\n".join((
         metrics["turnover"], metrics["velocity"], metrics["inner_gradient"], metrics["smearing"],
     ))
-    axis.text(0.055, 0.96, badge, transform=axis.transAxes, ha="left", va="top", fontsize=10,
+    axis.text(0.080, 0.96, badge, transform=axis.transAxes, ha="left", va="top", fontsize=10,
               bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "0.45", "alpha": 0.94})
     panel_letter(axis, "f", fontsize=11)
     figure.suptitle(f"{target}: major-axis PVD and intrinsic rotation - kinUV {stage}", y=0.975)
