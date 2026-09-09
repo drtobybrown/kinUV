@@ -113,6 +113,7 @@ def run_logged(command: list[str], *, cwd: Path, log) -> int:
 
 def finalize_attempt(
     name: str,
+    target: str,
     root: Path,
     *,
     repo: Path,
@@ -122,8 +123,6 @@ def finalize_attempt(
     log,
 ) -> tuple[bool, dict]:
     posterior = output_root / name / "posterior"
-    controller = campaign_status(root, {target: 1 for target in TARGETS})
-    write_json(root / "controller_status.json", controller_document(controller))
     command = [
         str(python),
         "scripts/finalize_collaborator_posterior.py",
@@ -133,18 +132,18 @@ def finalize_attempt(
         str(root),
         "--output-root",
         str(posterior),
+        "--targets",
+        target,
     ]
     if run_logged(command, cwd=repo, log=log) != 0:
         return False, {"state": "FINALIZATION_FAILED", "posterior_root": str(posterior)}
-    summaries = {
-        target: json.loads((posterior / target / "summary.json").read_text(encoding="utf-8"))
-        for target in TARGETS
-    }
-    accepted = all(item["gates"]["accepted"] for item in summaries.values())
+    summary = json.loads((posterior / target / "summary.json").read_text(encoding="utf-8"))
+    accepted = bool(summary["gates"]["accepted"])
     return accepted, {
         "state": "ACCEPTED" if accepted else "GATES_FAILED",
         "posterior_root": str(posterior),
-        "gates": {target: item["gates"] for target, item in summaries.items()},
+        "target": target,
+        "gates": summary["gates"],
     }
 
 
@@ -197,7 +196,7 @@ def submit_extension(target: str, chain: int, root: Path, commit: str, repo: Pat
     }
 
 
-def dispatch_session_ids(path: Path) -> list[str]:
+def dispatch_session_ids(path: Path, target: str) -> list[str]:
     if not path.is_file():
         return []
     document = json.loads(path.read_text(encoding="utf-8"))
@@ -205,7 +204,13 @@ def dispatch_session_ids(path: Path) -> list[str]:
     replacement = document.get("postprocess_replacement")
     if replacement:
         entries.append(replacement)
-    return sorted({row["session_id"] for row in entries if row.get("session_id")})
+    return sorted(
+        {
+            row["session_id"]
+            for row in entries
+            if row.get("session_id") and row.get("target") == target
+        }
+    )
 
 
 def terminate_sessions(session_ids: list[str]) -> dict:
@@ -252,6 +257,7 @@ def main() -> int:
         "fast_required_draws": {target: 500 for target in TARGETS},
         "fast_extensions": [],
         "evaluations": {},
+        "target_winners": {},
     }
     write_json(state_path, state)
     args.race_root.mkdir(parents=True, exist_ok=True)
@@ -268,102 +274,89 @@ def main() -> int:
                 f"legacy_draws={sum(x['completed_draws'] for x in legacy['chains'])}\n"
             )
             log.flush()
-            for name, root, status in (("fast", args.fast_root, fast), ("legacy", args.legacy_root, legacy)):
-                if status["state"] != "SUCCEEDED" or state["evaluations"].get(name, {}).get("draw_signature") == [row["completed_draws"] for row in status["chains"]]:
+            statuses = {"fast": (args.fast_root, fast), "legacy": (args.legacy_root, legacy)}
+            for target in TARGETS:
+                if target in state["target_winners"]:
                     continue
-                signature = [row["completed_draws"] for row in status["chains"]]
-                accepted, evaluation = finalize_attempt(
-                    name,
-                    root,
-                    repo=repo,
-                    python=args.python,
-                    map_root=args.map_root,
-                    output_root=args.race_root,
-                    log=log,
-                )
-                evaluation["draw_signature"] = signature
-                evaluation["evaluated_utc"] = now()
-                state["evaluations"][name] = evaluation
-                write_json(state_path, state)
-                if accepted:
-                    candidate = args.race_root / name / "posterior-candidate"
-                    render = [
-                        str(args.python),
-                        "scripts/render_collaborator_posterior.py",
-                        "--map-candidate-root",
-                        str(args.map_candidate_root),
-                        "--posterior-root",
-                        evaluation["posterior_root"],
-                        "--output-root",
-                        str(candidate),
-                    ]
-                    if run_logged(render, cwd=repo, log=log) != 0:
-                        state.update({"state": "RENDER_FAILED", "winner": name, "completed_utc": now()})
-                        write_json(state_path, state)
-                        return 1
-                    loser = "legacy" if name == "fast" else "fast"
-                    dispatch = (args.legacy_root if loser == "legacy" else args.fast_root) / "dispatch.json"
-                    loser_ids = dispatch_session_ids(dispatch)
-                    if loser == "fast":
-                        loser_ids.extend(row["session_id"] for row in state["fast_extensions"] if row.get("session_id"))
-                    termination = terminate_sessions(sorted(set(loser_ids)))
-                    state.update(
-                        {
-                            "state": "WINNER_READY",
-                            "winner": name,
-                            "candidate_root": str(candidate),
-                            "loser_termination": termination,
+                for name in ("fast", "legacy"):
+                    root, status = statuses[name]
+                    target_rows = [row for row in status["chains"] if row["target"] == target]
+                    if not all(row["state"] == "SUCCEEDED" for row in target_rows):
+                        continue
+                    signature = [row["completed_draws"] for row in target_rows]
+                    evaluation_key = f"{name}:{target}"
+                    if state["evaluations"].get(evaluation_key, {}).get("draw_signature") == signature:
+                        continue
+                    accepted, evaluation = finalize_attempt(
+                        name,
+                        target,
+                        root,
+                        repo=repo,
+                        python=args.python,
+                        map_root=args.map_root,
+                        output_root=args.race_root,
+                        log=log,
+                    )
+                    evaluation["draw_signature"] = signature
+                    evaluation["evaluated_utc"] = now()
+                    state["evaluations"][evaluation_key] = evaluation
+                    write_json(state_path, state)
+                    if accepted:
+                        candidate = args.race_root / name / "posterior-candidate"
+                        render = [
+                            str(args.python),
+                            "scripts/render_collaborator_posterior.py",
+                            "--map-candidate-root",
+                            str(args.map_candidate_root),
+                            "--posterior-root",
+                            evaluation["posterior_root"],
+                            "--output-root",
+                            str(candidate),
+                            "--targets",
+                            target,
+                        ]
+                        if run_logged(render, cwd=repo, log=log) != 0:
+                            state.update({"state": "RENDER_FAILED", "failed_target": target, "completed_utc": now()})
+                            write_json(state_path, state)
+                            return 1
+                        loser = "legacy" if name == "fast" else "fast"
+                        dispatch = (args.legacy_root if loser == "legacy" else args.fast_root) / "dispatch.json"
+                        loser_ids = dispatch_session_ids(dispatch, target)
+                        if loser == "fast":
+                            loser_ids.extend(
+                                row["session_id"]
+                                for row in state["fast_extensions"]
+                                if row.get("session_id") and row["target"] == target
+                            )
+                        state["target_winners"][target] = {
+                            "campaign": name,
+                            "candidate_root": str(candidate / target),
+                            "loser_termination": terminate_sessions(sorted(set(loser_ids))),
                             "completed_utc": now(),
                         }
-                    )
-                    write_json(state_path, state)
-                    return 0
-                if name == "fast":
-                    eligible_targets = [
-                        target
-                        for target in TARGETS
-                        if not evaluation["gates"][target]["accepted"]
-                        and extension_eligible(evaluation["gates"][target])
+                        write_json(state_path, state)
+                        break
+                    if (
+                        name == "fast"
+                        and extension_eligible(evaluation["gates"])
                         and state["fast_required_draws"][target] == 500
-                    ]
-                    for target in eligible_targets:
+                    ):
                         submissions = [
                             submit_extension(target, chain, args.fast_root, args.code_commit, repo)
                             for chain in range(1, 5)
                         ]
                         state["fast_extensions"].extend(submissions)
                         if not all(row["ok"] for row in submissions):
-                            state.update({"state": "EXTENSION_SUBMIT_FAILED", "completed_utc": now()})
+                            state.update({"state": "EXTENSION_SUBMIT_FAILED", "failed_target": target, "completed_utc": now()})
                             write_json(state_path, state)
                             return 1
                         state["fast_required_draws"][target] = 1000
-                    write_json(state_path, state)
-            if fast["state"] == "FAILED" and legacy["state"] == "FAILED":
-                state.update({"state": "BOTH_CAMPAIGNS_FAILED", "completed_utc": now()})
+                        write_json(state_path, state)
+                        break
+            if len(state["target_winners"]) == len(TARGETS):
+                state.update({"state": "WINNERS_READY", "completed_utc": now()})
                 write_json(state_path, state)
-                return 1
-            fast_pending_extension = any(
-                row["completed_draws"] < state["fast_required_draws"][row["target"]]
-                for row in fast["chains"]
-            )
-            fast_evaluation = state["evaluations"].get("fast", {})
-            fast_signature = [row["completed_draws"] for row in fast["chains"]]
-            fast_exhausted = bool(
-                fast["state"] == "FAILED"
-                or (
-                    fast["state"] == "SUCCEEDED"
-                    and not fast_pending_extension
-                    and fast_evaluation.get("draw_signature") == fast_signature
-                )
-            )
-            legacy_exhausted = bool(
-                legacy["state"] == "FAILED"
-                or (legacy["state"] == "SUCCEEDED" and "legacy" in state["evaluations"])
-            )
-            if fast_exhausted and legacy_exhausted:
-                state.update({"state": "NO_ACCEPTED_WINNER", "completed_utc": now()})
-                write_json(state_path, state)
-                return 1
+                return 0
             time.sleep(args.poll_seconds)
 
 

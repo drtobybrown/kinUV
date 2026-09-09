@@ -11,13 +11,54 @@ from pathlib import Path
 import subprocess
 
 import numpy as np
+from scipy import __version__ as scipy_version
+from scipy.io import netcdf_file
+from scipy.special import ndtri
+from scipy.stats import rankdata
 
+from kinuv.infer.posterior import ess_bulk, ess_tail, split_rhat
 from kinuv.io.vis import load_target_vis
 
 from run_collaborator_nuts_chain import REPO, setup_problem
 
 
 TARGETS = ("KGAS066", "KGAS007")
+
+
+def rank_normalize(chains: np.ndarray) -> np.ndarray:
+    """Transform pooled draws to normal scores while retaining chain shape."""
+    values = np.asarray(chains, dtype=np.float64)
+    flat = values.reshape(-1, values.shape[-1])
+    normalized = np.empty_like(flat)
+    count = flat.shape[0]
+    for index in range(flat.shape[1]):
+        ranks = rankdata(flat[:, index], method="average")
+        normalized[:, index] = ndtri((ranks - 3.0 / 8.0) / (count + 1.0 / 4.0))
+    return normalized.reshape(values.shape)
+
+
+def rank_diagnostics(chains: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    normalized = rank_normalize(chains)
+    folded = rank_normalize(np.abs(chains - np.median(chains, axis=(0, 1))))
+    rhat = np.maximum(split_rhat(normalized), split_rhat(folded))
+    return rhat, ess_bulk(normalized), ess_tail(chains)
+
+
+def energy_bfmi(energy: np.ndarray) -> np.ndarray:
+    energy = np.asarray(energy, dtype=np.float64)
+    numerator = np.mean(np.diff(energy, axis=1) ** 2, axis=1)
+    denominator = np.var(energy, axis=1, ddof=1)
+    return numerator / denominator
+
+
+def write_trace(path: Path, physical: dict[str, np.ndarray], draw_count: int) -> None:
+    """Write a dependency-light NetCDF3 trace with explicit chain/draw axes."""
+    with netcdf_file(path, mode="w") as dataset:
+        dataset.createDimension("chain", 4)
+        dataset.createDimension("draw", draw_count)
+        for name, values in physical.items():
+            variable = dataset.createVariable(name, "f8", ("chain", "draw"))
+            variable[:] = np.asarray(values, dtype=np.float64)
 
 
 def sha256(path: Path) -> str:
@@ -97,15 +138,10 @@ def main() -> int:
     parser.add_argument("--map-root", type=Path, required=True)
     parser.add_argument("--nuts-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--targets", nargs="+", choices=TARGETS, default=TARGETS)
     args = parser.parse_args()
-    import arviz as az
-    import xarray as xr
-
-    controller = json.loads((args.nuts_root / "controller_status.json").read_text(encoding="utf-8"))
-    if controller["state"] != "SUCCEEDED" or any(row["exit_code"] != 0 for row in controller["completed"]):
-        raise RuntimeError("all eight NUTS workers must succeed before posterior finalization")
     git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip()
-    for target in TARGETS:
+    for target in args.targets:
         chains = []
         sample_stats = {name: [] for name in ("diverging", "num_steps", "accept_prob", "energy")}
         source_records = []
@@ -139,28 +175,20 @@ def main() -> int:
         unconstrained = np.stack(chains, axis=0)
         physical = physical_draws(args.map_root / target / "selected_map.json", unconstrained)
         stats = {name: np.stack(parts, axis=0) for name, parts in sample_stats.items()}
-        inference = az.from_dict(
-            posterior=physical,
-            sample_stats={
-                "diverging": stats["diverging"].astype(bool),
-                "tree_depth": np.ceil(np.log2(stats["num_steps"] + 1)).astype(int),
-                "acceptance_rate": stats["accept_prob"],
-                "energy": stats["energy"],
-            },
-        )
-        summary_frame = az.summary(inference, kind="all", round_to=None)
+        names = list(physical)
+        physical_matrix = np.stack([physical[name] for name in names], axis=-1)
+        rhat, bulk_ess, tail_ess = rank_diagnostics(physical_matrix)
         summary = {
             name: {
                 "p16": float(np.percentile(values, 16.0)),
                 "p50": float(np.percentile(values, 50.0)),
                 "p84": float(np.percentile(values, 84.0)),
-                "r_hat": float(summary_frame.loc[name, "r_hat"]),
-                "ess_bulk": float(summary_frame.loc[name, "ess_bulk"]),
-                "ess_tail": float(summary_frame.loc[name, "ess_tail"]),
+                "r_hat": float(rhat[index]),
+                "ess_bulk": float(bulk_ess[index]),
+                "ess_tail": float(tail_ess[index]),
             }
-            for name, values in physical.items()
+            for index, (name, values) in enumerate(physical.items())
         }
-        names = list(physical)
         matrix = np.stack([physical[name].reshape(-1) for name in names], axis=0)
         covariance = np.cov(matrix)
         correlation = np.corrcoef(matrix)
@@ -168,16 +196,10 @@ def main() -> int:
         output.mkdir(parents=True, exist_ok=True)
         samples_path = output / "posterior_samples.npz"
         np.savez(samples_path, **physical, chain=np.arange(1, 5), draw=np.arange(draw_count))
-        xr.Dataset(
-            {
-                name: (("chain", "draw"), values)
-                for name, values in physical.items()
-            },
-            coords={"chain": np.arange(1, 5), "draw": np.arange(draw_count)},
-        ).to_netcdf(output / "trace.nc", engine="h5netcdf")
+        write_trace(output / "trace.nc", physical, draw_count)
         np.savez(output / "covariance.npz", names=np.asarray(names), covariance=covariance, correlation=correlation)
         divergence_count = int(np.sum(stats["diverging"]))
-        bfmi = np.asarray(az.bfmi(inference), dtype=float)
+        bfmi = energy_bfmi(stats["energy"])
         primary = [name for name in names if name not in {"flux_jy_kms", "dx_arcsec", "dy_arcsec"}]
         gates = {
             "r_hat_primary_max": max(summary[name]["r_hat"] for name in primary),
@@ -211,7 +233,7 @@ def main() -> int:
             "gates": gates,
             "bfmi_by_chain": bfmi.tolist(),
             "sources": source_records,
-            "packages": {"arviz": az.__version__, "xarray": xr.__version__},
+            "packages": {"numpy": np.__version__, "scipy": scipy_version},
         }
         write_json(output / "summary.json", record)
         write_json(

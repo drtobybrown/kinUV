@@ -17,6 +17,14 @@ MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 SPEC.loader.exec_module(MODULE)
 
+FINALIZER_SCRIPT = Path(__file__).resolve().parents[1] / "scripts/finalize_collaborator_posterior.py"
+FINALIZER_SPEC = importlib.util.spec_from_file_location(
+    "finalize_collaborator_posterior", FINALIZER_SCRIPT
+)
+FINALIZER = importlib.util.module_from_spec(FINALIZER_SPEC)
+assert FINALIZER_SPEC.loader is not None
+FINALIZER_SPEC.loader.exec_module(FINALIZER)
+
 
 def test_initial_jitter_is_shrunk_to_remain_in_map_basin():
     energy = lambda value: 1000.0 * float(np.sum(np.asarray(value) ** 2))
@@ -108,3 +116,16 @@ def test_race_status_represents_not_yet_started_chains_with_zero_progress(tmp_pa
     assert status["state"] == "RUNNING"
     assert all(row["state"] == "QUEUED" for row in status["chains"])
     assert sum(row["completed_draws"] for row in status["chains"]) == 0
+
+
+def test_dependency_light_rank_diagnostics_accept_independent_chains():
+    rng = np.random.default_rng(44)
+    draws = rng.normal(size=(4, 500, 3))
+
+    rhat, bulk, tail = FINALIZER.rank_diagnostics(draws)
+    bfmi = FINALIZER.energy_bfmi(rng.normal(size=(4, 500)))
+
+    assert np.max(rhat) < 1.05
+    assert np.min(bulk) > 400
+    assert np.min(tail) > 400
+    assert np.min(bfmi) > 0.3

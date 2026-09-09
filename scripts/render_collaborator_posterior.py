@@ -117,9 +117,10 @@ def main() -> int:
     parser.add_argument("--map-candidate-root", type=Path, required=True)
     parser.add_argument("--posterior-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
+    parser.add_argument("--targets", nargs="+", choices=TARGETS, default=TARGETS)
     args = parser.parse_args()
     commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[1], text=True).strip()
-    for target in TARGETS:
+    for target in args.targets:
         source = args.map_candidate_root / target
         destination = args.output_root / target
         if destination.exists():
