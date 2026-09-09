@@ -69,6 +69,8 @@ def main() -> int:
     parser.add_argument("--controller-log", type=Path, default=None)
     parser.add_argument("--worker-log-root", type=Path, default=None)
     parser.add_argument("--max-workers", type=int, default=8)
+    parser.add_argument("--warmup", type=int, default=200)
+    parser.add_argument("--samples", type=int, default=500)
     parser.add_argument(
         "--cpu-sets",
         default="0-3,4-7,8-11,12-15,16-19,20-23,24-27,28-31",
@@ -137,8 +139,10 @@ def main() -> int:
                     str(args.python), "scripts/run_collaborator_nuts_chain.py",
                     "--selected-map", str(job["selected"]), "--chain-id", str(chain),
                     "--seed", str(job["seed"]), "--scratch", str(args.scratch_root / target),
-                    "--durable", str(worker_root), "--warmup", "1000", "--samples", "1000",
-                    "--chunk", "100", "--target-accept", "0.90", "--max-tree-depth", "10",
+                    "--durable", str(worker_root), "--warmup", str(args.warmup),
+                    "--samples", str(args.samples), "--chunk", "100",
+                    "--target-accept", "0.90", "--warmup-max-tree-depth", "7",
+                    "--max-tree-depth", "8",
                 ]
                 if args.worker_log_root:
                     worker_command.extend(["--log-dir", str(args.worker_log_root / target / f"chain-{chain}")])

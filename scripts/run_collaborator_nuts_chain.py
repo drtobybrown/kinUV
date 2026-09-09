@@ -97,6 +97,43 @@ def bounded_initial_point(energy, map_point, direction, requested_scale, max_del
     return point, map_energy, map_energy, 0.0
 
 
+def regularized_inverse_mass(value_gradient, point, *, relative_step=1.0e-2, eigen_floor=1.0e-6):
+    """Finite-difference MAP curvature and return a positive dense covariance metric."""
+    point = np.asarray(point, dtype=np.float64)
+    hessian = np.empty((point.size, point.size), dtype=np.float64)
+    for index in range(point.size):
+        step = float(relative_step) * max(1.0, abs(float(point[index])))
+        plus = point.copy()
+        minus = point.copy()
+        plus[index] += step
+        minus[index] -= step
+        _, gradient_plus = value_gradient(plus)
+        _, gradient_minus = value_gradient(minus)
+        hessian[:, index] = (
+            np.asarray(gradient_plus, dtype=np.float64)
+            - np.asarray(gradient_minus, dtype=np.float64)
+        ) / (2.0 * step)
+    hessian = 0.5 * (hessian + hessian.T)
+    eigenvalues, eigenvectors = np.linalg.eigh(hessian)
+    absolute = np.abs(eigenvalues)
+    floor = max(float(np.max(absolute)) * float(eigen_floor), np.finfo(np.float64).eps)
+    regularized = np.maximum(absolute, floor)
+    inverse_mass = (eigenvectors * (1.0 / regularized)) @ eigenvectors.T
+    inverse_mass = 0.5 * (inverse_mass + inverse_mass.T)
+    if not np.all(np.isfinite(inverse_mass)) or np.min(np.linalg.eigvalsh(inverse_mass)) <= 0.0:
+        raise RuntimeError("regularized MAP inverse mass is not finite positive definite")
+    diagnostics = {
+        "hessian_relative_step": float(relative_step),
+        "hessian_negative_eigenvalues": int(np.sum(eigenvalues <= 0.0)),
+        "hessian_raw_eigenvalue_min": float(np.min(eigenvalues)),
+        "hessian_raw_eigenvalue_max": float(np.max(eigenvalues)),
+        "hessian_regularized_eigenvalue_min": float(np.min(regularized)),
+        "hessian_regularized_eigenvalue_max": float(np.max(regularized)),
+        "hessian_regularized_condition": float(np.max(regularized) / np.min(regularized)),
+    }
+    return inverse_mass, diagnostics
+
+
 def setup_problem(selected_path: Path):
     selected_doc = json.loads(selected_path.read_text(encoding="utf-8"))
     selected = selected_doc["selected"]
@@ -144,13 +181,16 @@ def main() -> int:
     parser.add_argument("--scratch", type=Path, required=True)
     parser.add_argument("--durable", type=Path, required=True)
     parser.add_argument("--log-dir", type=Path, default=None)
-    parser.add_argument("--warmup", type=int, default=1000)
-    parser.add_argument("--samples", type=int, default=1000)
+    parser.add_argument("--warmup", type=int, default=200)
+    parser.add_argument("--samples", type=int, default=500)
     parser.add_argument("--chunk", type=int, default=100)
     parser.add_argument("--target-accept", type=float, default=0.90)
-    parser.add_argument("--max-tree-depth", type=int, default=10)
+    parser.add_argument("--warmup-max-tree-depth", type=int, default=7)
+    parser.add_argument("--max-tree-depth", type=int, default=8)
     parser.add_argument("--initial-jitter", type=float, default=0.01)
     parser.add_argument("--max-initial-energy-delta", type=float, default=10.0)
+    parser.add_argument("--hessian-relative-step", type=float, default=1.0e-2)
+    parser.add_argument("--hessian-eigen-floor", type=float, default=1.0e-6)
     args = parser.parse_args()
     chain = f"chain-{args.chain_id}"
     scratch = args.scratch / chain
@@ -168,13 +208,26 @@ def main() -> int:
     jitter_direction = rng.standard_normal(y0.shape)
     prior_status_path = durable / "status.json"
     prior = json.loads(prior_status_path.read_text(encoding="utf-8")) if prior_status_path.is_file() else None
+    sampler_contract = {
+        "warmup": args.warmup,
+        "target_accept": args.target_accept,
+        "warmup_max_tree_depth": args.warmup_max_tree_depth,
+        "max_tree_depth": args.max_tree_depth,
+        "initial_jitter": args.initial_jitter,
+        "max_initial_energy_delta": args.max_initial_energy_delta,
+        "dense_map_metric": True,
+        "hessian_relative_step": args.hessian_relative_step,
+        "hessian_eigen_floor": args.hessian_eigen_floor,
+        "heuristic_step_size": True,
+    }
     compatible_resume = bool(
         prior
         and prior.get("target") == target
         and prior.get("chain_id") == args.chain_id
         and prior.get("seed") == args.seed
         and prior.get("warmup") == args.warmup
-        and prior.get("samples") == args.samples
+        and int(prior.get("completed_draws", 0)) <= args.samples
+        and prior.get("sampler_contract") == sampler_contract
         and (durable / "sampler_state.pkl").is_file()
     )
     if prior and prior.get("state") not in {"SUCCEEDED", "FAILED"} and not compatible_resume:
@@ -187,6 +240,7 @@ def main() -> int:
         "completed_warmup": int(prior.get("completed_warmup", 0)) if compatible_resume else 0,
         "completed_draws": int(prior.get("completed_draws", 0)) if compatible_resume else 0,
         "resumed": compatible_resume,
+        "sampler_contract": sampler_contract,
     }
     atomic_json(durable / "status.json", state_doc)
     stop = threading.Event()
@@ -204,6 +258,13 @@ def main() -> int:
         from numpyro.infer import NUTS
 
         compiled = jax.jit(potential)
+        value_gradient = jax.jit(jax.value_and_grad(potential))
+        inverse_mass_matrix, metric_diagnostics = regularized_inverse_mass(
+            lambda value: value_gradient(jnp.asarray(value)),
+            y0,
+            relative_step=args.hessian_relative_step,
+            eigen_floor=args.hessian_eigen_floor,
+        )
         y0, map_energy, initial_energy, jitter_scale = bounded_initial_point(
             lambda value: compiled(jnp.asarray(value)),
             y0,
@@ -220,6 +281,7 @@ def main() -> int:
                 "initial_energy_delta": initial_energy - map_energy,
                 "initial_jitter_requested": float(args.initial_jitter),
                 "initial_jitter_effective": jitter_scale,
+                "mass_preconditioning": metric_diagnostics,
             }
         )
         atomic_json(durable / "status.json", state_doc)
@@ -230,7 +292,15 @@ def main() -> int:
             jitter_scale,
             initial_energy - map_energy,
         )
-        kernel = NUTS(potential_fn=compiled, target_accept_prob=args.target_accept, max_tree_depth=args.max_tree_depth, adapt_mass_matrix=True)
+        kernel = NUTS(
+            potential_fn=compiled,
+            target_accept_prob=args.target_accept,
+            max_tree_depth=(args.warmup_max_tree_depth, args.max_tree_depth),
+            inverse_mass_matrix=jnp.asarray(inverse_mass_matrix),
+            dense_mass=True,
+            adapt_mass_matrix=True,
+            find_heuristic_step_size=True,
+        )
         key = jax.random.PRNGKey(args.seed)
         state_doc["state"] = "WARMUP"
         atomic_json(durable / "status.json", state_doc)
@@ -254,6 +324,8 @@ def main() -> int:
             sampler_state = sample_once(sampler_state)
             completed = warmup_index + 1
             state_doc["current_warmup"] = completed
+            state_doc["current_num_steps"] = int(np.asarray(sampler_state.num_steps))
+            state_doc["current_diverging"] = bool(np.asarray(sampler_state.diverging))
             if completed % args.chunk == 0 or completed == args.warmup:
                 atomic_pickle(scratch / "sampler_state.pkl", sampler_state)
                 copy_checkpoint(scratch / "sampler_state.pkl", durable / "sampler_state.pkl")

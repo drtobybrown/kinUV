@@ -109,19 +109,33 @@ def main() -> int:
         chains = []
         sample_stats = {name: [] for name in ("diverging", "num_steps", "accept_prob", "energy")}
         source_records = []
+        warmup_counts = set()
+        draw_counts = set()
+        sampling_depths = set()
         for chain in range(1, 5):
             status_path = args.nuts_root / target / f"chain-{chain}" / "status.json"
             draws_path = args.nuts_root / target / f"chain-{chain}" / "draws.npz"
             status = json.loads(status_path.read_text(encoding="utf-8"))
-            if status["state"] != "SUCCEEDED" or status["completed_draws"] != 1000:
+            if status["state"] != "SUCCEEDED" or int(status["completed_draws"]) <= 0:
                 raise RuntimeError(f"incomplete chain: {target} {chain}")
             with np.load(draws_path, allow_pickle=False) as archive:
-                chains.append(np.asarray(archive["unconstrained"], dtype=np.float64))
+                unconstrained = np.asarray(archive["unconstrained"], dtype=np.float64)
+                if unconstrained.shape[0] != int(status["completed_draws"]):
+                    raise RuntimeError(f"draw/status mismatch: {target} {chain}")
+                chains.append(unconstrained)
                 for name in sample_stats:
                     sample_stats[name].append(np.asarray(archive[name]))
+            warmup_counts.add(int(status["completed_warmup"]))
+            draw_counts.add(int(status["completed_draws"]))
+            sampling_depths.add(int(status.get("sampler_contract", {}).get("max_tree_depth", 10)))
             source_records.append(
                 {"chain": chain, "draws": {"path": str(draws_path.resolve()), "sha256": sha256(draws_path)}, "status": {"path": str(status_path.resolve()), "sha256": sha256(status_path)}}
             )
+        if len(warmup_counts) != 1 or len(draw_counts) != 1 or len(sampling_depths) != 1:
+            raise RuntimeError(f"inconsistent sampler contracts across {target} chains")
+        warmup_count = warmup_counts.pop()
+        draw_count = draw_counts.pop()
+        max_tree_depth = sampling_depths.pop()
         unconstrained = np.stack(chains, axis=0)
         physical = physical_draws(args.map_root / target / "selected_map.json", unconstrained)
         stats = {name: np.stack(parts, axis=0) for name, parts in sample_stats.items()}
@@ -153,13 +167,13 @@ def main() -> int:
         output = args.output_root / target
         output.mkdir(parents=True, exist_ok=True)
         samples_path = output / "posterior_samples.npz"
-        np.savez(samples_path, **physical, chain=np.arange(1, 5), draw=np.arange(1000))
+        np.savez(samples_path, **physical, chain=np.arange(1, 5), draw=np.arange(draw_count))
         xr.Dataset(
             {
                 name: (("chain", "draw"), values)
                 for name, values in physical.items()
             },
-            coords={"chain": np.arange(1, 5), "draw": np.arange(1000)},
+            coords={"chain": np.arange(1, 5), "draw": np.arange(draw_count)},
         ).to_netcdf(output / "trace.nc", engine="h5netcdf")
         np.savez(output / "covariance.npz", names=np.asarray(names), covariance=covariance, correlation=correlation)
         divergence_count = int(np.sum(stats["diverging"]))
@@ -171,7 +185,9 @@ def main() -> int:
             "ess_tail_primary_min": min(summary[name]["ess_tail"] for name in primary),
             "divergences": divergence_count,
             "bfmi_min": float(np.min(bfmi)),
-            "tree_depth_saturation_count": int(np.sum(stats["num_steps"] >= 1023)),
+            "tree_depth_saturation_count": int(
+                np.sum(stats["num_steps"] >= (2**max_tree_depth - 1))
+            ),
         }
         gates["accepted"] = bool(
             gates["r_hat_primary_max"] <= 1.05
@@ -188,8 +204,9 @@ def main() -> int:
             "git_commit": git_commit,
             "conditional_on_fixed_emissivity": True,
             "chains": 4,
-            "warmup_per_chain": 1000,
-            "draws_per_chain": 1000,
+            "warmup_per_chain": warmup_count,
+            "draws_per_chain": draw_count,
+            "sampling_max_tree_depth": max_tree_depth,
             "summary": summary,
             "gates": gates,
             "bfmi_by_chain": bfmi.tolist(),

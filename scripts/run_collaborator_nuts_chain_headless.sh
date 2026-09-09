@@ -6,6 +6,8 @@ TARGET="${1:?target required}"
 CHAIN_ID="${2:?chain id required}"
 DURABLE_ROOT="${3:?durable root required}"
 CODE_COMMIT="${4:?code commit required}"
+WARMUP="${5:-200}"
+SAMPLES="${6:-500}"
 PROJECT="/arc/projects/KILOGAS/analysis/toby_sandbox"
 SOURCE_REPO="${PROJECT}/kinUV"
 MAP_ROOT="${PROJECT}/results/incoming/collaborator-delivery-20260908/map"
@@ -75,8 +77,9 @@ cd "${CODE_ROOT}"
   --scratch "${SCRATCH_ROOT}/chains/${TARGET}" \
   --durable "${DURABLE_ROOT}/${TARGET}" \
   --log-dir "${LOG_ROOT}" \
-  --warmup 1000 \
-  --samples 1000 \
+  --warmup "${WARMUP}" \
+  --samples "${SAMPLES}" \
   --chunk 100 \
   --target-accept 0.90 \
-  --max-tree-depth 10
+  --warmup-max-tree-depth 7 \
+  --max-tree-depth 8

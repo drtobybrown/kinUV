@@ -73,6 +73,8 @@ def main() -> int:
         default=("KGAS066", "KGAS007"),
     )
     parser.add_argument("--chains", nargs="+", type=int, choices=(1, 2, 3, 4), default=(1, 2, 3, 4))
+    parser.add_argument("--warmup", type=int, default=200)
+    parser.add_argument("--samples", type=int, default=500)
     parser.add_argument("--skip-postprocess", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -97,6 +99,10 @@ def main() -> int:
             "topology": "one-flexible-headless-session-per-chain",
             "targets": list(args.targets),
             "chains": list(args.chains),
+            "warmup_per_chain": args.warmup,
+            "draws_per_chain": args.samples,
+            "dense_map_hessian_metric": True,
+            "heuristic_step_size": True,
         },
         "sessions": [],
     }
@@ -111,6 +117,7 @@ def main() -> int:
                 command=[
                     "/bin/bash", str(REPO / "scripts/run_collaborator_nuts_chain_headless.sh"),
                     target, str(chain), str(args.attempt_root.resolve()), commit,
+                    str(args.warmup), str(args.samples),
                 ],
                 dry_run=args.dry_run,
             )

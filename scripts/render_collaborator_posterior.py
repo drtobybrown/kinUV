@@ -134,7 +134,13 @@ def main() -> int:
         corner(target, samples, destination / "plots", bool(summary["gates"]["accepted"]))
         with (destination / "README.md").open("a", encoding="ascii") as stream:
             stream.write("\n## Conditional posterior\n\n")
-            stream.write(f"Four 1000-draw NUTS chains completed. Posterior gate accepted: `{str(summary['gates']['accepted']).lower()}`. See `best_model/posterior/summary.json` for R-hat, ESS, divergences, BFMI, and tree-depth diagnostics.\n")
+            stream.write(
+                f"Four {summary['draws_per_chain']}-draw NUTS chains completed after "
+                f"{summary['warmup_per_chain']} warm-up steps. Posterior gate accepted: "
+                f"`{str(summary['gates']['accepted']).lower()}`. See "
+                "`best_model/posterior/summary.json` for R-hat, ESS, divergences, "
+                "BFMI, and tree-depth diagnostics.\n"
+            )
         files = {
             path.relative_to(destination).as_posix(): {"bytes": path.stat().st_size, "sha256": sha256(path)}
             for path in sorted(destination.rglob("*")) if path.is_file() and path.name != "POSTERIOR_CANDIDATE_MANIFEST.json"

@@ -177,14 +177,17 @@ finite gradients and MAP/NUTS likelihood identity. Reuse the production forward
 operator; do not construct a secondary Fourier engine. Do not silently fall
 back to the legacy posterior or a differently named sampler.
 
-Initial allocation: **four independently seeded chains per target, 1,000 warm-up
-and 1,000 retained draws per chain**, target acceptance 0.90, maximum tree depth
-10. Initialize from small, independent valid perturbations around the selected
-MAP, scaled in its conditioned coordinates and adaptively reduced until the
-initial energy remains within 10 of the MAP energy. A fixed chart-space jitter
-is invalid when target curvatures differ. Retained competitive modes must
-be investigated or explicitly identified as unsampled; four near-identical
-chains alone do not demonstrate global exploration.
+Initial allocation: **four independently seeded chains per target, 200 warm-up
+and 500 retained draws per chain**, target acceptance 0.90. Seed adaptation with
+a regularized dense inverse Hessian evaluated at the MAP and use heuristic step
+size selection; retain mass adaptation during warm-up. Cap warm-up and sampling
+tree depth at 7 and 8 respectively to prevent pathological trajectories from
+dominating wall time. Initialize from small, independent valid perturbations
+around the selected MAP, scaled in its conditioned coordinates and adaptively
+reduced until the initial energy remains within 10 of the MAP energy. A fixed
+chart-space jitter is invalid when target curvatures differ. Retained competitive
+modes must be investigated or explicitly identified as unsampled; four
+near-identical chains alone do not demonstrate global exploration.
 
 Run the four chains for both targets concurrently when the CANFAR allocation is
 available. The active platform permits approximately 400 concurrent sessions;
@@ -211,7 +214,8 @@ finite valid draws, and no unresolved energy/tree-depth pathology affecting the
 primary posterior. Do not discard bad chains or individual divergent draws to
 manufacture acceptance.
 
-If ESS is the only failure, extend each compatible chain by up to 1,000 draws.
+If ESS is the only failure, first extend each compatible chain to 1,000 retained
+draws without repeating warm-up.
 If adaptation is inadequate, one automatic retry with 2,000 warm-up steps and
 target acceptance 0.95 is authorized; Sol may adjust tree depth within the
 resource budget. Retain the unsuccessful attempt. Remaining failure is reported
