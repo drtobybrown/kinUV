@@ -14,9 +14,12 @@ The active, PI-authorized pre-meeting campaign is defined by
 [`COLLABORATOR_DELIVERY_PLAN_20260908`](docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).
 Both four-start joint visibility MAP sweeps are complete. Reviewer A and
 Reviewer B independently accepted the MAP-only candidate; its best products are
-installed directly under each `results/production/<TARGET>/` root. KGAS007's
-four-chain conditional posterior is accepted and installed in its canonical
-`best_model/posterior/` directory.
+installed directly under each `results/production/<TARGET>/` root. Each target
+now exposes `best_model/`, the complete four-start `map/` record, `nuts/`,
+`plots/`, `benchmarks/`, and provenance. Both `best_model/selection.json`
+records select MAP as the authoritative point model. KGAS007's accepted
+four-chain conditional posterior lives in `nuts/` and supplies uncertainty
+bands; KGAS066's `nuts/status.json` records its unaccepted active campaign.
 The pathological KGAS066 start was diagnosed and preserved; its replacements
 run in four independent flexible headless sessions from commit `8f11648`, one
 per chain. The first oversubscribed launch and the superseded unbounded-jitter
@@ -32,13 +35,14 @@ publication diagnostic for `R_turn < BMAJ`; it reuses the accepted S4 fits and
 has no gating role.
 
 The canonical production hierarchy is `results/production/<target>/` with
-`best_model/`, `plots/`, and `benchmarks/`. Diagnostic repair `fdcbf165cdd8b1f9b6d89d71cfd5353ce4ac9e7c`
+`best_model/`, `map/`, `nuts/`, `plots/`, `benchmarks/`, and `provenance/`.
+Diagnostic repair `fdcbf165cdd8b1f9b6d89d71cfd5353ce4ac9e7c`
 corrects celestial slit orientation and selects the exact S4-bound smooth-S3
 checkpoints, instead of mixing historical cubes and posteriors. Both target
-suites have four direct and five comparator PDF/PNG pairs; no corresponding
-posterior exists. S0--S5 gates and accepted evidence are unchanged. No new fit
-or score was run. See STATUS and PRODUCTION_RECORD for verified archive and
-product identities and Astra's science-completeness acceptance.
+suites now include stage-labelled matched moments, kinematic-overlay PVDs,
+full-disk and central-beam spectra, two-panel rotation/dispersion profiles, and
+truth-annotated synthetic recovery. KGAS007 adds its accepted posterior corner
+and 16th--84th percentile radial bands. No fit or synthetic score was rerun.
 
 1. **Calibrate rotation significance.** Complete the fitted non-rotating emitting-disk bootstrap before promoting a formal rotation-detection probability.
 2. **Calibrate intervals separately.** A later authorized campaign applies R-hat and ESS to primary parameters and establishes exact-workflow coverage before calibrated interval claims.

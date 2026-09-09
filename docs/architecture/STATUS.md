@@ -1,5 +1,5 @@
 ---
-generation: 41
+generation: 42
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -18,17 +18,17 @@ user_review: docs/reviews/artifacts/2026-09-05-kgas007-nuts/
 open_questions:
   - How broadly does the demonstrated advantage extend beyond the tested thin axisymmetric arctan family?
 deadlocks: []
-canon_generation: 35
+canon_generation: 36
 ---
 
 ## Agent Run Status
 
-* **Phase:** The PI-authorized posterior campaign is active on top of the closed S0--S5 baseline. Accepted products occupy only the flat canonical target roots while KGAS066 sampling continues.
-* **Last Action:** Commit `feed645731c207805a212f837b72a133a054241a` removes the artificial two-target posterior barrier and undeclared ArviZ/xarray runtime dependency. KGAS007 was finalized immediately from its four completed fast chains. Commit `6f98adde17c4418450594d83fdd261995475be01` installs its accepted posterior and best diagnostic suite directly at `results/production/KGAS007/{best_model,plots,benchmarks}/` and places KGAS066's accepted MAP suite in the same flat canonical layout while its posterior continues sampling. The superseded target trees and presentation records were checksum-verified and moved to dated archives; no meeting- or collaborator-specific directory remains under `results/production/`.
+* **Phase:** Final target-centred diagnostic packaging is complete on top of the closed S0--S5 baseline. KGAS066 posterior sampling continues outside accepted products.
+* **Last Action:** Commit `64e314c83f145ef63b0824f5e265b300421459cb` adds the frozen-product delivery renderer and transactional packager. Both targets now expose `results/production/<TARGET>/{best_model,map,nuts,plots,benchmarks,provenance}` with no audience-specific path layer. `best_model/selection.json` selects MAP for both targets because it defines the minimum-chi-square delivered cube. KGAS007's accepted NUTS posterior supplies covariance and 16th--84th percentile bands; KGAS066's incomplete, depth-saturated NUTS campaign is explicitly unaccepted.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** Seven focused runner tests pass. KGAS007 has maximum primary rank-normalized split R-hat 1.00430, minimum bulk ESS 768.923, minimum tail ESS 627.544, minimum BFMI 0.874732, zero divergences, and zero retained tree-depth saturations. Its posterior manifest, NetCDF trace, samples, covariance, summary, corner PDF/PNG, MAP diagnostics, and KinMS comparisons verify against candidate manifest SHA-256 `a0e9e6f8936da00c3e0577faf96fbe26ecff9afdec6234c340cba724269c3ffc`.
-* **Next Step:** KGAS066 continues from four durable 100-draw checkpoints toward 500 draws. It will be finalized and rendered on its own completion. Any convergence-only extension to 1,000 draws is target-local and cannot delay the already landed KGAS007 products.
+* **Verification:** Thirty-six focused diagnostics tests pass. All 44 KGAS066 and 52 KGAS007 manifest entries verify by size and SHA-256. The production manifest hashes are `1883937344066f5d475781a06e1a15561ffd54d4551e8292e914de1888230c2d` and `410d2937ff5d50e4d2c6c8a994cec95d98e0918a89b1b374066be5f1993d6deb`. KGAS007 retains maximum primary rank-normalized split R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, BFMI >= 0.874732, zero divergences, and zero retained tree-depth saturations.
+* **Next Step:** KGAS066 continues from four durable 100-draw checkpoints toward 500 draws outside production. Its current retained checkpoints have zero divergences but near-universal maximum-depth saturation, so MAP remains selected unless a later independently verified posterior passes the frozen gates.
 
 ## 2026-09-08 collaborator delivery campaign
 

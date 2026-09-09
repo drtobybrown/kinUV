@@ -22,9 +22,11 @@ durable evidence path, and the next responsible role before handoff.
 kinUV must remain importable without legacy packages or CASA tooling. Measurement Set extraction belongs exclusively to the separate `ms2kinuv` repository. Use node-local `/scratch` for high-frequency temporary I/O and the configured `/arc` run root for durable, bounded artifacts.
 
 Install accepted products directly at
-`results/production/<TARGET>/{best_model,plots,benchmarks,provenance}`. Never
-create meeting-, collaborator-, candidate-, or run-specific layers beneath a
-production target. Keep candidates in `results/incoming`, delivery records in
+`results/production/<TARGET>/{best_model,map,nuts,plots,benchmarks,provenance}`.
+The `map/` and `nuts/` directories are scientific-stage records; `best_model/selection.json`
+declares which stage supplies the authoritative point product. Never create
+meeting-, collaborator-, candidate-, or run-specific layers beneath a production
+target. Keep candidates in `results/incoming`, delivery records in
 `results/records`, and superseded target trees in verified dated archives.
 
 Run production compute in CANFAR headless sessions visible to `canfar ps`, not

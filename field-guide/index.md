@@ -271,10 +271,12 @@ Paths are resolved from deployment configuration. Source code must not embed a u
 Write large intermediate arrays to scratch first. Promote a checkpoint by closing it, validating it, copying to a temporary durable path, fsyncing file and directory, verifying size/checksum, and atomically renaming it. Never stream high-volume progress output, JIT caches, or repeatedly rewritten arrays directly to `/arc`.
 
 Accepted products use one stable path per target:
-`results/production/<TARGET>/{best_model,plots,benchmarks,provenance}`. The
+`results/production/<TARGET>/{best_model,map,nuts,plots,benchmarks,provenance}`. The
 production tree contains the best accepted scientific products, independent of
 the audience or delivery event. Candidate, collaborator, meeting, and run-ID
-directory layers are prohibited there. Stage candidates remain under
+directory layers are prohibited there. `map/` preserves optimizer starts and
+`nuts/` contains accepted posterior products or an explicit unaccepted status;
+`best_model/selection.json` identifies the authoritative model stage. Stage candidates remain under
 `results/incoming/`; delivery indexes belong under `results/records/`; replaced
 production trees move to checksum-verified dated archives before promotion.
 
