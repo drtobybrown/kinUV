@@ -18,7 +18,7 @@ import jax.numpy as jnp
 import numpy as np
 from scipy.optimize import minimize
 
-from representation_model import build_target_context, _parent_projected_speed
+import representation_model as legacy_context
 from kinuv.infer.unified import (
     UNIFIED_PARAMETER_NAMES,
     UnifiedChartSpec,
@@ -51,7 +51,23 @@ def atomic_json(path: Path, value) -> None:
 
 def build_problem(target: str):
     """Adapt the accepted checkpoint only as a target-neutral initial condition."""
-    parent = build_target_context(target, "pspline")
+    workspace = Path(
+        os.environ.get(
+            "KINUV_WORKSPACE", "/arc/projects/KILOGAS/analysis/toby_sandbox"
+        )
+    )
+    # Executable code is the frozen /scratch archive; immutable scientific
+    # inputs remain under the durable workspace.
+    legacy_context.REPO = workspace / "kinUV"
+    legacy_context.PROJECT = workspace
+    legacy_context.RECOVERY = (
+        workspace
+        / "results/validation/crossdomain-recovery-s4-remediation-20260907-r1"
+    )
+    legacy_context.COVARIANCE_RECORD = (
+        workspace / "results/validation/crossdomain-recovery-s2-20260907-r1/metrics.json"
+    )
+    parent = legacy_context.build_target_context(target, "pspline")
     parameters = parent.parent_parameters
     pa_rad = np.radians(float(parameters["pa_deg"]))
     inclination_deg = float(parameters["inclination_deg"])
@@ -63,7 +79,9 @@ def build_problem(target: str):
         bmaj_arcsec=parent.design.bmaj_arcsec,
     )
     u_reference = max(
-        _parent_projected_speed(support.reference_radius_arcsec, parameters, parent),
+        legacy_context._parent_projected_speed(
+            support.reference_radius_arcsec, parameters, parent
+        ),
         1.0,
     )
     sigma_reference = np.sqrt(

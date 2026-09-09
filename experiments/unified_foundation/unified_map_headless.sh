@@ -30,6 +30,7 @@ export XLA_FLAGS="--xla_cpu_multi_thread_eigen=false intra_op_parallelism_thread
 export OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 MKL_NUM_THREADS=4 NUMEXPR_NUM_THREADS=4
 export TF_NUM_INTRAOP_THREADS=4 TF_NUM_INTEROP_THREADS=1 JAX_NUM_THREADS=4
 export PYTHONPATH="${code_root}/src:${code_root}/experiments/unified_foundation"
+export KINUV_WORKSPACE="${project}"
 
 set +e
 "${venv}/bin/python" "${code_root}/experiments/unified_foundation/unified_map_runner.py" \
