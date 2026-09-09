@@ -242,7 +242,7 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     ))
     axis.text(0.080, 0.96, badge, transform=axis.transAxes, ha="left", va="top", fontsize=10,
               bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": "0.45", "alpha": 0.94})
-    panel_letter(axis, "f", fontsize=11)
+    panel_letter(axis, "f", x=0.94, fontsize=11)
     figure.suptitle(f"{target}: major-axis PVD and intrinsic rotation - kinUV {stage}", y=0.975)
     return _save(figure, output, "pvd_kinuv_vs_kinms")
 
