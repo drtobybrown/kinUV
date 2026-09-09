@@ -1,5 +1,5 @@
 ---
-generation: 37
+generation: 38
 phase: collaborator-delivery-running
 code_freeze: false
 next_role: senior-implementer-sol
@@ -24,11 +24,11 @@ canon_generation: 34
 ## Agent Run Status
 
 * **Phase:** The PI-authorized 2026-09-08 collaborator campaign is active on top of the closed S0--S5 baseline. The immutable accepted production record remains unchanged while a versioned meeting candidate and conditional posterior are reviewed.
-* **Last Action:** Four bounded joint visibility MAP starts completed for both targets. Reviewer A and Reviewer B accept corrected packet v2 under `results/production/meeting_packets/kinuv-collaborator-20260908-map-v2/`. The posterior campaign now runs as proper flexible CANFAR headless sessions: KGAS066 session `lhcamyhk`, KGAS007 session `bkrzseva`, and postprocessing session `kd0xtaty`. Each target session has four active chains in warm-up with no queued chain.
+* **Last Action:** A 2026-09-09 runtime audit found that fixed `0.01` unconstrained jitter displaced KGAS066 by 171.9--616.6 energy units and prevented all four chains from reaching their first 100-step checkpoint in 20 hours. Session `lhcamyhk` was stopped with zero durable steps or draws and preserved as `SUPERSEDED`. KGAS007 session `bkrzseva` continues unchanged. KGAS066 now runs one chain per flexible session (`xri1j2xs`, `ib750zyy`, `pxau0h3j`, `qpasby1o`) from `8f11648`; postprocessor `kzq6ao95` aggregates the independent sessions from `20eed3d`.
 * **Decisions Made:** Standard practice is now the binding comparison: stock KinMS consumes the canonical full-data pipeline cube, while kinUV consumes and predicts calibrated visibilities. Training-fold `tclean` products are not required. Synthetic truth uses an analytic Python cube and native Fourier visibilities with no CASA dependency.
 * **Gates:** Every grouped visibility fold still favors kinUV. The collaborator MAP improves accepted full-data chi-square by 1.81008 for KGAS066 and 1.87969 for KGAS007; neither result has an active-boundary hit. The inclination values remain 55.3343 and 33.8940 deg, so the bounded replay does not support a large hidden inclination-mode correction.
-* **Verification:** Forty focused transform, S3, imaging, style, and S4 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. The CANFAR dispatch and runner suite adds 28 passing focused tests plus Python and shell syntax checks. With NumPyro enabled, the full optional suite reports 274 passed and 8 skipped; one historical 32-warm-up/32-draw G3 smoke does not meet its toy mixing threshold under NumPyro 0.21.0. The production campaign uses 1000 warm-up and 1000 retained draws and will be judged only from its recorded diagnostics. Attempt 4 records eight durable `WARMUP` states with the expected independent seeds and zero failures.
-* **Next Step:** Monitor headless attempt 4 without changing the dual-accepted MAP-only packet. Atomic sampler checkpoints move from each session's `/scratch` area to `/arc` every 100 steps. After all eight chains finish, the headless postprocessor generates chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate.
+* **Verification:** Forty focused transform, S3, imaging, style, and S4 tests pass. The early candidate verifies 30 rendered files per target plus 56 unchanged S4/S5 synthetic-manifest entries. The revised CANFAR runner and aggregation suite passes 33 focused tests plus Python and shell syntax checks. The v2 NPZ inputs load in 3.74/4.01 s versus 99.87/81.93 s for the old KGAS066/KGAS007 files, and produce equal or smaller fit arrays; they are not the slowdown. At audit, KGAS007 chain 3 had 400 retained draws, zero divergences, median 15 and maximum 31 leapfrog steps. The bounded KGAS066 replacements reduce effective jitter to `0.00125`, cap initial energy deltas at 2.763--9.779, and reached 36 warm-up steps within their first status minute.
+* **Next Step:** Monitor the mixed-session attempt without changing the dual-accepted MAP-only packet or the progressing KGAS007 chains. Atomic checkpoints move from each session's `/scratch` area to `/arc` every 100 steps. After all eight chains finish, postprocessor `kzq6ao95` generates chain-aware rank diagnostics, posterior corners, and a separately versioned posterior-bearing candidate.
 
 ## 2026-09-08 collaborator delivery campaign
 
@@ -100,6 +100,31 @@ posterior synthesis. No explicit CPU or memory request was made. Both target
 sessions run four chains concurrently, perform high-frequency work on local
 `/scratch`, and publish status and atomic recovery checkpoints to
 `results/incoming/collaborator-delivery-20260908/nuts-headless-attempt4/`.
+
+The 2026-09-09 audit found no traceback, OOM, non-finite value, sampler error,
+or failed process. It did find a target-sensitive initialization defect. The
+same fixed `0.01` perturbation used for every unconstrained coordinate raised
+KGAS066's potential by 171.887--616.589 and its gradient norm from 407.427 at
+the MAP to 31,174.9--62,321.1. In contrast, KGAS007's perturbations raised the
+potential by only 5.347--32.927. The metadata-complete visibility files were
+also exonerated: measured `load_target_vis` times were 3.74 s for KGAS066 v2
+and 4.01 s for KGAS007 v2, compared with 99.87 and 81.93 s for the old files.
+KGAS066 has 83,695 fitted complex cells and 10 active coordinates; KGAS007 has
+60,192 cells and 11 active coordinates.
+
+Commit `8f116487090c7881e448eff8a1e2418848ac8fc7` bounds each independent
+perturbation to an initial energy increase of at most 10, records its effective
+scale, exposes in-memory warm-up progress in the minute heartbeat, and makes
+one flexible session per chain the standard launch topology. Thirty-two focused
+runner tests pass. The stopped KGAS066 record, containing zero completed
+warm-up checkpoints and zero draws, is checksum-preserved under
+`results/incoming/collaborator-delivery-20260908/nuts-headless-attempt4/superseded-kgas066-unbounded-jitter-20260909T011824Z/`.
+Its four replacements are sessions `xri1j2xs`, `ib750zyy`, `pxau0h3j`, and
+`qpasby1o`; their measured initial energy deltas are 7.1981, 9.7787, 4.2830,
+and 2.7633. Commit `20eed3d20f04e7e3625a5c26cc74cfb859746873`
+lets replacement postprocessor `kzq6ao95` aggregate status directly from
+independent chain sessions; 33 focused runner tests pass. The original KGAS007
+session remains active because it has durable progress and compatible output.
 
 ## 2026-09-07 diagnostic coordinate and checkpoint repair
 

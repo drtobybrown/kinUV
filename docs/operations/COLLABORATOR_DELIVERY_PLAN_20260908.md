@@ -180,14 +180,18 @@ back to the legacy posterior or a differently named sampler.
 Initial allocation: **four independently seeded chains per target, 1,000 warm-up
 and 1,000 retained draws per chain**, target acceptance 0.90, maximum tree depth
 10. Initialize from small, independent valid perturbations around the selected
-MAP, scaled in its conditioned coordinates. Retained competitive modes must
+MAP, scaled in its conditioned coordinates and adaptively reduced until the
+initial energy remains within 10 of the MAP energy. A fixed chart-space jitter
+is invalid when target curvatures differ. Retained competitive modes must
 be investigated or explicitly identified as unsampled; four near-identical
 chains alone do not demonstrate global exploration.
 
 Run the four chains for both targets concurrently when the CANFAR allocation is
 available. The active platform permits approximately 400 concurrent sessions;
-this campaign therefore uses exactly eight CPU-pinned workers, four per target,
-without an artificial cross-target queue. Checkpoint chain identity, RNG state,
+the standard topology is one flexible headless CANFAR session per chain, with
+no explicit resource request while each worker remains below 16 CPU and 32 GB.
+This lets the platform schedule eight independent chains without CPU contention
+inside a target container. Checkpoint chain identity, RNG state,
 adaptation state and draw position. Resume only a compatible chain; never merge
 overlapping draws or warm-up samples into production draws.
 
