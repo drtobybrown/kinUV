@@ -1,16 +1,16 @@
 ---
-generation: 45
-phase: unified-foundation-bounded-prototyping
+generation: 46
+phase: unified-foundation-map-production
 code_freeze: false
 next_role: senior-implementer-sol
-board: unified-foundation-architecture-licensed
+board: unified-foundation-map-conditioned
 build_licensed: true
 pending:
   - nonrotation-null-bootstrap
   - stage-b-smoothness-recalibration
   - exact-workflow-posterior-calibration
-  - collaborator-nuts-completion
-  - unified-foundation-new-mock-and-real-verification
+  - unified-chart-sampler-comparison
+  - unified-foundation-new-mock-verification
 last_propose: docs/decisions/DEC-KINUV-UNIFIED-FOUNDATION.md
 last_review: docs/reviews/2026-09-08-collaborator-map-review-b.md
 last_review_a: docs/reviews/2026-09-08-collaborator-map-review-a.md
@@ -24,13 +24,77 @@ canon_generation: 36
 
 ## Agent Run Status
 
-* **Phase:** The PI has licensed a bounded unified-foundation prototype. Production adoption is not accepted, and all accepted KGAS066/KGAS007 products remain immutable. Existing KGAS066 posterior workers continue independently.
-* **Production baseline:** Both targets still select MAP. KGAS007's accepted conditional posterior retains maximum primary R-hat 1.00430, bulk ESS >= 768.923, tail ESS >= 627.544, zero divergences, and zero retained depth saturations. KGAS066 has 400 current draws outside accepted products and remains unaccepted: mean leapfrog steps are 249.56--255.00 per draw and 395 of 400 retained draws reached the 255-step cap. The unified spike is based on `71b9d9e0d55df19bdb6ac2b0fb475d4eeea30142`.
-* **Last Action:** The Registrar recorded `DEC-KINUV-UNIFIED-FOUNDATION`. The diagnostics spike adapted both accepted checkpoint profiles to one versioned schema and rendered moments, both PVD axes, spectra, and rotation/dispersion products without fitting or rescoring. Corrected P-spline and finite-GP three-iteration representation pilots completed but remain unconverged and source-incomparable. The bounded sampler probes completed with no accepted posterior comparison.
-* **Decisions Made:** One fixed-dimensional smooth projected-velocity and dispersion chart, proper common priors, common sampler semantics, explicit support/missingness, and a model-neutral output are licensed for prototyping. R50 is derived only from a constrained outer reference. Existing arctan/ring products are adapter fixtures, not evidence that the new model has been fitted.
-* **Gates:** No unified-foundation scientific or sampler gate has passed. Historical mock ratios do not transfer. The present P-spline carrier/shape chart is ineligible for sampling because KGAS007 collapsed its carrier scale to 0.00069 arcsec. The production PVD spectral-frame overlay defect is closed by the bounded repair below; this changes no fit, cube, mask, or profile.
-* **Verification:** The two-target diagnostic self-check, schema validation, cube load, and eight-figure smoke render completed in 11.238 seconds. Corrected P-spline warmed value-plus-gradient calls measured 0.564/0.417 s for KGAS066/KGAS007 versus 0.539/0.441 s for finite GP; no winner is inferred. A forced-bound `rslice` probe took 102.807 s total, made 28 actual likelihood calls and three constrained replacements, and had weighted ESS 1; its paired NUTS probe produced no draw within the 10-minute bound. Durable diagnostic evidence is `results/validation/unified-foundation-spikes-20260909/diagnostics/`. The PVD repair changed only reporting overlays and production manifests; S0--S5 states are unchanged.
-* **Next Step:** Sol resolves the shared chart's scale/shape degeneracy and dispersion capacity, then runs an exact same-prior sampler comparison on frozen source. New matched mock and real held-out validation, independent reviews, and an explicit promotion decision are required before production adoption.
+* **Phase:** The PI-authorized unified MAP campaign is complete and promoted for
+  KGAS007 and KGAS066. Both production targets now use the same 14-coordinate,
+  carrier-free projected-velocity spline and the same two-mode continuous
+  log-dispersion profile. No target-ID model dispatch remains in this path.
+* **Production baseline:** `best_model/selection.json` selects unified MAP for
+  both targets. KGAS007 selected start 4 at visibility chi-square
+  105452.682660 with gradient/component 0.000788888. KGAS066 selected start 4
+  at 166274.124145 with gradient/component 0.000915305. R50 is explicitly
+  `UNRESOLVED_PLATEAU` for both because the computational outer continuation
+  does not constitute plateau evidence. No unified-chart NUTS posterior has
+  been run or implied.
+* **Conditioning:** All four KGAS007 starts passed and their supported projected
+  profiles differ from the winner by at most 1.400%. KGAS066's winning start
+  passed; three starts stopped above the gradient gate, but all four supported
+  profiles agree within 0.174% and none shows coefficient runaway or boundary
+  jamming. Individual headless fits used 2.4--5.0 GiB and completed in
+  58--189 s.
+* **Fit comparison:** The common chart improves KGAS066 visibility chi-square
+  by 43.318703 relative to the superseded target-specific MAP. KGAS007 changes
+  by +30.687684, only 0.029% of its prior chi-square and well below the 1%
+  empirical fidelity bound. On the supporting restored-cube diagnostic,
+  KGAS007 also improves on KinMS residual RMS (0.048761 versus 0.051294 K),
+  while KGAS066 remains worse (0.108121 versus 0.101067 K). Image-plane scores
+  remain diagnostics rather than the fit objective.
+* **Delivery:** Each production target contains 50 checksum-bound files under
+  `best_model/`, `map/`, `nuts/`, `plots/`, `benchmarks/`, and `provenance/`.
+  Native intrinsic, PB-attenuated, and matched restored FITS cubes are present,
+  together with moments, both PVD axes, aperture spectra, rotation/dispersion
+  profiles, KinMS comparisons, and retained synthetic evidence. Production
+  manifest SHA-256 values are `1f069ad4287567fb94c6d71d6d8140c9a7346a6dbd8bfa0800405c49df4057b8`
+  for KGAS007 and `1361c3a12cacb8328dd90c82f72fc8ae4a123ed3253a0be81b00833c497c1520`
+  for KGAS066.
+* **Implementation:** The chart is commit `6b4c921`; headless campaign runner
+  and durable-input repair are `defeb88` and `6bf5865`; production packaging is
+  `c91396b16e70c407c5bfa57d72e619bda8efdd8e`. The final focused profile,
+  forward-model, and diagnostic suite passes 36 tests in 21.52 s.
+* **Next Step:** Run the fair same-prior sampler comparison on this identifiable
+  chart, then extend synthetic validation beyond the retained axisymmetric
+  family. Posterior intervals remain unavailable until that work passes.
+
+## 2026-09-09 unified foundation MAP production
+
+The direct chart uses `u(R)=R exp(g(R))`, fixes `u(0)=0`, removes the floating
+carrier radius, and places target-neutral support nodes from the beam and
+emission quantiles. A proper fixed second-derivative prior controls curvature
+without enforcing monotonicity. The common dispersion law is
+`log sigma(R)=s0+a1 h1(R)+a2 h2(R)`; zero deviations recover a constant profile.
+Dark-matter or baryonic decomposition remains absent from the likelihood.
+
+The eight-start campaign ran as eight independent flexible CANFAR sessions from
+commit `6bf586552cf0055d833175db68d8e397962c95a3`. The first dispatch is retained
+as a clean pre-fit path-resolution failure; the corrected `r2` dispatch contains
+all exit records, logs, MAP vectors, scalar objectives, and radial profiles at
+`results/incoming/unified-foundation-step3-6bf5865-r2/`.
+
+| Target | Start | Visibility chi-square | Delta vs previous MAP | Gradient/component | Max profile difference | Restored RMS kinUV / KinMS |
+|---|---:|---:|---:|---:|---:|---:|
+| KGAS007 | 4 | 105452.682660 | +30.687684 | 0.000788888 | 1.400% | 0.048761 / 0.051294 K |
+| KGAS066 | 4 | 166274.124145 | -43.318703 | 0.000915305 | 0.174% | 0.108121 / 0.101067 K |
+
+The superseded trees were verified and archived before replacement:
+
+| Target | Archive | Bytes | SHA-256 |
+|---|---|---:|---|
+| KGAS007 | `results/archive/KGAS007/20260909_pre-unified-foundation-production.tar.gz` | 5659200 | `f1b27a722ca544410918567393d7c189fdc82c463fe87bb2350ee002467cd7e0` |
+| KGAS066 | `results/archive/KGAS066/20260909_pre-unified-foundation-production.tar.gz` | 5495013 | `8a6a23deaef659a181257d7ffdc9ad363275b0d25f9d05a9831aef02dabb2227` |
+
+The optical-LSRK PVD overlay applies the endpoint-wise reporting transform from
+commit `1e8ea5b`; the model cube uses the same transformed channel coordinates.
+All delivered FITS cubes are finite and match the official science-cube shape
+and WCS exactly.
 
 ## 2026-09-09 PVD spectral-frame overlay repair
 

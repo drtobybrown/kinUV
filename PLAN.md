@@ -10,31 +10,29 @@ The visibility likelihood and samplers contain kinematics only. Mass decompositi
 
 ## Priority work
 
-The PI has licensed the bounded architecture and prototype sequence in
+The PI licensed the unified architecture and execution sequence in
 [`DEC-KINUV-UNIFIED-FOUNDATION`](docs/decisions/DEC-KINUV-UNIFIED-FOUNDATION.md).
-Production adoption is not accepted.  Complete the representation comparison
-and corrected same-prior sampler benchmark, implement one common model for
-both targets, then run new matched mock and grouped-real predictive validation.
-The diagnostic adapter/render smoke is complete; its open production
-spectral-frame overlay defect must be corrected and independently reviewed
-before any figure promotion.  Existing production products and active KGAS066
-workers remain untouched.
+The carrier-free common model, targeted four-start MAP campaign, corrected PVD
+reporting transform, and production packaging are complete for both targets.
+Commit `c91396b16e70c407c5bfa57d72e619bda8efdd8e` reproduces the packaging path;
+the active products live directly under `results/production/<TARGET>/` and
+their manifests are recorded in `STATUS.md`.
+
+The next bounded increment is the fair same-prior sampler comparison using the
+now-identifiable unified chart. Do not inherit old arctan/ring posterior draws.
+If one sampler closes the primary-parameter R-hat/ESS gates, land its posterior
+beside the MAP without replacing the accepted point model until its posterior
+predictive visibility score is verified. New mock validation should then widen
+the truth family beyond smooth axisymmetric arctan disks.
 
 The active, PI-authorized pre-meeting campaign is defined by
 [`COLLABORATOR_DELIVERY_PLAN_20260908`](docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).
-Both four-start joint visibility MAP sweeps are complete. Reviewer A and
-Reviewer B independently accepted the MAP-only candidate; its best products are
-installed directly under each `results/production/<TARGET>/` root. Each target
-now exposes `best_model/`, the complete four-start `map/` record, `nuts/`,
-`plots/`, `benchmarks/`, and provenance. Both `best_model/selection.json`
-records select MAP as the authoritative point model. KGAS007's accepted
-four-chain conditional posterior lives in `nuts/` and supplies uncertainty
-bands; KGAS066's `nuts/status.json` records its unaccepted active campaign.
-The pathological KGAS066 start was diagnosed and preserved; its replacements
-run in four independent flexible headless sessions from commit `8f11648`, one
-per chain. The first oversubscribed launch and the superseded unbounded-jitter
-launch remain explicit evidence. Archived candidate history remains available
-while KGAS066 posterior sampling proceeds.
+The former target-specific collaborator MAP and NUTS products are archived.
+Both current `best_model/selection.json` records select the unified MAP and both
+`nuts/status.json` records explicitly say that no posterior has been run for
+this chart. Each target exposes the complete four-start `map/` record,
+`best_model/`, `nuts/`, `plots/`, `benchmarks/`, and provenance. Historical
+posteriors must not be mixed with these fitted profiles.
 
 The cross-domain recovery program is complete through S5 under
 [`DEC-PI-S4-STANDARD-USE-BENCHMARK`](docs/decisions/DEC-PI-S4-STANDARD-USE-BENCHMARK.md).
