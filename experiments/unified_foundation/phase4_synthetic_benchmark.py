@@ -562,6 +562,7 @@ def _truth_cube_and_mask(config, data, grid, template, truth, velocity_profile, 
 
 
 def run_target(args) -> dict:
+    target_started = perf_counter()
     config_path = Path(args.target_config).resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
     target_id = config["target_id"]
@@ -615,6 +616,7 @@ def run_target(args) -> dict:
         truth_central_slope = float(projected_truth(derivative_step) / derivative_step)
         scenario_records = []
         for seed in args.seeds:
+            realization_started = perf_counter()
             realization_dir = scenario_dir / f"seed-{seed}"
             realization_dir.mkdir(parents=True, exist_ok=args.resume)
             seed_sequence = np.random.SeedSequence([int(seed), int(scenario_index)])
@@ -665,6 +667,7 @@ def run_target(args) -> dict:
             noisy_cube = np.where(mask, truth_cube + cube_noise, 0.0)
             cube_path = realization_dir / "mock_cube_k.fits"
             fits.PrimaryHDU(noisy_cube.astype(np.float32), truth_header).writeto(cube_path, overwrite=True)
+            kinms_started = perf_counter()
             kinms = _kinms_fit(
                 config,
                 cube_path,
@@ -677,6 +680,7 @@ def run_target(args) -> dict:
                 args.kinms_python,
                 seed,
             )
+            kinms_s = perf_counter() - kinms_started
             fitted = kinms["fitted"]
             kinms_u = projected_arctan_speed(
                 {
@@ -712,10 +716,13 @@ def run_target(args) -> dict:
             )
 
             legacy = None
+            legacy_s = None
             if scenario == "smooth_monotonic":
+                legacy_started = perf_counter()
                 legacy_fit = _fit_legacy_smooth(
                     mock_data, template, grid, covariance, truth, args.maxiter
                 )
+                legacy_s = perf_counter() - legacy_started
                 legacy_parameters = legacy_fit["parameters"]
                 legacy_u = projected_arctan_speed(legacy_parameters, radius)
                 legacy_sigma = np.zeros_like(radius) + float(legacy_parameters["gas_sigma_kms"])
@@ -737,8 +744,7 @@ def run_target(args) -> dict:
                         },
                         truth_central_slope=truth_central_slope,
                         fit_central_slope=float(
-                            legacy_parameters["v0_kms"]
-                            * np.sin(np.radians(legacy_parameters["inclination_deg"]))
+                            legacy_parameters["u_kms"]
                             * (2.0 / np.pi)
                             / legacy_parameters["r_t_arcsec"]
                         ),
@@ -768,6 +774,7 @@ def run_target(args) -> dict:
                 "kinuv_unified": {
                     "optimum_z": best["z"].tolist(),
                     "physical": {
+                        "flux": float(physical["flux"]),
                         "inclination_deg": float(np.degrees(physical["i_rad"])),
                         "pa_deg": float(np.degrees(physical["pa_rad"])),
                         "u_reference_kms": float(physical["u_reference_kms"]),
@@ -776,6 +783,7 @@ def run_target(args) -> dict:
                     "selected_start": {key: value for key, value in best.items() if key != "z"},
                     "attempts": [{key: value for key, value in item.items() if key != "z"} for item in attempts],
                     "metrics": unified_metrics,
+                    "flux_fractional_error": float(physical["flux"] / truth["flux"] - 1.0),
                 },
                 "kinms_stock": {
                     "family": "stock arctan rotation plus constant gasSigma",
@@ -783,8 +791,19 @@ def run_target(args) -> dict:
                     "optimizer_success": bool(kinms["success"]),
                     "nfev": int(kinms["nfev"]),
                     "metrics": kinms_metrics,
+                    "flux_fractional_error": float(fitted["flux_scale"] / truth["flux"] - 1.0),
                 },
                 "legacy_kinuv_arctan_smooth_control": legacy,
+                "profile_uncertainty_coverage": {
+                    "status": "UNMEASURED_MAP_ONLY",
+                    "reason": "Phase-4 lean benchmark runs deterministic MAP recovery only",
+                },
+                "timing_s": {
+                    "kinuv_unified_compile_plus_optimize": float(sum(item["compile_s"] + item["optimize_s"] for item in attempts)),
+                    "kinms_stock_fit": kinms_s,
+                    "legacy_kinuv_smooth_control": legacy_s,
+                    "realization_total": perf_counter() - realization_started,
+                },
                 "ratios": {
                     "inner_u_rmse_kinuv_over_kinms": unified_metrics["inner_bmaj_u_rmse_kms"] / kinms_metrics["inner_bmaj_u_rmse_kms"],
                     "full_u_rmse_kinuv_over_kinms": unified_metrics["full_support_u_rmse_kms"] / kinms_metrics["full_support_u_rmse_kms"],
@@ -840,6 +859,10 @@ def run_target(args) -> dict:
             "inner_u_rmse_kinms_rms_kms": float(np.sqrt(np.mean(kinms_inner ** 2))),
             "inner_u_rmse_ratio_kinuv_over_kinms": inner_ratio,
             "smooth_control_inner_u_rmse_ratio_unified_over_legacy_kinuv": smooth_ratio,
+            "completed_realizations": len(records),
+            "failed_realizations": 0,
+            "failure_rate": 0.0,
+            "target_wall_s": perf_counter() - target_started,
         },
         "gates": gates,
         "gate_pass": all(gates.values()),
