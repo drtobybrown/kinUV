@@ -18,12 +18,23 @@ Commit `c91396b16e70c407c5bfa57d72e619bda8efdd8e` reproduces the packaging path;
 the active products live directly under `results/production/<TARGET>/` and
 their manifests are recorded in `STATUS.md`.
 
-The next bounded increment is the fair same-prior sampler comparison using the
-now-identifiable unified chart. Do not inherit old arctan/ring posterior draws.
-If one sampler closes the primary-parameter R-hat/ESS gates, land its posterior
-beside the MAP without replacing the accepted point model until its posterior
-predictive visibility score is verified. New mock validation should then widen
-the truth family beyond smooth axisymmetric arctan disks.
+The fair same-prior sampler comparison is active on the identifiable unified
+chart. A bounded NUTS probe reached the depth-8 cap and completed only 10
+warm-up transitions in 20 minutes, so the declared Dynesty fallback now runs
+as two independent flexible CANFAR sessions per target from commit `cca9b7f`.
+Do not inherit old arctan/ring posterior draws. Promote only weighted posterior
+products whose independent replicates pass effective-sample, evidence,
+parameter, and radial-profile agreement gates.
+
+The new Phase-4 mock and real-data evidence is complete. Across smooth,
+non-monotonic, and varying-dispersion truths, unified kinUV's inner-beam
+projected-speed RMSE is 23.8--25.5 percent of KinMS and smooth-control absolute
+errors remain below one percent of projected amplitude. Genuine grouped
+training-refit prediction has positive one-sided 95-percent lower bounds on
+both real targets. Phase 5 will stage the accepted weighted posterior beside
+the MAP, retain MAP as the selected point model unless posterior-median native
+visibility scoring justifies replacement, render matching credible bands, and
+rehash the complete production trees.
 
 The active, PI-authorized pre-meeting campaign is defined by
 [`COLLABORATOR_DELIVERY_PLAN_20260908`](docs/operations/COLLABORATOR_DELIVERY_PLAN_20260908.md).

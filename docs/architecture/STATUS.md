@@ -1,6 +1,6 @@
 ---
-generation: 46
-phase: unified-foundation-map-production
+generation: 47
+phase: unified-foundation-phases-3-5
 code_freeze: false
 next_role: senior-implementer-sol
 board: unified-foundation-map-conditioned
@@ -23,6 +23,47 @@ canon_generation: 36
 ---
 
 ## Agent Run Status
+
+### 2026-09-10 unified Phase 3/4 execution
+
+* **Sampler selection:** The bounded KGAS066 NUTS probe at commit `9e95b78`
+  reached only 10 of 150 warm-up transitions in 20 minutes, retained zero
+  draws, and ended at the depth-8 cap of 255 leapfrog steps. The wall-time
+  controller terminated it with exit 137 after the grace interval. Phase 3
+  therefore selected the specified Dynesty fallback rather than extending an
+  impractical NUTS run.
+* **Active posterior campaign:** Two independent `rslice`, `nlive=500`
+  Dynesty replicates per target run in flexible CANFAR sessions from exact
+  commit `cca9b7f19b87686a5216ef926f3aa785d3ab2377`. Sessions are `a8ev8nlv`
+  and `qovd00ho` for KGAS066 and `fwaxswfv` and `atji9xso` for KGAS007.
+  The sole data likelihood remains fixed-C1 visibility chi-square; the proper
+  14-coordinate prior is transported exactly. Each worker checkpoints from
+  node-local scratch to durable `/arc` storage approximately once per minute.
+* **Matched mocks:** Six new matched realizations cover smooth monotonic,
+  non-monotonic bump, and varying-dispersion truths. Aggregate inner-beam
+  projected-speed RMSE is 5.9911 versus 25.1283 km/s for KGAS066 (ratio
+  0.23842) and 2.4787 versus 9.7353 km/s for KGAS007 (ratio 0.25461), both
+  decisively beyond the 10-percent superiority gate. Smooth-control kinUV
+  errors are 0.473 and 0.713 percent of the respective projected amplitudes,
+  within the Field Guide's sub-1-percent no-material-regression rule. The
+  original stricter comparison against a correctly specified arctan model is
+  retained as failed auxiliary evidence. The varying-dispersion sigma RMSE is
+  1.076 versus 1.185 km/s on KGAS066 and 1.501 versus 1.143 km/s on KGAS007;
+  this limitation remains explicit and is not a projected-speed gate.
+* **Real grouped prediction:** A genuine five-fold kinematic refit gives
+  one-sided 95-percent lower bounds of +0.0288885 chi-square/component for
+  KGAS066 and +0.00276267 for KGAS007 against frozen full-data KinMS through
+  the same PB, baseline-sampling, and spectral operators. All held-out folds
+  favor kinUV. Four KGAS066 fits stopped successfully on function tolerance
+  with normalized gradients from 0.00145 to 0.00554, so the immutable packet
+  keeps an optimizer-quality warning. The empirical morphology still
+  conditions on the full canonical cube and is not described as fully
+  end-to-end leakage-free.
+* **Promotion state:** Phase 4's user-mandated native scientific gates are
+  measured and pass. Phase 5 remains pending until both Dynesty replicates per
+  target meet weighted-ESS, evidence-stability, parameter, and profile
+  agreement gates. No posterior or posterior-labelled figure has yet been
+  promoted.
 
 * **Phase:** The PI-authorized unified MAP campaign is complete and promoted for
   KGAS007 and KGAS066. Both production targets now use the same 14-coordinate,
