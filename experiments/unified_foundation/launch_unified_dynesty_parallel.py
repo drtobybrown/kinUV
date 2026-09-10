@@ -34,8 +34,13 @@ def atomic_json(path, value):
             os.unlink(temporary)
 
 
-def submit(name, command, image, dry_run):
-    argv = ["/usr/bin/python3", str(CANFAR), "create", "headless", image, "--name", name, "--", *command]
+def submit(name, command, image, cpu, memory, dry_run):
+    argv = ["/usr/bin/python3", str(CANFAR), "create", "headless", image, "--name", name]
+    if cpu is not None:
+        argv.extend(("--cpu", str(cpu)))
+    if memory is not None:
+        argv.extend(("--memory", str(memory)))
+    argv.extend(("--", *command))
     if dry_run:
         return {"ok": True, "session_id": None, "argv": argv, "dry_run": True}
     result = subprocess.run(
@@ -65,7 +70,9 @@ def main():
     parser.add_argument("--map-commit", required=True)
     parser.add_argument("--targets", nargs="+", choices=("KGAS066", "KGAS007"), default=("KGAS066", "KGAS007"))
     parser.add_argument("--replicates", type=int, default=2, choices=(2,))
-    parser.add_argument("--workers", type=int, default=4, choices=(4, 8))
+    parser.add_argument("--workers", type=int, default=4, choices=(4, 8, 16, 32))
+    parser.add_argument("--cpu", type=int)
+    parser.add_argument("--memory", type=int)
     parser.add_argument("--image", default="skaha/astroml:latest")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -86,7 +93,11 @@ def main():
         "code_commit": commit,
         "map_commit": args.map_commit,
         "run_root": str(args.run_root.resolve()),
-        "allocation": {"class": "flexible", "cpu_requested": None, "memory_requested": None},
+        "allocation": {
+            "class": "fixed" if args.cpu is not None or args.memory is not None else "flexible",
+            "cpu_requested": args.cpu,
+            "memory_requested": args.memory,
+        },
         "parallel": {
             "executor": "ThreadPoolExecutor",
             "workers": args.workers,
@@ -116,7 +127,7 @@ def main():
                 str(args.workers),
             ]
             name = f"kinuv-udp-{target[-3:]}-{commit[:7]}-r{replicate}"
-            response = submit(name, command, args.image, args.dry_run)
+            response = submit(name, command, args.image, args.cpu, args.memory, args.dry_run)
             record["sessions"].append(
                 {"target": target, "replicate": replicate, "seed": seed, "name": name, **response}
             )

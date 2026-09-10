@@ -291,7 +291,7 @@ def main():
     parser.add_argument("--durable", type=Path, required=True)
     parser.add_argument("--nlive", type=int, default=500)
     parser.add_argument("--n-effective", type=int, default=2000)
-    parser.add_argument("--workers", type=int, default=4, choices=(4, 8))
+    parser.add_argument("--workers", type=int, default=4, choices=(4, 8, 16, 32))
     args = parser.parse_args()
     return run(args)
 

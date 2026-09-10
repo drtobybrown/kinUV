@@ -11,8 +11,8 @@ map_result="${6:?MAP result required}"
 map_commit="${7:?MAP commit required}"
 workers="${8:-4}"
 case "${workers}" in
-  4|8) ;;
-  *) printf 'workers must be 4 or 8\n' >&2; exit 2 ;;
+  4|8|16|32) ;;
+  *) printf 'workers must be 4, 8, 16, or 32\n' >&2; exit 2 ;;
 esac
 session_id="${SKAHA_SESSION_ID:-${skaha_sessionid:-${HOSTNAME:-unknown}}}"
 workspace="/arc/projects/KILOGAS/analysis/toby_sandbox"
