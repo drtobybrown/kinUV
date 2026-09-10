@@ -1,6 +1,6 @@
 ---
 id: DEC-KINUV-UNIFIED-FOUNDATION
-status: architecture-licensed-for-bounded-prototyping
+status: proposed
 date: 2026-09-09
 source: Project PI current directive
 owner: senior-registrar
