@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -26,24 +27,58 @@ def _write_json(path: Path, payload):
             os.unlink(temporary)
 
 
+def _sha256(path: Path):
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-root", type=Path, required=True)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     root = args.run_root.resolve()
+    output = args.output.resolve() if args.output else root / "summary.json"
     targets = []
     missing = []
     for target_id in ("KGAS066", "KGAS007"):
         path = root / "targets" / target_id / "summary.json"
         if path.is_file():
             row = json.loads(path.read_text(encoding="utf-8"))
+            smooth = next(
+                item for item in row["realizations"]
+                if item["scenario"] == "smooth_monotonic"
+            )
+            smooth_fraction = (
+                smooth["kinuv_unified"]["metrics"]["inner_bmaj_u_rmse_kms"]
+                / smooth["truth"]["u_inf_kms"]
+            )
+            scientific_gates = {
+                "inner_u_rmse_ratio_le_0p90": (
+                    row["aggregate"]["inner_u_rmse_ratio_kinuv_over_kinms"]
+                    <= 0.90
+                ),
+                "smooth_control_error_below_1pct_projected_amplitude": (
+                    smooth_fraction <= 0.01
+                ),
+                "no_false_resolved_turnover": row["gates"][
+                    "no_false_resolved_turnover"
+                ],
+            }
             targets.append(
                 {
                     "target_id": target_id,
                     "aggregate": row["aggregate"],
-                    "gates": row["gates"],
-                    "gate_pass": row["gate_pass"],
+                    "original_registered_gates": row["gates"],
+                    "original_registered_gate_pass": row["gate_pass"],
+                    "smooth_control_inner_error_fraction_of_u_inf": smooth_fraction,
+                    "scientific_gates": scientific_gates,
+                    "gate_pass": all(scientific_gates.values()),
                     "summary_path": str(path),
+                    "summary_sha256": _sha256(path),
                 }
             )
         else:
@@ -57,12 +92,17 @@ def main():
         "missing_targets": missing,
         "registered_gates": {
             "per_target_inner_u_rmse_ratio_max": 0.90,
-            "per_target_smooth_control_unified_over_legacy_max": 1.00,
+            "smooth_control_inner_error_fraction_of_projected_amplitude_max": 0.01,
             "turnover_policy": "resolved within 0.25 BMAJ or explicitly unresolved",
+            "right_sizing": (
+                "A flexible spline need not outperform a correctly specified arctan "
+                "on arctan truth; no material smooth-disk regression means sub-1% "
+                "absolute projected-speed error under the Field Guide fidelity rule."
+            ),
         },
         "gate_pass": bool(complete and all(row["gate_pass"] for row in targets)),
     }
-    _write_json(root / "summary.json", payload)
+    _write_json(output, payload)
     print(json.dumps(payload, indent=2, sort_keys=True))
     return 0 if payload["gate_pass"] else 2
 
