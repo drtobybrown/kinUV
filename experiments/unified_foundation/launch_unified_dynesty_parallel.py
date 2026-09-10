@@ -73,6 +73,8 @@ def main():
     parser.add_argument("--workers", type=int, default=4, choices=(4, 8, 16, 32))
     parser.add_argument("--n-effective", type=int, default=2000)
     parser.add_argument("--slices", type=int, default=17)
+    parser.add_argument("--dlogz-init", type=float, default=0.01)
+    parser.add_argument("--resume-root", type=Path)
     parser.add_argument("--cpu", type=int)
     parser.add_argument("--memory", type=int)
     parser.add_argument("--image", default="skaha/astroml:latest")
@@ -108,6 +110,8 @@ def main():
         },
         "n_effective": args.n_effective,
         "slices": args.slices,
+        "dlogz_init": args.dlogz_init,
+        "resume_root": str(args.resume_root.resolve()) if args.resume_root else None,
         "sessions": [],
     }
     atomic_json(dispatch_path, record)
@@ -131,6 +135,8 @@ def main():
                 str(args.workers),
                 str(args.n_effective),
                 str(args.slices),
+                str(args.dlogz_init),
+                str(args.resume_root.resolve()) if args.resume_root else "",
             ]
             name = f"kinuv-udp-{target[-3:]}-{commit[:7]}-r{replicate}"
             response = submit(name, command, args.image, args.cpu, args.memory, args.dry_run)

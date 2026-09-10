@@ -118,6 +118,7 @@ def run(args):
         "sample": "rslice",
         "slices": args.slices,
         "n_effective": args.n_effective,
+        "dlogz_init": args.dlogz_init,
         "prior": "exact normalized unified chart prior",
         "likelihood": "sole fixed-C1 visibility likelihood",
         "parallel": {
@@ -130,10 +131,44 @@ def run(args):
         },
     }
     prior_status = json.loads(status_path.read_text(encoding="ascii")) if status_path.is_file() else None
+    if prior_status and prior_status.get("contract", {}).get("resume_lineage"):
+        contract["resume_lineage"] = prior_status["contract"]["resume_lineage"]
+    migrated = False
+    if prior_status is None and args.resume_root is not None:
+        source = args.resume_root / args.target / f"replicate-{args.replicate}"
+        source_status_path = source / "status.json"
+        source_checkpoint = source / "dynesty.save"
+        if not source_status_path.is_file() or not source_checkpoint.is_file():
+            raise FileNotFoundError(f"incomplete resume source: {source}")
+        source_status = json.loads(source_status_path.read_text(encoding="ascii"))
+        source_contract = source_status.get("contract", {})
+        required_equal = (
+            "map_commit", "map_sha256", "scientific_inputs", "ndim", "nlive",
+            "sample", "slices", "n_effective", "prior", "likelihood",
+        )
+        if (
+            source_status.get("target_id") != args.target
+            or source_status.get("replicate") != args.replicate
+            or source_status.get("seed") != args.seed
+            or any(source_contract.get(key) != contract.get(key) for key in required_equal)
+        ):
+            raise RuntimeError("resume source scientific contract mismatch")
+        publish(source_checkpoint, durable_checkpoint)
+        contract["resume_lineage"] = {
+            "source_root": str(args.resume_root.resolve()),
+            "source_code_commit": source_contract.get("code_commit"),
+            "source_checkpoint_sha256": sha256(durable_checkpoint),
+            "source_status_sha256": sha256(source_status_path),
+            "source_iteration": source_status.get("iteration"),
+            "reason": "continue identical sampler state under right-sized evidence stopping tolerance",
+        }
+        migrated = True
     compatible = bool(
-        prior_status
-        and prior_status.get("contract") == contract
-        and prior_status.get("seed") == args.seed
+        (migrated or (
+            prior_status
+            and prior_status.get("contract") == contract
+            and prior_status.get("seed") == args.seed
+        ))
         and durable_checkpoint.is_file()
     )
     if prior_status and prior_status.get("state") == "SUCCEEDED":
@@ -222,6 +257,7 @@ def run(args):
                 nlive_init=args.nlive,
                 nlive_batch=args.nlive,
                 n_effective=args.n_effective,
+                dlogz_init=args.dlogz_init,
                 resume=compatible,
                 checkpoint_file=str(scratch_checkpoint),
                 checkpoint_every=60,
@@ -295,6 +331,8 @@ def main():
     parser.add_argument("--n-effective", type=int, default=2000)
     parser.add_argument("--workers", type=int, default=4, choices=(4, 8, 16, 32))
     parser.add_argument("--slices", type=int, default=17)
+    parser.add_argument("--dlogz-init", type=float, default=0.01)
+    parser.add_argument("--resume-root", type=Path)
     args = parser.parse_args()
     return run(args)
 

@@ -12,6 +12,8 @@ map_commit="${7:?MAP commit required}"
 workers="${8:-4}"
 n_effective="${9:-2000}"
 slices="${10:-17}"
+dlogz_init="${11:-0.01}"
+resume_root="${12:-}"
 case "${workers}" in
   4|8|16|32) ;;
   *) printf 'workers must be 4, 8, 16, or 32\n' >&2; exit 2 ;;
@@ -36,6 +38,10 @@ export TF_NUM_INTRAOP_THREADS=1 TF_NUM_INTEROP_THREADS=1 JAX_NUM_THREADS=1
 export PYTHONPATH="${scratch}/vendor:${repo}/src:${repo}/experiments/unified_foundation"
 export KINUV_WORKSPACE="${workspace}"
 
+resume_args=()
+if [ -n "${resume_root}" ]; then
+  resume_args=(--resume-root "${resume_root}")
+fi
 set +e
 /arc/home/thbrown/kinuv-venv-recovery/bin/python \
   "${repo}/experiments/unified_foundation/unified_dynesty_parallel.py" \
@@ -43,12 +49,13 @@ set +e
   --map-result "${map_result}" --map-commit "${map_commit}" --code-commit "${code_commit}" \
   --scratch "${scratch}/work" --durable "${durable_root}" \
   --nlive 500 --n-effective "${n_effective}" --workers "${workers}" --slices "${slices}" \
+  --dlogz-init "${dlogz_init}" "${resume_args[@]}" \
   >"${log}" 2>&1
 code=$?
 set -e
 cp "${log}" "${durable}/worker.log.tmp" && mv "${durable}/worker.log.tmp" "${durable}/worker.log"
-printf '{"target":"%s","replicate":%s,"session_id":"%s","code_commit":"%s","map_commit":"%s","workers":%s,"n_effective":%s,"slices":%s,"exit_code":%d,"completed_utc":"%s"}\n' \
-  "${target}" "${replicate}" "${session_id}" "${code_commit}" "${map_commit}" "${workers}" "${n_effective}" "${slices}" "${code}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+printf '{"target":"%s","replicate":%s,"session_id":"%s","code_commit":"%s","map_commit":"%s","workers":%s,"n_effective":%s,"slices":%s,"dlogz_init":%s,"exit_code":%d,"completed_utc":"%s"}\n' \
+  "${target}" "${replicate}" "${session_id}" "${code_commit}" "${map_commit}" "${workers}" "${n_effective}" "${slices}" "${dlogz_init}" "${code}" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   >"${durable}/headless_exit.json.tmp"
 mv "${durable}/headless_exit.json.tmp" "${durable}/headless_exit.json"
 exit "${code}"
