@@ -97,6 +97,7 @@ def main():
     parser.add_argument("--map-result", type=Path, required=True)
     parser.add_argument("--map-commit", required=True)
     parser.add_argument("--code-commit", required=True)
+    parser.add_argument("--finalizer-commit", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
@@ -122,8 +123,17 @@ def main():
                 raise RuntimeError(f"replicate {replicate} provenance mismatch")
             if contract["map_sha256"] != sha256(args.map_result):
                 raise RuntimeError(f"replicate {replicate} MAP hash mismatch")
-            common_contract = contract if common_contract is None else common_contract
-            if contract != common_contract:
+            # Resume lineage is intentionally replica-specific: each independent
+            # sampler resumes its own checkpoint and iteration.  Compare the
+            # shared scientific contract while retaining both lineages below.
+            scientific_contract = {
+                key: value for key, value in contract.items()
+                if key != "resume_lineage"
+            }
+            common_contract = (
+                scientific_contract if common_contract is None else common_contract
+            )
+            if scientific_contract != common_contract:
                 raise RuntimeError("replicate contracts differ")
             with np.load(paths["posterior_weighted.npz"], allow_pickle=False) as archive:
                 q = np.asarray(archive["q_unified"], dtype=np.float64)
@@ -145,6 +155,7 @@ def main():
             replicate_summary.append({
                 "replicate": replicate, "weighted_ess": record["weighted_ess"],
                 "log_evidence": record["log_evidence"], "log_evidence_error": record["log_evidence_error"],
+                "resume_lineage": record["contract"].get("resume_lineage"),
                 "parameters": {name: scalar_quantiles(value, weight)
                                for name, value in physical.items()},
             })
@@ -214,13 +225,15 @@ def main():
                         "R50": None, "samplewise_defined_count": 0, "R50_status": "UNRESOLVED_PLATEAU",
                         "R50_reason": "outer continuation supplies no plateau-identifiability evidence"},
             "contract": common_contract, "model_provenance": provenance,
+            "finalizer_code_commit": args.finalizer_commit,
             "sources": {"map": {"path": str(args.map_result.resolve()), "sha256": sha256(args.map_result)},
                         "replicates": sources},
         }
         (staging / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True, ensure_ascii=True) + "\n", encoding="ascii")
         files = {path.name: {"bytes": path.stat().st_size, "sha256": sha256(path)} for path in sorted(staging.iterdir())}
         manifest = {"schema_version": "kinuv-unified-dynesty-evidence-manifest-v1",
-                    "created_utc": utc_now(), "code_commit": args.code_commit, "files": files}
+                    "created_utc": utc_now(), "code_commit": args.code_commit,
+                    "finalizer_code_commit": args.finalizer_commit, "files": files}
         (staging / "MANIFEST.json").write_text(json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=True) + "\n", encoding="ascii")
         os.replace(staging, args.output)
         print(json.dumps({"target": args.target, **gates}, sort_keys=True))
