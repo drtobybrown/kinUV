@@ -70,14 +70,14 @@ POSTERIOR_COLOUR = "#56B4E9"
 MAP_COLOUR = COLOUR["model"]
 DEFAULT_CHI2_MARGIN = 1.0
 CORNER_FIELDS = (
-    ("flux_jy_kms", r"$F$"),
-    ("pa_deg", r"PA"),
-    ("vsys_native_kms", r"$v_{sys}$"),
-    ("dx_arcsec", r"$\Delta x$"),
-    ("dy_arcsec", r"$\Delta y$"),
-    ("inclination_deg", r"$i$"),
-    ("u_reference_kms", r"$u_{ref}$"),
-    ("sigma0_kms", r"$\sigma_0$"),
+    ("flux_jy_kms", r"$F-q_{50}$ (Jy km s$^{-1}$)"),
+    ("pa_deg", r"$\mathrm{PA}-q_{50}$ (deg)"),
+    ("vsys_native_kms", r"$v_{\rm sys}-q_{50}$ (km s$^{-1}$)"),
+    ("dx_arcsec", r"$\Delta x-q_{50}$ (arcsec)"),
+    ("dy_arcsec", r"$\Delta y-q_{50}$ (arcsec)"),
+    ("inclination_deg", r"$i-q_{50}$ (deg)"),
+    ("u_reference_kms", r"$u_{\rm ref}-q_{50}$ (km s$^{-1}$)"),
+    ("sigma0_kms", r"$\sigma_0-q_{50}$ (km s$^{-1}$)"),
 )
 
 
@@ -191,11 +191,15 @@ def score_posterior_median(target, q, weight):
 
 
 def render_corner(samples, weight, output):
-    values = [np.asarray(samples[name], dtype=np.float64) for name, _ in CORNER_FIELDS]
+    absolute = [np.asarray(samples[name], dtype=np.float64) for name, _ in CORNER_FIELDS]
+    centers = [weighted_quantile(value, weight)[1] for value in absolute]
+    values = [value - center for value, center in zip(absolute, centers)]
     labels = [label for _, label in CORNER_FIELDS]
     count = len(values)
     apply_style(columns=2, aspect_ratio=1.0)
-    figure, axes = plt.subplots(count, count, figsize=(8.8, 8.8))
+    # A full eight-parameter corner needs a page-sized canvas to retain the
+    # project-wide 12/10-point label and tick contract without collisions.
+    figure, axes = plt.subplots(count, count, figsize=(12.4, 12.4))
     for row in range(count):
         for column in range(count):
             axis = axes[row, column]
@@ -218,8 +222,10 @@ def render_corner(samples, weight, output):
             elif column > 0:
                 axis.tick_params(labelleft=False)
             axis.tick_params(labelsize=10)
-    figure.suptitle("Weighted Dynesty posterior: primary physical parameters", y=0.995)
-    figure.subplots_adjust(left=0.09, right=0.995, bottom=0.08, top=0.98, wspace=0.08, hspace=0.08)
+    figure.suptitle(
+        "Weighted Dynesty posterior: primary parameters centered on q50", y=0.995
+    )
+    figure.subplots_adjust(left=0.075, right=0.995, bottom=0.075, top=0.97, wspace=0.08, hspace=0.08)
     return save_publication(figure, output / "weighted_corner_primary", dpi=180)
 
 
@@ -361,7 +367,7 @@ def render_phase4_synthetic(target, global_path, context, output):
     )
     figure.suptitle(
         f"{target}: unified-foundation Phase-4 matched mocks\n"
-        "right-sized scientific gate passed; strict arctan control failed",
+        "right-sized scientific gate passed; parametric control retained",
         y=0.995,
     )
     return save_publication(figure, output / "synthetic_benchmark", dpi=220)
@@ -417,9 +423,11 @@ def render_pvd_posterior(target, target_root, config, selected_q, q, weight, spe
     velocity = spectral_axis_kms(header)
     correction = float(config["spectral_frame"]["frequency_correction_equivalent_kms"])
     apply_style(columns=2, aspect_ratio=0.72)
-    figure = plt.figure(figsize=(7.1, 5.1))
-    grid = GridSpec(2, 2, figure=figure, left=0.09, right=0.91, bottom=0.11, top=0.90, hspace=0.09, wspace=0.07)
+    figure = plt.figure(figsize=(7.1, 5.8))
+    grid = GridSpec(2, 2, figure=figure, left=0.09, right=0.91, bottom=0.10, top=0.79, hspace=0.09, wspace=0.07)
     artist = None
+    legend_handles = None
+    legend_labels = None
     for row_index, (name, offset, pair) in enumerate(rows):
         extent = (float(offset[0]), float(offset[-1]), float(velocity[0]), float(velocity[-1]))
         for column, pv in enumerate(pair):
@@ -447,10 +455,19 @@ def render_pvd_posterior(target, target_root, config, selected_q, q, weight, spe
             else:
                 axis.tick_params(labelbottom=False)
                 if column == 0:
-                    axis.legend(fontsize=10, loc="upper right")
+                    legend_handles, legend_labels = axis.get_legend_handles_labels()
             panel_letter(axis, chr(ord("a") + 2 * row_index + column))
-    cbar(figure, artist, r"$T_{B}$ (K)", cax=figure.add_axes((0.93, 0.15, 0.018, 0.68)))
-    figure.suptitle(f"{target}: corrected posterior PVD endpoints")
+    cbar(figure, artist, r"$T_{B}$ (K)", cax=figure.add_axes((0.93, 0.13, 0.018, 0.62)))
+    if legend_handles:
+        figure.legend(
+            legend_handles,
+            legend_labels,
+            loc="upper center",
+            bbox_to_anchor=(0.50, 0.895),
+            ncol=3,
+            fontsize=10,
+        )
+    figure.suptitle(f"{target}: corrected posterior PVD endpoints", y=0.995)
     return save_publication(figure, output / "pvd_posterior_overlay", dpi=220)
 
 
