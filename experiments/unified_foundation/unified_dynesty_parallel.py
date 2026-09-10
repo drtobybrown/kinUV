@@ -188,7 +188,7 @@ def run(args):
             "SKAHA_SESSION_ID", os.environ.get("skaha_sessionid", platform.node())
         ),
         "pid": os.getpid(),
-        "started_utc": prior_status.get("started_utc", utc_now()) if compatible else utc_now(),
+        "started_utc": prior_status.get("started_utc", utc_now()) if prior_status else utc_now(),
         "resumed": compatible,
         "contract": contract,
         "provenance": provenance,
