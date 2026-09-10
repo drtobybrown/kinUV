@@ -172,6 +172,34 @@ def verify_scoring_source(evidence_summary):
         "experiments/unified_foundation/unified_map_runner.py",
         "experiments/unified_foundation/representation_model.py",
     )
+    reference_root = os.environ.get("KINUV_SCORING_REFERENCE")
+    if reference_root:
+        reference_root = Path(reference_root)
+        for relative in paths:
+            current = REPO / relative
+            reference = reference_root / relative
+            if reference.is_dir():
+                expected = {
+                    path.relative_to(reference)
+                    for path in reference.rglob("*.py")
+                }
+                actual = {
+                    path.relative_to(current)
+                    for path in current.rglob("*.py")
+                }
+                if actual != expected:
+                    raise RuntimeError(
+                        f"current scoring source file set differs from {commit}: {relative}"
+                    )
+                pairs = ((current / name, reference / name) for name in expected)
+            else:
+                pairs = ((current, reference),)
+            for current_path, reference_path in pairs:
+                if not reference_path.is_file() or sha256(current_path) != sha256(reference_path):
+                    raise RuntimeError(
+                        f"current scoring implementation differs from {commit}: {relative}"
+                    )
+        return
     completed = __import__("subprocess").run(
         ["git", "diff", "--quiet", commit, "--", *paths], cwd=REPO, check=False
     )
