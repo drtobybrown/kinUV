@@ -72,6 +72,7 @@ def main():
     parser.add_argument("--replicates", type=int, default=2, choices=(2,))
     parser.add_argument("--workers", type=int, default=4, choices=(4, 8, 16, 32))
     parser.add_argument("--n-effective", type=int, default=2000)
+    parser.add_argument("--slices", type=int, default=17)
     parser.add_argument("--cpu", type=int)
     parser.add_argument("--memory", type=int)
     parser.add_argument("--image", default="skaha/astroml:latest")
@@ -106,6 +107,7 @@ def main():
             "shared_prewarmed_jit": True,
         },
         "n_effective": args.n_effective,
+        "slices": args.slices,
         "sessions": [],
     }
     atomic_json(dispatch_path, record)
@@ -128,6 +130,7 @@ def main():
                 args.map_commit,
                 str(args.workers),
                 str(args.n_effective),
+                str(args.slices),
             ]
             name = f"kinuv-udp-{target[-3:]}-{commit[:7]}-r{replicate}"
             response = submit(name, command, args.image, args.cpu, args.memory, args.dry_run)

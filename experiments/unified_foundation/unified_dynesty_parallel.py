@@ -116,6 +116,7 @@ def run(args):
         "ndim": 14,
         "nlive": args.nlive,
         "sample": "rslice",
+        "slices": args.slices,
         "n_effective": args.n_effective,
         "prior": "exact normalized unified chart prior",
         "likelihood": "sole fixed-C1 visibility likelihood",
@@ -207,6 +208,7 @@ def run(args):
                     14,
                     nlive=args.nlive,
                     sample="rslice",
+                    slices=args.slices,
                     bound="multi",
                     rstate=np.random.default_rng(args.seed),
                     pool=pool,
@@ -292,6 +294,7 @@ def main():
     parser.add_argument("--nlive", type=int, default=500)
     parser.add_argument("--n-effective", type=int, default=2000)
     parser.add_argument("--workers", type=int, default=4, choices=(4, 8, 16, 32))
+    parser.add_argument("--slices", type=int, default=17)
     args = parser.parse_args()
     return run(args)
 
