@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Submit fresh spawn-pool unified Dynesty replicates to flexible CANFAR."""
+"""Submit fresh shared-JIT thread-pool Dynesty replicates to flexible CANFAR."""
 
 from __future__ import annotations
 
@@ -87,7 +87,12 @@ def main():
         "map_commit": args.map_commit,
         "run_root": str(args.run_root.resolve()),
         "allocation": {"class": "flexible", "cpu_requested": None, "memory_requested": None},
-        "parallel": {"workers": args.workers, "queue_size": args.workers, "start_method": "spawn"},
+        "parallel": {
+            "executor": "ThreadPoolExecutor",
+            "workers": args.workers,
+            "queue_size": args.workers,
+            "shared_prewarmed_jit": True,
+        },
         "sessions": [],
     }
     atomic_json(dispatch_path, record)

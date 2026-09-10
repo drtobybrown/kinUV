@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Spawn-pool DynamicNestedSampler worker for the unified 14D posterior."""
+"""Shared-JIT thread-pool DynamicNestedSampler worker for the unified posterior."""
 
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import gc
 import json
-import multiprocessing as mp
 import os
 from pathlib import Path
 import platform
@@ -38,9 +38,49 @@ USE_POOL = {
 }
 
 
+class DynestyThreadPool:
+    """Minimal pool interface backed by threads sharing one warmed JAX runtime."""
+
+    def __init__(self, workers):
+        self.workers = workers
+        self._executor = None
+
+    @property
+    def size(self):
+        return self.workers
+
+    def __enter__(self):
+        self._executor = ThreadPoolExecutor(
+            max_workers=self.workers, thread_name_prefix="kinuv-loglike"
+        )
+        return self
+
+    def map(self, function, values):
+        return self._executor.map(function, values)
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        self._executor.shutdown(wait=True, cancel_futures=True)
+        self._executor = None
+
+
+def rebind_restored_sampler(sampler, pool, likelihood, prior, workers):
+    """Attach live functions and executor to every sampler held by a checkpoint."""
+    samplers = [sampler]
+    if getattr(sampler, "sampler", None) is not None:
+        samplers.append(sampler.sampler)
+    if getattr(sampler, "batch_sampler", None) is not None:
+        samplers.append(sampler.batch_sampler)
+    for current in samplers:
+        current.M = pool.map
+        current.pool = pool
+        current.queue_size = workers
+        current.prior_transform = prior
+        current.loglikelihood.pool = pool
+        current.loglikelihood.loglikelihood = likelihood
+
+
 def run(args):
     import dynesty
-    from dynesty.pool import Pool
 
     scratch = args.scratch / args.target / f"replicate-{args.replicate}"
     durable = args.durable / args.target / f"replicate-{args.replicate}"
@@ -57,13 +97,15 @@ def run(args):
     if map_doc.get("git", {}).get("commit") != args.map_commit:
         raise RuntimeError("MAP result commit mismatch")
 
-    # The parent needs only the small chart specification. Workers lazily rebuild
-    # the fixed-C1 likelihood after spawn, avoiding unsafe fork-after-JAX behavior.
     context, spec, density, initial, provenance = build_problem(args.target)
-    del context, density, initial
+    del context, density
     gc.collect()
     prior = UnifiedPriorTransform(spec)
     likelihood = UnifiedLikelihood(args.target)
+    state_q = np.asarray(map_doc.get("optimum_z", initial), dtype=np.float64)
+    if state_q.shape != (14,):
+        raise RuntimeError("MAP optimum_z must have shape (14,)")
+    del initial
     contract = {
         "code_commit": args.code_commit,
         "map_commit": args.map_commit,
@@ -78,11 +120,12 @@ def run(args):
         "prior": "exact normalized unified chart prior",
         "likelihood": "sole fixed-C1 visibility likelihood",
         "parallel": {
-            "start_method": "spawn",
+            "executor": "ThreadPoolExecutor",
             "workers": args.workers,
             "queue_size": args.workers,
             "use_pool": USE_POOL,
-            "threads_per_process": 1,
+            "shared_prewarmed_jit": True,
+            "jax_threads_per_call": 1,
         },
     }
     prior_status = json.loads(status_path.read_text(encoding="ascii")) if status_path.is_file() else None
@@ -101,7 +144,7 @@ def run(args):
 
     state = {
         "schema_version": "kinuv-unified-dynesty-parallel-status-v1",
-        "state": "STARTING_POOL",
+        "state": "PREWARMING",
         "target_id": args.target,
         "replicate": args.replicate,
         "seed": args.seed,
@@ -143,15 +186,24 @@ def run(args):
         state.update({"state": "RUNNING", "iteration": int(niter), "calls": int(ncall)})
 
     try:
-        with Pool(args.workers, likelihood, prior) as pool:
+        # Compile and materialize the sole likelihood once. All executor threads
+        # then call the same immutable data and compiled executable.
+        warm_value = likelihood(state_q)
+        if not np.isfinite(warm_value):
+            raise RuntimeError("nonfinite likelihood at the accepted MAP during prewarm")
+        state.update({"state": "STARTING_POOL", "prewarm_log_likelihood": warm_value})
+        atomic_json(status_path, state)
+        write_heartbeat(heartbeat_path, state)
+        with DynestyThreadPool(args.workers) as pool:
             if compatible:
                 sampler = dynesty.DynamicNestedSampler.restore(str(scratch_checkpoint), pool=pool)
                 if sampler.queue_size != args.workers:
                     raise RuntimeError("restored checkpoint queue_size mismatch")
+                rebind_restored_sampler(sampler, pool, likelihood, prior, args.workers)
             else:
                 sampler = dynesty.DynamicNestedSampler(
-                    pool.loglike,
-                    pool.prior_transform,
+                    likelihood,
+                    prior,
                     14,
                     nlive=args.nlive,
                     sample="rslice",
@@ -241,7 +293,6 @@ def main():
     parser.add_argument("--n-effective", type=int, default=2000)
     parser.add_argument("--workers", type=int, default=4, choices=(4, 8))
     args = parser.parse_args()
-    mp.set_start_method("spawn", force=True)
     return run(args)
 
 

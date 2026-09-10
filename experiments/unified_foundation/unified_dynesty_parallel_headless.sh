@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One spawn-pool unified Dynesty replicate in one flexible CANFAR session.
+# One shared-JIT thread-pool unified Dynesty replicate in one CANFAR session.
 set -uo pipefail
 
 target="${1:?target required}"
