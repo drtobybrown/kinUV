@@ -273,7 +273,8 @@ def render_pvd(target, cubes, mask, header, geometry, stage, profiles, output):
     axis.plot(radius, profiles["kinuv_intrinsic"], color=COLOUR["model"], lw=2.1, label=f"kinUV {stage}")
     if profiles.get("intrinsic_lo") is not None:
         axis.fill_between(radius, profiles["intrinsic_lo"], profiles["intrinsic_hi"],
-                          color=POSTERIOR_COLOUR, alpha=0.28, label="NUTS 16th-84th percentile")
+                          color=POSTERIOR_COLOUR, alpha=0.28,
+                          label=profiles.get("posterior_label", "posterior 16th-84th percentile"))
     axis.plot(radius, profiles["kinms_intrinsic"], color=KINMS_COLOUR, lw=1.7, ls="--", label="KinMS")
     if profiles.get("turnover") is not None:
         axis.axvline(profiles["turnover"], color=COLOUR["model"], ls=":", lw=1.1)
@@ -340,7 +341,8 @@ def render_radial_profiles(target, profiles, stage, output, *, benchmark):
     axes[0].plot(radius, profiles["kinuv_intrinsic"], color=COLOUR["model"], lw=2.1, label=f"kinUV {stage}")
     if profiles.get("intrinsic_lo") is not None:
         axes[0].fill_between(radius, profiles["intrinsic_lo"], profiles["intrinsic_hi"],
-                             color=POSTERIOR_COLOUR, alpha=0.28, label="NUTS 16th-84th percentile")
+                             color=POSTERIOR_COLOUR, alpha=0.28,
+                             label=profiles.get("posterior_label", "posterior 16th-84th percentile"))
     if benchmark:
         axes[0].plot(radius, profiles["kinms_intrinsic"], color=KINMS_COLOUR, lw=1.7, ls="--", label="KinMS intrinsic")
     if profiles.get("turnover") is not None:
@@ -350,7 +352,8 @@ def render_radial_profiles(target, profiles, stage, output, *, benchmark):
     axes[1].plot(radius, profiles["sigma_map"], color=COLOUR["model"], lw=2.1, label=f"kinUV {stage}")
     if profiles.get("sigma_lo") is not None:
         axes[1].fill_between(radius, profiles["sigma_lo"], profiles["sigma_hi"],
-                             color=POSTERIOR_COLOUR, alpha=0.28, label="NUTS 16th-84th percentile")
+                             color=POSTERIOR_COLOUR, alpha=0.28,
+                             label=profiles.get("posterior_label", "posterior 16th-84th percentile"))
     if benchmark:
         axes[1].plot(radius, np.full_like(radius, profiles["kinms_sigma"]), color=KINMS_COLOUR, lw=1.7, ls="--", label="KinMS")
     axes[1].set(xlabel=r"Galactocentric radius $R\ (\mathrm{arcsec})$",

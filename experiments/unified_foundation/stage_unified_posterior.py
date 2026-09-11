@@ -33,8 +33,10 @@ from astropy.io import fits
 
 REPO = Path(__file__).resolve().parents[2]
 PROJECT = REPO.parent
+sys.path.insert(0, str(REPO / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import generate_production_figures as direct_figures  # noqa: E402
 from unified_map_runner import build_problem  # noqa: E402
 from phase4_synthetic_benchmark import (  # noqa: E402
     matched_disk_template as phase4_disk_template,
@@ -46,6 +48,13 @@ from kinuv.diagnostics.imaging import (  # noqa: E402
     pv_diagram,
     spectral_axis_kms,
 )
+from kinuv.diagnostics.delivery import (  # noqa: E402
+    render_moments,
+    render_pvd,
+    render_radial_profiles,
+    render_spectra,
+)
+from kinuv.diagnostics.kinms_benchmark import write_cube_benchmark  # noqa: E402
 from kinuv.diagnostics.style import (  # noqa: E402
     COLOUR,
     apply_style,
@@ -168,7 +177,12 @@ def verify_production_target(source):
 def verify_scoring_source(evidence_summary):
     commit = evidence_summary["contract"]["code_commit"]
     paths = (
-        "src/kinuv",
+        "src/kinuv/constants.py",
+        "src/kinuv/forward",
+        "src/kinuv/geometry.py",
+        "src/kinuv/infer",
+        "src/kinuv/io/vis.py",
+        "src/kinuv/profiles",
         "experiments/unified_foundation/unified_map_runner.py",
         "experiments/unified_foundation/representation_model.py",
     )
@@ -222,6 +236,17 @@ def render_corner(samples, weight, output):
     absolute = [np.asarray(samples[name], dtype=np.float64) for name, _ in CORNER_FIELDS]
     centers = [weighted_quantile(value, weight)[1] for value in absolute]
     values = [value - center for value, center in zip(absolute, centers)]
+    # Nested-sampling output retains negligible-weight prior-tail particles.
+    # Restrict plotting only (never inference) to the central 99.8% weighted
+    # interval so those particles cannot collapse the visible posterior.
+    ranges = []
+    for value in values:
+        lo, hi = weighted_quantile(value, weight, probabilities=(0.001, 0.999))
+        if not np.isfinite(lo + hi) or hi <= lo:
+            width = max(float(np.nanstd(value)), 1.0e-8)
+            lo, hi = -4.0 * width, 4.0 * width
+        pad = 0.04 * (hi - lo)
+        ranges.append((lo - pad, hi + pad))
     labels = [label for _, label in CORNER_FIELDS]
     count = len(values)
     apply_style(columns=2, aspect_ratio=1.0)
@@ -235,11 +260,16 @@ def render_corner(samples, weight, output):
                 axis.axis("off")
                 continue
             if row == column:
-                axis.hist(values[row], bins=34, weights=weight, color=MAP_COLOUR, histtype="stepfilled", alpha=0.75)
+                axis.hist(values[row], bins=34, range=ranges[row], weights=weight, color=MAP_COLOUR, histtype="stepfilled", alpha=0.75)
                 for qvalue in weighted_quantile(values[row], weight):
                     axis.axvline(qvalue, color=COLOUR["data"], lw=0.55, alpha=0.8)
             else:
-                axis.hist2d(values[column], values[row], bins=28, weights=weight, cmap="Blues")
+                axis.hist2d(
+                    values[column], values[row], bins=28,
+                    range=(ranges[column], ranges[row]), weights=weight, cmap="Blues",
+                )
+                axis.set_ylim(*ranges[row])
+            axis.set_xlim(*ranges[column])
             if row == count - 1:
                 axis.set_xlabel(labels[column])
                 axis.tick_params(axis="x", labelrotation=35)
@@ -547,6 +577,108 @@ def write_selected_model(target, target_root, config, context, spec, selected_q)
     write_json(target_root / "best_model/parameters.json", {"native_TOPO_radio": physical_json, "diagnostic_optical_LSRK": geometry})
 
 
+def refresh_selected_diagnostics(
+    target, target_root, source, config, context, spec, selected_q, selected_best, profile_quantiles
+):
+    """Regenerate every model-dependent diagnostic for the selected model."""
+    stage = "posterior median [16th-84th percentiles]" if selected_best == "POSTERIOR_MEDIAN" else "MAP"
+    data_path = Path(config["diagnostic_cube"])
+    mask_path = Path(config["diagnostic_mask"])
+    model_path = target_root / "best_model/model_on_science_grid.fits"
+    kinms_source = source / "benchmarks/kinms_model_k.fits"
+    kinms_fit_source = source / "benchmarks/kinms_fit_result.json"
+    benchmarks = target_root / "benchmarks"
+    plots = target_root / "plots"
+    geometry = load_json(target_root / "best_model/parameters.json")["diagnostic_optical_LSRK"]
+
+    benchmark = write_cube_benchmark(
+        target_id=target,
+        data_cube=data_path,
+        mask_cube=mask_path,
+        kinuv_cube=model_path,
+        kinms_cube=kinms_source,
+        output_dir=benchmarks,
+        pa_deg=float(geometry["pa_deg"]),
+        inclination_deg=float(geometry["inclination_deg"]),
+        vsys_kms=float(geometry["vsys_kms"]),
+        dx_arcsec=float(geometry["dx_arcsec"]),
+        dy_arcsec=float(geometry["dy_arcsec"]),
+    )
+    shutil.copy2(kinms_fit_source, benchmarks / "kinms_fit_result.json")
+    for obsolete in (
+        "moments_comparison.png", "spectra_comparison.png", "pvd_major_comparison.png",
+        "rotation_curve_comparison.png", "channel_maps_comparison.png",
+    ):
+        (benchmarks / obsolete).unlink(missing_ok=True)
+
+    data = np.asarray(fits.getdata(data_path), dtype=np.float64).squeeze()
+    model = np.asarray(fits.getdata(model_path), dtype=np.float64).squeeze()
+    mask = np.asarray(fits.getdata(mask_path), dtype=np.float64).squeeze() > 0.5
+    header = fits.getheader(data_path)
+    kinms = np.asarray(fits.getdata(benchmarks / "kinms_model_k.fits"), dtype=np.float64).squeeze()
+    with np.load(benchmarks / "moments.npz", allow_pickle=False) as archive:
+        moments = {key: np.asarray(archive[key]) for key in archive.files}
+    direct_figures.pv_figure(target, data, model, mask, header, geometry, plots)
+    direct_figures.spectral_figure(target, data, model, mask, header, geometry, plots)
+    render_moments(target, moments, header, geometry, stage, benchmarks)
+
+    with np.load(target_root / "best_model/radial_profiles.npz", allow_pickle=False) as archive:
+        selected_profile = {key: np.asarray(archive[key]) for key in archive.files}
+    with np.load(profile_quantiles, allow_pickle=False) as archive:
+        posterior_profile = {key: np.asarray(archive[key]) for key in archive.files}
+    radius = selected_profile["radius_arcsec"]
+    kinms_document = load_json(kinms_fit_source)
+    kinms_fit = kinms_document.get("fitted", kinms_document)
+    kinms_intrinsic = float(kinms_fit["v0_kms"]) * (2.0 / np.pi) * np.arctan(
+        radius / float(kinms_fit["r_t_arcsec"])
+    )
+    kinms_projected = kinms_intrinsic * np.sin(
+        np.radians(float(kinms_fit.get("i_deg", kinms_fit.get("inclination_deg"))))
+    )
+    correction = float(config["spectral_frame"]["frequency_correction_equivalent_kms"])
+    physical = decode_unified_chart(selected_q, spec)
+    u = selected_profile["projected_velocity_kms"]
+    slope = float((u[1] - u[0]) / (radius[1] - radius[0]))
+    profile_payload = {
+        "radius": radius,
+        "beam": float(spec.support.bmaj_arcsec),
+        "kinuv_projected": u,
+        "kinuv_intrinsic": selected_profile["intrinsic_rotation_kms"],
+        "sigma_map": selected_profile["dispersion_kms"],
+        "projected_lo": np.interp(radius, posterior_profile["radius_arcsec"], posterior_profile["u_projected_q16"]),
+        "projected_hi": np.interp(radius, posterior_profile["radius_arcsec"], posterior_profile["u_projected_q84"]),
+        "intrinsic_lo": np.interp(radius, posterior_profile["radius_arcsec"], posterior_profile["v_rot_q16"]),
+        "intrinsic_hi": np.interp(radius, posterior_profile["radius_arcsec"], posterior_profile["v_rot_q84"]),
+        "sigma_lo": np.interp(radius, posterior_profile["radius_arcsec"], posterior_profile["sigma_q16"]),
+        "sigma_hi": np.interp(radius, posterior_profile["radius_arcsec"], posterior_profile["sigma_q84"]),
+        "kinms_projected": kinms_projected,
+        "kinms_intrinsic": kinms_intrinsic,
+        "kinms_sigma": float(kinms_fit["gas_sigma_kms"]),
+        "kinms_vsys": float(kinms_fit["vsys_optical_kms"]),
+        "turnover": None,
+        "moment0": moments["data_moment0"],
+        "kinuv_spectral_transform": {
+            "native_vsys_radio_topo_kms": float(physical["vsys_kms"]),
+            "frequency_equivalent_correction_kms": correction,
+        },
+        "profile_metrics": {
+            "turnover": r"kinUV $R_{50}$: unresolved plateau",
+            "velocity": fr"$u(R_{{70}})={float(physical['u_reference_kms']):.1f}$ km s$^{{-1}}$",
+            "inner_gradient": fr"$(du/dR)_0={slope:.1f}$ km s$^{{-1}}$ arcsec$^{{-1}}$",
+            "smearing": fr"KinMS $R_{{\rm turn}}/\mathrm{{BMAJ}}={float(kinms_fit['r_t_arcsec']) / float(spec.support.bmaj_arcsec):.2f}$",
+        },
+        "posterior_label": "Dynesty weighted 16th-84th percentile",
+    }
+    render_pvd(target, (data, model, kinms), mask, header, geometry, stage, profile_payload, benchmarks)
+    render_spectra(target, (data, model, kinms), mask, header, geometry, stage, benchmarks)
+    render_radial_profiles(target, profile_payload, stage, benchmarks, benchmark=True)
+    render_radial_profiles(target, profile_payload, stage, plots, benchmark=False)
+    for suffix in ("pdf", "png"):
+        shutil.copy2(benchmarks / f"moments_kinuv_vs_kinms.{suffix}", plots / f"moments_comparison.{suffix}")
+        shutil.copy2(benchmarks / f"spectra_kinuv_vs_kinms.{suffix}", plots / f"spectral_profiles.{suffix}")
+    return benchmark
+
+
 def rebuild_manifests(target_root, target, selected_best):
     best = target_root / "best_model"
     write_json(best / "manifest.json", {
@@ -610,6 +742,7 @@ def stage_target(args, target):
             "posterior_minus_map_visibility_chi2": delta,
             "posterior_selection_required_improvement_chi2": float(args.chi2_margin),
             "posterior_status": "ACCEPTED_WEIGHTED_DYNESTY",
+            "visibility_chi2": median_chi2 if select_posterior else map_chi2,
             "selection_rationale": (
                 "posterior median visibility chi2 improves on MAP beyond the declared margin"
                 if select_posterior else
@@ -624,6 +757,10 @@ def stage_target(args, target):
             "delta_chi2": delta,
             "selected": select_posterior,
         })
+        shutil.copy2(
+            staging / "best_model/radial_profiles.npz",
+            posterior / "map_radial_profiles.npz",
+        )
         if select_posterior:
             write_selected_model(target, staging, load_json(REPO / "configs/targets" / f"{target}.json"), context, spec, selected_q)
             write_json(staging / "best_model/selected_posterior_median.json", load_json(posterior / "selection_candidate.json"))
@@ -647,8 +784,22 @@ def stage_target(args, target):
             "rhat_applicable": False,
         })
         config = load_json(REPO / "configs/targets" / f"{target}.json")
+        benchmark = refresh_selected_diagnostics(
+            target,
+            staging,
+            source,
+            config,
+            context,
+            spec,
+            selected_q,
+            selected_best,
+            posterior / "radial_profile_quantiles.npz",
+        )
+        best_summary = load_json(staging / "best_model/summary.json")
+        best_summary["benchmark_metrics"] = benchmark["metrics"]
+        write_json(staging / "best_model/summary.json", best_summary)
         render_corner(samples, weight, posterior)
-        render_profile_bands(posterior / "radial_profile_quantiles.npz", staging / "best_model/radial_profiles.npz", summary["profile"]["support"], posterior)
+        render_profile_bands(posterior / "radial_profile_quantiles.npz", posterior / "map_radial_profiles.npz", summary["profile"]["support"], posterior)
         render_pvd_posterior(target, staging, config, selected_q, q, weight, spec, posterior)
         phase4_global, phase4_records = phase4_target_records(args.phase4_synthetic)
         _, _, phase4_target_path = phase4_records[target]
@@ -681,7 +832,7 @@ def stage_target(args, target):
             },
             "phase4_real": {"path": str(args.phase4_real.resolve()), "sha256": sha256(args.phase4_real)},
             "visibility_selection": selection,
-            "existing_moments_and_spectra_preserved": not select_posterior,
+            "selected_model_diagnostics_regenerated": True,
         }
         write_json(staging / "provenance/posterior_staging.json", provenance)
         (staging / "README.md").write_text(
